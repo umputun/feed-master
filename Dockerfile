@@ -2,13 +2,15 @@
 FROM debian:wheezy
 MAINTAINER Umputun <feedmaster@umputun.com>
 
+ADD requirements.txt /requirements.txt
 
 RUN \
- build_deps='binutils build-essential bzip2 cpp cpp-4.7 dpkg-dev fakeroot file g++ g++-4.7 gcc gcc-4.7' && \
+ build_deps='binutils build-essential bzip2 cpp cpp-4.7 dpkg-dev perl file g++ g++-4.7 gcc gcc-4.7' && \
  apt-get update && apt-get upgrade -y --no-install-recommends && \
  apt-get install -y python-pip && \
  apt-get autoremove -y && apt-get clean && \
- pip install feedparser plumbum pymongo && \
+ pip install -r /requirements.txt && \
+ rm -f requirements.txt && \
  apt-get purge -y --auto-remove $build_deps && \
  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
  rm -rf /var/lib/{apt,dpkg,cache,log}
