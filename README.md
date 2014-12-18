@@ -1,6 +1,6 @@
 # Feed Master
 
-Pulls multiple podcast feeds (RSS) and republishes as a common feed.
+Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly sorted and podcast-client freindly.
 
 ## Run directly
 - Edit config/config.py (sample provided)
@@ -9,11 +9,16 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed.
 
 ## Run in docker (short version)
 - make build
-- make run
-- hit http://ip:8099/feed.xml
+- make run-with-mongo
+- hit http://localhost:8099/feed.xml
 
 ## Run in docker (long version)
 - build `docker build -t umputun/feed-master .`
 - run dockerized mongo `docker run -d --name=mongodb -p 27017:27017 mongo`
-- run feed master linked to mongo `docker run -d --name feed-master -v /path/to/config:/srv/confir -p 8099:8099 --link mongodb:mongodb umputun/feed-master`
+- run feed master linked to mongo `docker run -d --name feed-master -v /path/to/config:/srv/config -p 8099:8099 --link mongodb:mongodb umputun/feed-master`
 
+## Notes
+- feed.xml served via exec.sh with SimpleHTTPServer. Good enought for single-user or feed it to feedburner. If you need some real server - expose /srv/data to your host and serve it with nginx/apache.
+- feed master runs in 10mins loops, see `sleep 600` in exec.sh
+- making mongo persistent may be a good idea. Makefile has run-with-mongo target doing this.
+- change of config.py requires reload, i.e. `make reload` or `docker restart feed-master` for dockerized version.
