@@ -22,3 +22,4 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 - feed master runs in 10mins loops, see `sleep 600` in exec.sh
 - making mongo persistent may be a good idea. Makefile has run-with-mongo target doing this.
 - change of config.py requires reload, i.e. `make reload` or `docker restart feed-master` for dockerized version.
+- you can get feed-master from docker hub `docker pull umputun/feed-master`
