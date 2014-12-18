@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 
 __author__ = 'Umputun'
+__copyright__ = "Copyright 2014, Feed Master by Umputun"
+__license__ = "GPL"
+__version__ = "1.1"
+__maintainer__ = "Umputun"
+__email__ = "umputun@gmail.com"
+__status__ = "Production"
 
 import logging
 import sys
@@ -25,7 +31,7 @@ class App(cli.Application):
     '''Feed-master utility'''
 
     PROGNAME = "feed-master"
-    VERSION = "1.1"
+    VERSION = __version__
 
 
 @App.subcommand("update")
@@ -70,7 +76,7 @@ class UpdateItems(cli.Application):
                 else:
                     pub_dtime = datetime.fromtimestamp(time.mktime(item['published_parsed']))
                     if pub_dtime > datetime.now() or abs((pub_dtime - datetime.now()).total_seconds()) < 2 * 60 * 60:
-                        # for items in the future or close enough no now - reset timestamp
+                        # for items in the future or close enough to now - reset timestamp
                         logging.debug("timestamp adjusted to now for %s - %s", title, pub_dtime)
                         pub_dtime = datetime.now()
                     mrec = {"_id": enclosure['href'], 'enclosure': enclosure, 'title': title,
@@ -103,7 +109,7 @@ class GenerateFeed(cli.Application):
 
     @cli.switch(["--file", "-f"], str, help="set feed file")
     def set_feed_file(self, feed_file):
-        logging.info("set feed file=%s", feed_file)
+        logging.debug("set feed file=%s", feed_file)
         self.feed_file = feed_file
 
     def main(self):

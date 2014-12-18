@@ -23,7 +23,6 @@ feeds = [
     ("Без дураков", "http://echo.msk.ru/programs/korzun/rss-audio.xml"),
     ("Особое мнение", "http://echo.msk.ru/programs/personalno/rss-audio.xml"),
     ("2014", "http://www.echo.msk.ru/programs/year2014/rss-audio.xml"),
-#    ("Разворот", "http://www.echo.msk.ru/programs/razvorot/rss-audio.xml"),
     ("Интервью", "http://www.echo.msk.ru/programs/beseda/rss-audio.xml"),
     ("48 минут", "http://www.echo.msk.ru/programs/48minut/rss-audio.xml"),
     ("Выбор ясен", "http://www.echo.msk.ru/programs/vyboryasen/rss-audio.xml"),
@@ -31,13 +30,12 @@ feeds = [
 ]
 
 settings = {
-
     "info": {
         "title": u"Эхо Москвы",
         "description": u"Правильный, комбинированный фид избранных передач (версия 2)",
         "link": "http://echo.msk.ru"
     },
     "language": "ru-ru",
-    "max_items_per_feed": 5,
-    "max_items_total": 100
+    "max_items_per_feed": 5,  # how many episoded to keep per feed
+    "max_items_total": 100    # total number of episodes in common feed
 }
