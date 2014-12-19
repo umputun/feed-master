@@ -8,9 +8,9 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 - publish merged rss file `feed-master.py generate -m <mongo-host> -f /path/to/feed.xml
 
 ## Run in docker (short version)
-- make build
-- make run-with-mongo
-- hit http://localhost:8099/feed.xml
+- `make build`
+- `make run-with-mongo`
+- hit `http://localhost:8099/feed.xml`
 
 ## Run in docker (longer version)
 - build `docker build -t umputun/feed-master .`
