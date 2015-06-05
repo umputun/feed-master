@@ -5,7 +5,7 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 ## Run directly
 - Edit config/config.py (sample provided)
 - update feeds `feed-master.py update -m <mongo-host>`
-- publish merged rss file `feed-master.py generate -m <mongo-host> -f /path/to/feed.xml
+- publish merged rss file `feed-master.py generate -m <mongo-host> -f /path/to/feed.xml`
 
 ## Run in docker (short version)
 - `make build`
