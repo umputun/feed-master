@@ -1,0 +1,79 @@
+feeds:
+
+    all-umputun:
+        title: Весь Umputun
+        description: Общий фид всех подкастов с участием Umputun
+        link: http://umputun.com
+        language: "ru-ru"
+        sources:
+            - name: Еженедельный подкаст от Umputun (UWP)
+              url: http://feeds.rucast.net/Umputun
+            - name: Радио-Т
+              url: http://feeds.rucast.net/radio-t
+            - name: Пираты Радио-Т
+              url: http://feeds.feedburner.com/pirate-radio-t
+
+    echo-msk:
+        title: Эхо Москвы
+        description: Правильный, комбинированный фид избранных передач
+        link: http://echo.msk.ru
+        language: "ru-ru"
+        image: static/echomsk.png
+        sources:
+            - name: Владимир Кара-Мурза
+              url: http://www.echo.msk.ru/programs/graniweek/rss-audio.xml
+            - name: Народ против
+              url: http://www.echo.msk.ru/programs/opponent/rss-audio.xml
+            - name: Ганапольское
+              url: http://www.echo.msk.ru/programs/ganapolskoe_itogi/rss-audio.xml
+            - name: Без посредников
+              url: http://www.echo.msk.ru/programs/nomed/rss-audio.xml
+            - name: Точка
+              url: http://www.echo.msk.ru/programs/tochka/rss-audio.xml
+            - name: Кейс
+              url: http://www.echo.msk.ru/programs/keys/rss-audio.xml
+            - name: Блог-аут
+              url: http://www.echo.msk.ru/programs/blogout1/rss-audio.xml
+            - name: Альбац
+              url: http://www.echo.msk.ru/contributors/7/rss-audio.xml
+            - name: Код доступа
+              url: http://www.echo.msk.ru/programs/code/rss-audio.xml
+            - name: Цена Победы
+              url: http://www.echo.msk.ru/programs/victory/rss-audio.xml
+            - name: Все так
+              url: http://www.echo.msk.ru/programs/vsetak/rss-audio.xml
+            - name: Не так
+              url: http://www.echo.msk.ru/programs/netak/rss-audio.xml
+            - name: В круге Света
+              url: http://echo.msk.ru/programs/sorokina/rss-audio.xml
+            - name: Суть событий
+              url: http://www.echo.msk.ru/programs/sut/rss-audio.xml
+            - name: Попутчики
+              url: http://www.echo.msk.ru/programs/poputchiki/rss-audio.xml
+            - name: Русский бомбардир
+              url: http://www.echo.msk.ru/programs/orekh_osin/rss-audio.xml
+            - name: Дилентанты
+              url: http://echo.msk.ru/programs/Diletanti/rss-audio.xml
+            - name: Цена революции
+              url: http://echo.msk.ru/programs/cenapobedy/rss-audio.xml
+            - name: Особое мнение
+              url: http://echo.msk.ru/programs/personalno/rss-audio.xml
+            - name: Персонально ваш
+              url: http://echo.msk.ru/programs/personalnovash/rss-audio.xml
+            - name: Клинч
+              url: http://echo.msk.ru/programs/klinch/rss-audio.xml
+            - name: Выбор ясен
+              url: http://www.echo.msk.ru/programs/vyboryasen/rss-audio.xml
+            - name: Дифирамб
+              url: http://echo.msk.ru/programs/dithyramb/rss-audio.xml
+            - name: Один
+              url: http://echo.msk.ru/programs/odin/rss-audio.xml
+            - name: Сбитый фокус
+              url: http://echo.msk.ru/programs/focus/rss-audio.xml
+            - name: Большой дозор
+              url: http://echo.msk.ru/programs/dozor/rss-audio.xml
+
+update: 600
+max_per_feed: 5
+max_total: 50
+max_keep: 1000

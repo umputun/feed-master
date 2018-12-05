@@ -1,3 +1,0 @@
-feedparser
-plumbum
-pymongo
