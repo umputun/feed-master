@@ -37,8 +37,7 @@ func (s *Server) Run(port int) {
 	router.Use(middleware.RealIP, rest.Recoverer(log.Default()))
 	router.Use(middleware.Throttle(1000), middleware.Timeout(60*time.Second))
 	router.Use(rest.AppInfo("feed-master", "umputun", s.Version), rest.Ping)
-	l := logger.New(logger.Flags(logger.All), logger.Log(log.Default()), logger.Prefix("[INFO]"))
-	router.Use(l.Handler, tollbooth_chi.LimitHandler(tollbooth.NewLimiter(5, nil)))
+	router.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(5, nil)))
 
 	s.httpServer = &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),
@@ -48,10 +47,19 @@ func (s *Server) Run(port int) {
 		IdleTimeout:       30 * time.Second,
 	}
 
-	router.Get("/rss/{name}", s.getFeedCtrl)
-	router.Get("/list", s.getListCtrl)
-	router.Get("/images/{name}", s.getImageCtrl)
-	router.Get("/image/{name}", s.getImageCtrl)
+	router.Group(func(rimg chi.Router) {
+		l := logger.New(logger.Flags(logger.All), logger.Log(log.Default()), logger.Prefix("[DEBUG]"))
+		rimg.Use(l.Handler)
+		rimg.Get("/images/{name}", s.getImageCtrl)
+		rimg.Get("/image/{name}", s.getImageCtrl)
+	})
+
+	router.Group(func(rrss chi.Router) {
+		l := logger.New(logger.Flags(logger.All), logger.Log(log.Default()), logger.Prefix("[INFO]"))
+		rrss.Use(l.Handler)
+		rrss.Get("/rss/{name}", s.getFeedCtrl)
+		rrss.Get("/list", s.getListCtrl)
+	})
 
 	err := s.httpServer.ListenAndServe()
 	log.Printf("[WARN] http server terminated, %s", err)
