@@ -22,6 +22,6 @@ services:
         volumes:
             - ./var:/srv/var # mapped location to save status
             - ./_example/etc:/srv/etc # mapped location for config
-            - ./_example/static:/srv/static # mapped location for images
+            - ./_example/images:/srv/images # mapped location for images
         ports:
             - "8097:8080"
