@@ -50,6 +50,7 @@ func (s *Server) Run(port int) {
 
 	router.Get("/rss/{name}", s.getFeedCtrl)
 	router.Get("/list", s.getListCtrl)
+	router.Get("/images/{name}", s.getImageCtrl)
 	router.Get("/image/{name}", s.getImageCtrl)
 
 	err := s.httpServer.ListenAndServe()
@@ -88,27 +89,25 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 // GET /image/{name}
 func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
 
-	http.HandleFunc("/image/", func(w http.ResponseWriter, r *http.Request) {
-		fm := chi.URLParam(r, "name")
-		fm = strings.TrimRight(fm, ".png")
-		feedConf, found := s.Conf.Feeds[fm]
-		if !found {
-			rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest,
-				errors.New("image "+chi.URLParam(r, "name")+" not found"), "failed to load image")
-			return
-		}
+	fm := chi.URLParam(r, "name")
+	fm = strings.TrimRight(fm, ".png")
+	feedConf, found := s.Conf.Feeds[fm]
+	if !found {
+		rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest,
+			errors.New("image "+chi.URLParam(r, "name")+" not found"), "failed to load image")
+		return
+	}
 
-		b, err := ioutil.ReadFile(feedConf.Image)
-		if err != nil {
-			rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest,
-				errors.New("can't read  "+chi.URLParam(r, "name")), "failed to read image")
-			return
-		}
-		w.Header().Set("Content-Type", "image/png")
-		if _, err := w.Write(b); err != nil {
-			log.Printf("[WARN] failed to send image, %s", err)
-		}
-	})
+	b, err := ioutil.ReadFile(feedConf.Image)
+	if err != nil {
+		rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest,
+			errors.New("can't read  "+chi.URLParam(r, "name")), "failed to read image")
+		return
+	}
+	w.Header().Set("Content-Type", "image/png")
+	if _, err := w.Write(b); err != nil {
+		log.Printf("[WARN] failed to send image, %s", err)
+	}
 }
 
 // GET /list - returns feed's image
