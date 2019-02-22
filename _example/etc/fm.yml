@@ -17,7 +17,7 @@ feeds:
     description: Правильный, комбинированный фид избранных передач
     link: http://echo.msk.ru
     language: "ru-ru"
-    image: echomsk.png
+    image: images/echomsk.png
     sources:
       - name: Владимир Кара-Мурза
         url: http://www.echo.msk.ru/programs/graniweek/rss-audio.xml
