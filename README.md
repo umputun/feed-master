@@ -5,6 +5,10 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 ## Run in docker (short version)
 
 - Copy `docker-compose.yml` and adjust exposed port if needed
-- Create `etc/fm.yml` (sample provided)
+- Create `etc/fm.yml` (sample provided in `_example`)
 - Start container with `docker-compose up -d`
 
+## API
+
+- `GET /rss/{name}` - returns feed-set for given name
+- `GET /list` - returns list of feed-sets (json)

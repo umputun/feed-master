@@ -6,3 +6,4 @@ target
 *.xlsx
 *.bdb
 var/
+.vscode/

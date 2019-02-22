@@ -1,10 +1,11 @@
 package proc
 
 import (
-	"log"
+	"context"
 	"time"
 
-	"github.com/remeh/sizedwaitgroup"
+	log "github.com/go-pkgz/lgr"
+	"github.com/go-pkgz/syncs"
 
 	"github.com/umputun/feed-master/app/feed"
 )
@@ -29,28 +30,30 @@ type Conf struct {
 		} `yaml:"sources"`
 	} `yaml:"feeds"`
 
-	UpdateInterval int    `yaml:"update"`
-	MaxItems       int    `yaml:"max_per_feed"`
-	MaxTotal       int    `yaml:"max_total"`
-	MaxKeepInDB    int    `yaml:"max_keep"`
-	BaseURL        string `yaml:"base_url"`
-	Concurrent     int    `yaml:"concurrent"`
+	System struct {
+		UpdateInterval time.Duration `yaml:"update"`
+		MaxItems       int           `yaml:"max_per_feed"`
+		MaxTotal       int           `yaml:"max_total"`
+		MaxKeepInDB    int           `yaml:"max_keep"`
+		Concurrent     int           `yaml:"concurrent"`
+	} `yaml:"system"`
 }
 
 // Do activates loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent
 func (p *Processor) Do() {
-	log.Printf("[INFO] activate processor, fms=%d, %+v", len(p.Conf.Feeds), p.Conf)
+	log.Printf("[INFO] activate processor, feeds=%d, %+v", len(p.Conf.Feeds), p.Conf)
 	p.setDefaults()
 
 	for {
-		swg := sizedwaitgroup.New(p.Conf.Concurrent)
+		swg := syncs.NewSizedGroup(p.Conf.System.Concurrent, syncs.Preemptive)
 		for name, fm := range p.Conf.Feeds {
 			for _, src := range fm.Sources {
-				swg.Add()
-				go p.feed(name, src.URL, p.Conf.MaxItems, &swg)
+				swg.Go(func(_ context.Context) {
+					p.feed(name, src.URL, p.Conf.System.MaxItems)
+				})
 			}
 			// keep up to MaxKeepInDB items in bucket
-			if removed, err := p.Store.removeOld(name, p.Conf.MaxKeepInDB); err == nil {
+			if removed, err := p.Store.removeOld(name, p.Conf.System.MaxKeepInDB); err == nil {
 				if removed > 0 {
 					log.Printf("[DEBUG] removed %d from %s", removed, name)
 				}
@@ -60,14 +63,11 @@ func (p *Processor) Do() {
 		}
 		swg.Wait()
 		log.Printf("[DEBUG] refresh completed")
-		time.Sleep(time.Duration(p.Conf.UpdateInterval) * time.Second)
+		time.Sleep(p.Conf.System.UpdateInterval)
 	}
 }
 
-func (p *Processor) feed(name string, url string, max int, swg *sizedwaitgroup.SizedWaitGroup) {
-	defer func() {
-		swg.Done()
-	}()
+func (p *Processor) feed(name string, url string, max int) {
 
 	rss, err := feed.Parse(url)
 	if err != nil {
@@ -75,7 +75,7 @@ func (p *Processor) feed(name string, url string, max int, swg *sizedwaitgroup.S
 		return
 	}
 
-	// up to 5 items from each feed
+	// up to MaxItems (5) items from each feed
 	upto := max
 	if len(rss.ItemList) <= max {
 		upto = len(rss.ItemList)
@@ -94,19 +94,19 @@ func (p *Processor) feed(name string, url string, max int, swg *sizedwaitgroup.S
 }
 
 func (p *Processor) setDefaults() {
-	if p.Conf.Concurrent == 0 {
-		p.Conf.Concurrent = 8
+	if p.Conf.System.Concurrent == 0 {
+		p.Conf.System.Concurrent = 8
 	}
-	if p.Conf.MaxItems == 0 {
-		p.Conf.MaxItems = 5
+	if p.Conf.System.MaxItems == 0 {
+		p.Conf.System.MaxItems = 5
 	}
-	if p.Conf.MaxTotal == 0 {
-		p.Conf.MaxTotal = 100
+	if p.Conf.System.MaxTotal == 0 {
+		p.Conf.System.MaxTotal = 100
 	}
-	if p.Conf.MaxKeepInDB == 0 {
-		p.Conf.MaxKeepInDB = 5000
+	if p.Conf.System.MaxKeepInDB == 0 {
+		p.Conf.System.MaxKeepInDB = 5000
 	}
-	if p.Conf.UpdateInterval == 0 {
-		p.Conf.UpdateInterval = 600
+	if p.Conf.System.UpdateInterval == 0 {
+		p.Conf.System.UpdateInterval = time.Minute * 5
 	}
 }

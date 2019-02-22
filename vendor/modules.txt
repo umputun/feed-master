@@ -1,0 +1,39 @@
+# github.com/boltdb/bolt v0.0.0-20161028193645-4b1ebc1869ad
+github.com/boltdb/bolt
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/didip/tollbooth v4.0.0+incompatible
+github.com/didip/tollbooth
+github.com/didip/tollbooth/errors
+github.com/didip/tollbooth/libstring
+github.com/didip/tollbooth/limiter
+# github.com/didip/tollbooth_chi v0.0.0-20170928041846-6ab5f3083f3d
+github.com/didip/tollbooth_chi
+# github.com/go-chi/chi v4.0.1+incompatible
+github.com/go-chi/chi
+github.com/go-chi/chi/middleware
+# github.com/go-chi/render v1.0.1
+github.com/go-chi/render
+# github.com/go-pkgz/lgr v0.3.2
+github.com/go-pkgz/lgr
+# github.com/go-pkgz/rest v1.3.2
+github.com/go-pkgz/rest
+github.com/go-pkgz/rest/logger
+# github.com/go-pkgz/syncs v1.1.0
+github.com/go-pkgz/syncs
+# github.com/jessevdk/go-flags v0.0.0-20160626162948-f2785f5820ec
+github.com/jessevdk/go-flags
+# github.com/patrickmn/go-cache v2.1.0+incompatible
+github.com/patrickmn/go-cache
+# github.com/pkg/errors v0.8.0
+github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/testify v1.3.0
+github.com/stretchr/testify/assert
+# golang.org/x/sys v0.0.0-20181205085412-a5c9d58dba9a
+golang.org/x/sys/unix
+# golang.org/x/time v0.0.0-20181108054448-85acf8d2951c
+golang.org/x/time/rate
+# gopkg.in/yaml.v2 v2.0.0-20160301204022-a83829b6f129
+gopkg.in/yaml.v2

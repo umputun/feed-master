@@ -4,10 +4,12 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"log"
+	"os"
+	"path"
 	"time"
 
 	"github.com/boltdb/bolt"
+	log "github.com/go-pkgz/lgr"
 
 	"github.com/umputun/feed-master/app/feed"
 )
@@ -19,7 +21,10 @@ type BoltDB struct {
 
 // NewBoltDB makes persistent boltdb based store
 func NewBoltDB(dbFile string) (*BoltDB, error) {
-	log.Printf("[INFO] bolt (persitent) store, %s", dbFile)
+	log.Printf("[INFO] bolt (persistent) store, %s", dbFile)
+	if err := os.MkdirAll(path.Dir(dbFile), 0700); err != nil {
+		return nil, err
+	}
 	result := BoltDB{}
 	db, err := bolt.Open(dbFile, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
@@ -119,13 +124,13 @@ func (b BoltDB) removeOld(fmFeed string, keep int) (int, error) {
 }
 
 // Buckets returns list of buckets
-func (b BoltDB) Buckets() (result []string) {
+func (b BoltDB) Buckets() (result []string, err error) {
 
-	_ = b.DB.View(func(tx *bolt.Tx) error {
-		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error {
+	err = b.DB.View(func(tx *bolt.Tx) error {
+		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error { //nolint
 			result = append(result, string(name))
 			return nil
 		})
 	})
-	return result
+	return result, err
 }

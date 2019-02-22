@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	log "github.com/go-pkgz/lgr"
 	"github.com/pkg/errors"
 )
 
