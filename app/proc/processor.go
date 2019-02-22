@@ -48,7 +48,7 @@ func (p *Processor) Do() {
 		swg := syncs.NewSizedGroup(p.Conf.System.Concurrent, syncs.Preemptive)
 		for name, fm := range p.Conf.Feeds {
 			for _, src := range fm.Sources {
-				name := name
+				name, src := name, src
 				swg.Go(func(_ context.Context) {
 					p.feed(name, src.URL, p.Conf.System.MaxItems)
 				})
