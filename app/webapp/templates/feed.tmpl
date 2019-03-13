@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Feed Master</title>
+    <link href="/static/bootstrap.min.css" rel="stylesheet"/>
+    <link href="/static/styles.css" rel="stylesheet"/>
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
+</head>
+
+
+<body>
+
+    <nav class="navbar navbar-light fixed-top">
+        <div class="navbar-brand" href="#">
+            <img src="/static/podcast.png" width="30" height="30" alt="">
+            Feed Master <span class="version">{{.Version}}</span>
+        </div>
+
+        <span class="navbar-text">
+            {{len .Items}} feeds, {{.LastUpdate.Format "2006-01-02 15:04:05"}}
+        </span>
+    </nav>
+
+
+    <div id='main'>
+        <table class='table' id='header-row'>
+            <tbody>
+                {{range .Items}}
+                <tr>
+                    <td class="player"><a href="{{.Enclosure.URL}}" target="_blank" >🎵 </a></td>
+                    <td class="title"><a href="{{.Link}}" target="_blank" >{{.Title}}</a></td>
+                    <td>{{.DT.Format "2006-01-02 15:04:05"}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div> 
+    
+</body>
+
+</html>

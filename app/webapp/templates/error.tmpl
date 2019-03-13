@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Feed Master - {{.Status}}</title>
+    <meta HTTP-EQUIV="Expires" Content="0"/>
+    <meta HTTP-EQUIV="Pragma" Content='no-cache'/>
+    <link href="/static/bootstrap.min.css" rel="stylesheet"/>
+
+    <style>
+        body { text-align: center; padding: 150px; }
+        h1 { font-size: 50px; margin: 30px auto;}
+        body { font: 20px Helvetica, sans-serif; color: #333; }
+        article { display: block; text-align: left; width: 650px; margin: 0 auto; }
+        a { color: #dc8100; text-decoration: none; }
+        a:hover { color: #333; text-decoration: none; }
+        .red-text {color: #8f0d1b;}
+        .err {margin-top: 20px;margin-bottom: 30px; background-color: rgba(245, 174, 179, 0.54); font-size:18px; padding: 50px;}
+    </style>
+
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
+</head>
+
+<body>
+
+<article>
+    <h1>Something went wrong!</h1>
+    <p></p>
+    <div>
+        <p>Sorry for the inconvenience but we&rsquo;re performing some maintenance at the moment. Please <a href="mailto:support@feed-master.com">contact us</a> whenever you encounter such error - there is nothing you can do to sort them out.</p>
+        <div class="err">
+        <p><span class="red-text">{{.Status}} – {{.Error}}</span></p>
+        </div>
+        <p>&mdash; The Team</p>
+    </div>
+</article>
+
+</body>
+</html>
