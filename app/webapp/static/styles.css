@@ -23,12 +23,8 @@ nav {
     background-color: #fdc07a;
 }
 
-.version {
-    margin-left: 1em;
-    font-size: 0.9em;
-    font-weight: 200;
-    color: #8b874f;
-}
+
+
 #main {
     margin-top: 5em;
 }
@@ -38,6 +34,13 @@ nav {
     text-align: left;
     font-size:1.3em;
     line-height: 1.6em;
+}
+
+#name {
+    margin-left: 2em;
+    font-size: 0.9em;
+    font-weight: 200;
+    color: #686434;
 }
 
 .title a:link {

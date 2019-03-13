@@ -12,3 +12,7 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 
 - `GET /rss/{name}` - returns feed-set for given name
 - `GET /list` - returns list of feed-sets (json)
+
+## Web UI
+
+Web UI shows a list of items from generated RSS. It is available on `/feed/{name}`
