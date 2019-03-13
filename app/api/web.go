@@ -1,14 +1,16 @@
 package api
 
 import (
+	"bytes"
 	"html/template"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/go-pkgz/lcw"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	log "github.com/go-pkgz/lgr"
 	"github.com/go-pkgz/rest"
 
 	"github.com/umputun/feed-master/app/feed"
@@ -19,34 +21,41 @@ var templates = template.Must(template.ParseGlob("webapp/templates/*"))
 // GET /feed/{name} - renders page with list of items
 func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
-	items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal)
 
-	tmplData := struct {
-		Items       []feed.Item
-		Name        string
-		Description string
-		Link        string
-		LastUpdate  time.Time
-		Version     string
-	}{
-		Items:       items,
-		Name:        s.Conf.Feeds[feedName].Title,
-		Description: s.Conf.Feeds[feedName].Description,
-		Link:        s.Conf.Feeds[feedName].Link,
-		LastUpdate:  items[0].DT,
-		Version:     s.Version,
-	}
+	data, err := s.cache.Get(feedName, func() (lcw.Value, error) {
+		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal)
+		tmplData := struct {
+			Items       []feed.Item
+			Name        string
+			Description string
+			Link        string
+			LastUpdate  time.Time
+			Version     string
+		}{
+			Items:       items,
+			Name:        s.Conf.Feeds[feedName].Title,
+			Description: s.Conf.Feeds[feedName].Description,
+			Link:        s.Conf.Feeds[feedName].Link,
+			LastUpdate:  items[0].DT,
+			Version:     s.Version,
+		}
+
+		if err != nil {
+			return nil, err
+		}
+		res := bytes.NewBuffer(nil)
+		err = templates.ExecuteTemplate(res, "feed.tmpl", &tmplData)
+		return res.Bytes(), err
+	})
 
 	if err != nil {
-		rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest, err, "failed to get feed")
+		s.renderErrorPage(w, r, err, 400)
 		return
 	}
 
-	if err := templates.ExecuteTemplate(w, "feed.tmpl", &tmplData); err != nil {
-		s.renderErrorPage(w, r, err, http.StatusInternalServerError)
-		return
-	}
-
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(data.([]byte))
 }
 
 func (s *Server) renderErrorPage(w http.ResponseWriter, r *http.Request, err error, errCode int) {

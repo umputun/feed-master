@@ -15,6 +15,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"github.com/go-pkgz/lcw"
 	log "github.com/go-pkgz/lgr"
 	"github.com/go-pkgz/rest"
 	"github.com/go-pkgz/rest/logger"
@@ -25,14 +26,22 @@ import (
 
 // Server provides HTTP API
 type Server struct {
-	Version    string
-	Conf       proc.Conf
-	Store      *proc.BoltDB
+	Version string
+	Conf    proc.Conf
+	Store   *proc.BoltDB
+
 	httpServer *http.Server
+	cache      lcw.LoadingCache
 }
 
 // Run starts http server for API with all routes
 func (s *Server) Run(port int) {
+
+	var err error
+	if s.cache, err = lcw.NewExpirableCache(lcw.TTL(time.Minute*5), lcw.MaxCacheSize(10*1024*1024)); err != nil {
+		log.Printf("[PANIC] failed to make loading cache, %v", err)
+		return
+	}
 
 	router := chi.NewRouter()
 	router.Use(middleware.RealIP, rest.Recoverer(log.Default()))
@@ -64,7 +73,7 @@ func (s *Server) Run(port int) {
 	})
 
 	s.addFileServer(router, "/static", http.Dir(filepath.Join("webapp", "static")))
-	err := s.httpServer.ListenAndServe()
+	err = s.httpServer.ListenAndServe()
 	log.Printf("[WARN] http server terminated, %s", err)
 }
 
