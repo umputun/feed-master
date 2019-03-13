@@ -16,7 +16,7 @@ import (
 
 var templates = template.Must(template.ParseGlob("webapp/templates/*"))
 
-// GET /feed/{name} - returns rss for given feeds set
+// GET /feed/{name} - renders page with list of items
 func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
 	items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal)
