@@ -45,6 +45,7 @@ RUN \
 FROM umputun/baseimage:app-latest
 
 COPY --from=build /go/src/github.com/umputun/feed-master/feed-master /srv/feed-master
+COPY app/webapp /srv/webapp
 RUN \
     chown -R app:app /srv && \
     chmod +x /srv/feed-master

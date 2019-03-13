@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -48,19 +49,21 @@ func (s *Server) Run(port int) {
 	}
 
 	router.Group(func(rimg chi.Router) {
-		l := logger.New(logger.Flags(logger.All), logger.Log(log.Default()), logger.Prefix("[DEBUG]"))
+		l := logger.New(logger.Log(log.Default()), logger.Prefix("[DEBUG]"))
 		rimg.Use(l.Handler)
 		rimg.Get("/images/{name}", s.getImageCtrl)
 		rimg.Get("/image/{name}", s.getImageCtrl)
 	})
 
 	router.Group(func(rrss chi.Router) {
-		l := logger.New(logger.Flags(logger.All), logger.Log(log.Default()), logger.Prefix("[INFO]"))
+		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"))
 		rrss.Use(l.Handler)
 		rrss.Get("/rss/{name}", s.getFeedCtrl)
 		rrss.Get("/list", s.getListCtrl)
+		rrss.Get("/feed/{name}", s.getFeedPageCtrl)
 	})
 
+	s.addFileServer(router, "/static", http.Dir(filepath.Join("webapp", "static")))
 	err := s.httpServer.ListenAndServe()
 	log.Printf("[WARN] http server terminated, %s", err)
 }

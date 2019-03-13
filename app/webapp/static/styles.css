@@ -1,0 +1,49 @@
+html, body {height: 100%;margin: 0; }
+body  {background-color: rgb(247, 247, 247);font: normal normal normal 13px/18px 'Droid+Sans+Mono', Verdana, Helvetica, Arial, sans-serif; color:rgb(12, 7, 78);}
+
+a {color:rgb(48, 69, 97)}
+a:link {text-decoration: none !important;}
+a:hover {text-decoration: none !important;}
+
+table {
+    border-collapse:collapse;
+    border:0;
+    margin-left:auto;
+    margin-right:auto;
+    width:95%;
+}
+
+#wrap {min-height: 100%;}
+
+#header-row {width:95%; font-size:1.2em; color:#595959;}
+#header-row th {padding:20px 10px 10px 10px;font-size:100%; border-bottom:0 solid #adadad; border-top:0;}
+#header-row td {padding:3px 10px; align:right; color:#393639;}
+
+nav {
+    background-color: #fdc07a;
+}
+
+.version {
+    margin-left: 1em;
+    font-size: 0.9em;
+    font-weight: 200;
+    color: #8b874f;
+}
+#main {
+    margin-top: 5em;
+}
+
+.title {
+    width: 80%;
+    text-align: left;
+    font-size:1.3em;
+    line-height: 1.6em;
+}
+
+.title a:link {
+    text-decoration: none !important;
+}
+
+.player {
+    font-size:1.4em;
+}
