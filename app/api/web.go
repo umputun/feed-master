@@ -24,6 +24,9 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	data, err := s.cache.Get(feedName, func() (lcw.Value, error) {
 		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal)
+		if err != nil {
+			return nil, err
+		}
 		tmplData := struct {
 			Items       []feed.Item
 			Name        string
@@ -40,9 +43,6 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			Version:     s.Version,
 		}
 
-		if err != nil {
-			return nil, err
-		}
 		res := bytes.NewBuffer(nil)
 		err = templates.ExecuteTemplate(res, "feed.tmpl", &tmplData)
 		return res.Bytes(), err
