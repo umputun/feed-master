@@ -27,6 +27,7 @@ nav {
 
 #main {
     margin-top: 5em;
+  
 }
 
 .title {
@@ -49,4 +50,14 @@ nav {
 
 .player {
     font-size:1.4em;
+}
+
+.fa-info-circle {
+    color: rgb(183, 184, 181);
+    size: 3em;
+}
+.fa-volume-up {
+    font-size:1.4em;
+    color: rgb(166, 170, 128);
+    size: 3em; 
 }

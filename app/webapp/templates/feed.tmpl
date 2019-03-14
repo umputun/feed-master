@@ -6,6 +6,11 @@
     <link href="/static/bootstrap.min.css" rel="stylesheet"/>
     <link href="/static/styles.css" rel="stylesheet"/>
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="/static/bootstrap.bundle.min.js"></script>
+
 </head>
 
 
@@ -28,8 +33,11 @@
             <tbody>
                 {{range .Items}}
                 <tr>
-                    <td class="player"><a href="{{.Enclosure.URL}}" target="_blank" >🎵 </a></td>
-                    <td class="title"><a href="{{.Link}}" target="_blank" >{{.Title}}</a></td>
+                    <td class="player"><a href="{{.Enclosure.URL}}" target="_blank"><i class="fas fa-volume-up"></i></a></td>
+                    <td class="title">
+                        <a href="{{.Link}}" target="_blank">{{.Title}}</a> 
+                        <i class="fas fa-info-circle" data-toggle="tooltip" title="{{.Description}}"></i>
+                    </td>
                     <td>{{.DT.Format "2006-01-02 15:04:05"}}</td>
                 </tr>
                 {{end}}
@@ -37,6 +45,12 @@
         </table>
     </div> 
     
+<script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+</script>
+
 </body>
 
 </html>
