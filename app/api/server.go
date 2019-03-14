@@ -97,6 +97,11 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		LastBuildDate: time.Now().Format(time.RFC822Z),
 	}
 
+	// replace link to UI page
+	if s.Conf.System.BaseURL != "" {
+		rss.Link = s.Conf.System.BaseURL + "/feed/" + feedName
+	}
+
 	b, err := xml.MarshalIndent(&rss, "", "  ")
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to marshal rss")

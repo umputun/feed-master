@@ -36,6 +36,7 @@ type Conf struct {
 		MaxTotal       int           `yaml:"max_total"`
 		MaxKeepInDB    int           `yaml:"max_keep"`
 		Concurrent     int           `yaml:"concurrent"`
+		BaseURL        string        `yaml:"base_url"`
 	} `yaml:"system"`
 }
 
