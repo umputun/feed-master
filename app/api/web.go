@@ -55,7 +55,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write(data.([]byte))
+	w.Write(data.([]byte)) //nolint
 }
 
 func (s *Server) renderErrorPage(w http.ResponseWriter, r *http.Request, err error, errCode int) {
