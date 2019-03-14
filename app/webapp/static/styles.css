@@ -24,18 +24,10 @@ nav {
 }
 
 
-
 #main {
-    margin-top: 5em;
-  
+    margin-top: 60px;
 }
 
-.title {
-    width: 80%;
-    text-align: left;
-    font-size:1.3em;
-    line-height: 1.6em;
-}
 
 #name {
     margin-left: 2em;
@@ -44,17 +36,39 @@ nav {
     color: #686434;
 }
 
+#feeds-info {
+    font-size:1.2em;
+}
+
+.title {
+    font-size:1.3em;
+    line-height: 1.6em;
+
+    float: left;
+    padding-left: 57px;
+    width: 80%;
+}
+
+.timestamp {
+    float: right;
+    margin-left: 2em;
+    margin-top: 5px;
+    font-size: 1em;
+}
+
 .title a:link {
     text-decoration: none !important;
 }
 
 .player {
+    float: left;
     font-size:1.4em;
 }
 
 .fa-info-circle {
     color: rgb(183, 184, 181);
-    size: 3em;
+    font-size: 1em;
+    margin-left: 0.2em;
 }
 .fa-volume-up {
     font-size:1.4em;

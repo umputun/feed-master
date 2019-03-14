@@ -22,8 +22,8 @@
             Feed Master <span id="name"><a href="{{.Link}}">{{.Name}}</a> - {{.Description}}</span>
         </div>
 
-        <span class="navbar-text">
-            {{len .Items}} feeds, {{.LastUpdate.Format "2006-01-02 15:04:05"}}
+        <span class="navbar-text" id="feeds-info">
+            {{len .Items}} feeds, {{.LastUpdate.Format "02 Jan 2006 15:04:05 MST"}}
         </span>
     </nav>
 
@@ -33,12 +33,16 @@
             <tbody>
                 {{range .Items}}
                 <tr>
-                    <td class="player"><a href="{{.Enclosure.URL}}" target="_blank"><i class="fas fa-volume-up"></i></a></td>
-                    <td class="title">
-                        <a href="{{.Link}}" target="_blank">{{.Title}}</a> 
-                        <i class="fas fa-info-circle" data-toggle="tooltip" title="{{.Description}}"></i>
+                    <td>
+                        <span class="player">
+                            <a href="{{.Enclosure.URL}}" target="_blank">
+                            <i class="fas fa-volume-up"></i></a>
+                        </span>
+                        
+                        <a class="title" href="{{.Link}}" target="_blank">{{.Title}} <i class="fas fa-info-circle" data-toggle="tooltip" title="{{.Description}}"></i></a> 
+                        
+                        <span class="timestamp">{{.DT.Format "02 Jan 15:04"}}</span>
                     </td>
-                    <td>{{.DT.Format "2006-01-02 15:04:05"}}</td>
                 </tr>
                 {{end}}
             </tbody>
