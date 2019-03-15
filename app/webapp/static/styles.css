@@ -75,3 +75,8 @@ nav {
     color: rgb(166, 170, 128);
     size: 3em; 
 }
+
+#footer {
+    font-size:1em;
+    height: 30px;
+}
