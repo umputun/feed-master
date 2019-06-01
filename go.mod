@@ -9,7 +9,7 @@ require (
 	github.com/go-pkgz/lcw v0.3.1
 	github.com/go-pkgz/lgr v0.4.0
 	github.com/go-pkgz/rest v1.4.0
-	github.com/go-pkgz/syncs v1.1.0
+	github.com/go-pkgz/syncs v1.1.1
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/kr/pretty v0.1.0 // indirect
