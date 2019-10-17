@@ -32,8 +32,15 @@ table {
 }
 
 .table .text-cell {
-    vertical-align: top;
+    vertical-align: middle;
     text-align: left;
+}
+
+.title {
+    font-size: 1.2em;
+    line-height: 1.4em;
+    padding-top: 2px;
+    display: inline-block;
 }
 
 nav {
@@ -46,25 +53,20 @@ nav {
 
 #name {
     margin-left: 2em;
-    font-size: 1.2em;
+    font-size: 1.3em;
     font-weight: 200;
     color: #686434;
 }
 
 #feeds-info {
-    font-size:1.2em;
-}
-
-.title {
-    font-size:0.9em;
-    line-height: 1.6em;
+    font-size:1.3em;
 }
 
 .timestamp {
     float: right;
     margin-top: 15px;
     margin-bottom: 7px;
-    font-size: 0.9em;
+    font-size: 1.1em;
 }
 
 .title a:link {
@@ -72,19 +74,17 @@ nav {
 }
 
 .player {
-    float: left;
     font-size:1.4em;
 }
 
 .fa-info-circle {
     color: rgb(183, 184, 181);
-    font-size: 1em;
-    margin-left: 0.2em;
+    font-size: 1.1em;
+    margin-left: 3px;
 }
 .fa-volume-up {
     font-size:1.4em;
     color: rgb(166, 170, 128);
-    size: 3em; 
 }
 
 #footer {
@@ -102,7 +102,7 @@ nav {
     }
 
     #name {
-        margin-left: 0;
+        margin: 5px 0;
         font-size: 1.1em;
     }
 
@@ -114,8 +114,19 @@ nav {
         padding-top: 20px;
     }
 
+    .player {
+        font-size: 1.3em;
+    }
+
     .timestamp {
-        font-size: 0.8em;
+        font-size: 0.9em;
         margin-top: 20px;
+    }
+
+    .title {
+        font-size: 0.9em;
+        line-height: 1.5em;
+        padding-top: 8px;
+        display: inline-block;
     }
 }
