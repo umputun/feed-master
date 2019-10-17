@@ -3,7 +3,6 @@
 
 <head>
     <title>Feed Master</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="/static/bootstrap.min.css" rel="stylesheet"/>
     <link href="/static/styles.css" rel="stylesheet"/>
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
@@ -11,33 +10,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="/static/bootstrap.bundle.min.js"></script>
-	<script type="text/javascript">
-        $(document).ready(function () {
-            setContentPadding();
-            $(window).resize(setContentPadding);
-
-            $('[data-toggle="tooltip"]').tooltip();
-        });
-
-        function setContentPadding() {
-            $('#main').css('padding-top', $('#navbar').outerHeight() + 'px');
-        }
-    </script>
 </head>
 
 
 <body>
 
-    <nav id="navbar" class="navbar navbar-light fixed-top">
+    <nav class="navbar navbar-light fixed-top">
         <div class="navbar-brand" href="#">
             <img src="/static/podcast.png" width="30" height="30" alt="">
-            Feed Master
+            Feed Master <span id="name"><a href="{{.Link}}">{{.Name}}</a> - {{.Description}}</span>
         </div>
-		<div id="name"><a href="{{.Link}}">{{.Name}}</a> - {{.Description}}</div>
 
-        <div class="navbar-text" id="feeds-info">
+        <span class="navbar-text" id="feeds-info">
             {{len .Items}} feeds, {{.LastUpdate.Format "02 Jan 2006 15:04:05 MST"}}
-        </div>
+        </span>
     </nav>
 
 
@@ -46,15 +32,15 @@
             <tbody>
                 {{range .Items}}
                 <tr>
-                    <td class="play-cell">
+                    <td>
                         <span class="player">
                             <a href="{{.Enclosure.URL}}" target="_blank">
                             <i class="fas fa-volume-up"></i></a>
                         </span>
-					</td>
-                    <td class="text-cell">    
-                        <a class="title" href="{{.Link}}" target="_blank">{{.Title}} <i class="fas fa-info-circle" data-toggle="tooltip" title="{{.Description}}"></i></a>
-						<div class="timestamp">{{.DT.Format "02 Jan 15:04"}}</div>
+                        
+                        <a class="title" href="{{.Link}}" target="_blank">{{.Title}} <i class="fas fa-info-circle" data-toggle="tooltip" title="{{.Description}}"></i></a> 
+                        
+                        <span class="timestamp">{{.DT.Format "02 Jan 15:04"}}</span>
                     </td>
                 </tr>
                 {{end}}
@@ -66,6 +52,12 @@
      <span class="navbar-text">Copyright (c) 2019 Umputun</span>
      <a class="navbar-text" href="https://github.com/umputun/feed-master">Open Source, MIT License</a>
     </nav>
+
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+    </script>
 
 </body>
 
