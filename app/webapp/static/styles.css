@@ -6,47 +6,32 @@ a:link {text-decoration: none !important;}
 a:hover {text-decoration: none !important;}
 
 table {
-    border-collapse: collapse;
-    border: 0;
-    margin: 0 auto;
-}
-
-.table td {
-    border-top: none;
-    padding: 15px 10px;
-    color: #393639;
+    border-collapse:collapse;
+    border:0;
+    margin-left:auto;
+    margin-right:auto;
+    width:95%;
 }
 
 #wrap {min-height: 100%;}
 
-#header-row {font-size:1.2em; color:#595959;}
+#header-row {width:95%; font-size:1.2em; color:#595959;}
 #header-row th {padding:20px 10px 10px 10px;font-size:100%; border-bottom:0 solid #adadad; border-top:0;}
-
-.table tr:not(:first-child) td {
-    border-top: 1px solid #dee2e6;
-}
-
-.table .play-cell {
-    vertical-align: top;
-    text-align: center;
-}
-
-.table .text-cell {
-    vertical-align: top;
-    text-align: left;
-}
+#header-row td {padding:3px 10px; align:right; color:#393639;}
 
 nav {
     background-color: #fdc07a;
 }
 
+
 #main {
-    padding: 15px;
+    margin-top: 60px;
 }
+
 
 #name {
     margin-left: 2em;
-    font-size: 1.2em;
+    font-size: 0.9em;
     font-weight: 200;
     color: #686434;
 }
@@ -56,15 +41,19 @@ nav {
 }
 
 .title {
-    font-size:0.9em;
+    font-size:1.3em;
     line-height: 1.6em;
+
+    float: left;
+    padding-left: 57px;
+    width: 80%;
 }
 
 .timestamp {
     float: right;
-    margin-top: 15px;
-    margin-bottom: 7px;
-    font-size: 0.9em;
+    margin-left: 2em;
+    margin-top: 5px;
+    font-size: 1em;
 }
 
 .title a:link {
@@ -89,33 +78,5 @@ nav {
 
 #footer {
     font-size:1em;
-}
-
-.navbar-text {
-    padding-top: 3px;
-    padding-bottom: 3px;
-}
-
-@media (max-width: 767px) {
-    #main {
-        padding: 10px;
-    }
-
-    #name {
-        margin-left: 0;
-        font-size: 1.1em;
-    }
-
-    #feeds-info {
-        font-size: 1.1em;
-    }
-
-    .table .play-cell {
-        padding-top: 20px;
-    }
-
-    .timestamp {
-        font-size: 0.8em;
-        margin-top: 20px;
-    }
+    height: 30px;
 }
