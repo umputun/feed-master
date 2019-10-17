@@ -96,6 +96,18 @@ nav {
     padding-bottom: 3px;
 }
 
+.navbar-brand {
+    padding-left: 40px;
+    position: relative;
+}
+
+.navbar-brand img {
+    position: absolute;
+    left: 0;
+    top: -1px;
+    display: block;
+}
+
 @media (max-width: 767px) {
     #main {
         padding: 10px;
