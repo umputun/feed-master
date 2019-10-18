@@ -6,18 +6,42 @@ a:link {text-decoration: none !important;}
 a:hover {text-decoration: none !important;}
 
 table {
-    border-collapse:collapse;
-    border:0;
-    margin-left:auto;
-    margin-right:auto;
-    width:95%;
+    border-collapse: collapse;
+    border: 0;
+    margin: 0 auto;
+}
+
+.table td {
+    border-top: none;
+    padding: 15px 10px;
+    color: #393639;
 }
 
 #wrap {min-height: 100%;}
 
-#header-row {width:95%; font-size:1.2em; color:#595959;}
+#header-row {font-size:1.2em; color:#595959;}
 #header-row th {padding:20px 10px 10px 10px;font-size:100%; border-bottom:0 solid #adadad; border-top:0;}
-#header-row td {padding:3px 10px; align:right; color:#393639;}
+
+.table tr:not(:first-child) td {
+    border-top: 1px solid #dee2e6;
+}
+
+.table .play-cell {
+    vertical-align: top;
+    text-align: center;
+}
+
+.table .text-cell {
+    vertical-align: middle;
+    text-align: left;
+    padding-top: 20px;
+}
+
+.title {
+    font-size: 1.0em;
+    line-height: 1.4em;
+    display: inline;
+}
 
 nav {
     background-color: #fdc07a;
@@ -25,35 +49,25 @@ nav {
 
 
 #main {
-    margin-top: 60px;
+    padding: 15px;
 }
 
 
 #name {
-    margin-left: 2em;
-    font-size: 0.9em;
+    font-size: 1.3em;
     font-weight: 200;
     color: #686434;
 }
 
 #feeds-info {
-    font-size:1.2em;
-}
-
-.title {
     font-size:1.3em;
-    line-height: 1.6em;
-
-    float: left;
-    padding-left: 57px;
-    width: 80%;
 }
 
 .timestamp {
     float: right;
-    margin-left: 2em;
-    margin-top: 5px;
-    font-size: 1em;
+    margin-top: 15px;
+    margin-bottom: 7px;
+    font-size: 0.95em;
 }
 
 .title a:link {
@@ -61,22 +75,90 @@ nav {
 }
 
 .player {
-    float: left;
-    font-size:1.4em;
+    font-size:1.35em;
+}
+
+.player:hover {
+    opacity: 0.8;
 }
 
 .fa-info-circle {
     color: rgb(183, 184, 181);
-    font-size: 1em;
-    margin-left: 0.2em;
+    font-size: 1.1em;
+    margin-left: 3px;
+}
+.fa-info-circle:hover {
+    opacity: 0.8;
+    cursor: help;
 }
 .fa-volume-up {
     font-size:1.4em;
     color: rgb(166, 170, 128);
-    size: 3em; 
 }
 
 #footer {
     font-size:1em;
-    height: 30px;
+}
+
+.navbar-text {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.navbar-brand {
+    padding-left: 40px;
+    position: relative;
+    flex: 1 100%;
+    margin-bottom: 5px;
+}
+
+.navbar-brand img {
+    position: absolute;
+    left: 0;
+    top: -1px;
+    display: block;
+}
+
+@media (max-width: 1000px) {
+    .navbar {
+        flex-direction: column;
+        align-items: normal;
+    }
+
+    #name {
+        margin: 5px 0;
+    }
+}
+
+@media (max-width: 767px) {
+    #name {
+        margin: 5px 0;
+        font-size: 1.15em;
+    }
+
+    #feeds-info {
+        font-size: 1.1em;
+    }
+
+    .table td {
+        padding: 10px 5px;
+    }
+
+    .table .text-cell {
+        padding: 13px 10px;
+    }
+
+    .player {
+        font-size: 1.3em;
+    }
+
+    .timestamp {
+        font-size: 0.9em;
+        margin-top: 20px;
+    }
+
+    .title {
+        font-size: 0.95em;
+        line-height: 1.5em;
+    }
 }
