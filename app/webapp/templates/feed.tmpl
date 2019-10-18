@@ -148,7 +148,7 @@
 </header>
 
 <main class="ump-feed-master">
-
+    {{range .Items}}
     <div class="ump-feed-master__data-row">
         <div class="ump-feed-master__data-row-player-cell">
             <a href="{{.Enclosure.URL}}" target="_blank">
@@ -168,7 +168,7 @@
             <div class="ump-feed-master-timestamp-cell">{{.DT.Format "02 Jan 15:04"}}</div>
         </div>
     </div>
-
+    {{end}}
 </main>
 
 <footer class="ump-feed-master-footer">
