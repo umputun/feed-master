@@ -100,6 +100,11 @@ nav {
     font-size:1em;
 }
 
+.navbar {
+    padding: 10px 0;
+}
+
+
 .navbar-text {
     padding-top: 3px;
     padding-bottom: 3px;

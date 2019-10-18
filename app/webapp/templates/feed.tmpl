@@ -28,16 +28,18 @@
 
 <body>
 
-    <nav id="navbar" class="navbar navbar-light fixed-top container">
-        <a class="navbar-brand" href="#">
-            <img src="/static/podcast.png" width="30" height="30" alt="">
-            Feed Master
-        </a>
-		<div id="name"><a href="{{.Link}}">{{.Name}}</a> - {{.Description}}</div>
+    <nav id="navbar" class="navbar navbar-light fixed-top">
+		<div class="container">
+			<a class="navbar-brand" href="#">
+				<img src="/static/podcast.png" width="30" height="30" alt="">
+				Feed Master
+			</a>
+			<div id="name"><a href="{{.Link}}">{{.Name}}</a> - {{.Description}}</div>
 
-        <div class="navbar-text" id="feeds-info">
-            {{len .Items}} feeds, {{.LastUpdate.Format "02 Jan 2006 15:04:05 MST"}}
-        </div>
+			<div class="navbar-text" id="feeds-info">
+				{{len .Items}} feeds, {{.LastUpdate.Format "02 Jan 2006 15:04:05 MST"}}
+			</div>
+		</div>
     </nav>
 
 
@@ -62,9 +64,11 @@
         </table>
     </div> 
     
-    <nav class="navbar bottom navbar-light container" id="footer">
-     <span class="navbar-text">Copyright (c) 2019 Umputun</span>
-     <a class="navbar-text" href="https://github.com/umputun/feed-master">Open Source, MIT License</a>
+    <nav class="navbar bottom navbar-light" id="footer">
+		<div class="container">
+			<span class="navbar-text">Copyright (c) 2019 Umputun</span>
+			<a class="navbar-text" href="https://github.com/umputun/feed-master">Open Source, MIT License</a>
+		</div>
     </nav>
 
 </body>
