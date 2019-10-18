@@ -20,7 +20,7 @@
         });
 
         function setContentPadding() {
-            $('#main').css('padding-top', $('#navbar').outerHeight() + 'px');
+            $('#main').css('padding-top', $('#navbar').outerHeight() + 15 + 'px');
         }
     </script>
 </head>
@@ -28,11 +28,11 @@
 
 <body>
 
-    <nav id="navbar" class="navbar navbar-light fixed-top">
-        <div class="navbar-brand" href="#">
+    <nav id="navbar" class="navbar navbar-light fixed-top container">
+        <a class="navbar-brand" href="#">
             <img src="/static/podcast.png" width="30" height="30" alt="">
             Feed Master
-        </div>
+        </a>
 		<div id="name"><a href="{{.Link}}">{{.Name}}</a> - {{.Description}}</div>
 
         <div class="navbar-text" id="feeds-info">
@@ -41,7 +41,7 @@
     </nav>
 
 
-    <div id='main'>
+    <div id='main' class='container'>
         <table class='table' id='header-row'>
             <tbody>
                 {{range .Items}}
@@ -62,7 +62,7 @@
         </table>
     </div> 
     
-    <nav class="navbar bottom navbar-light" id="footer">
+    <nav class="navbar bottom navbar-light container" id="footer">
      <span class="navbar-text">Copyright (c) 2019 Umputun</span>
      <a class="navbar-text" href="https://github.com/umputun/feed-master">Open Source, MIT License</a>
     </nav>

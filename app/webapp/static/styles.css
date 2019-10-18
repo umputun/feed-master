@@ -34,13 +34,13 @@ table {
 .table .text-cell {
     vertical-align: middle;
     text-align: left;
+    padding-top: 20px;
 }
 
 .title {
-    font-size: 1.2em;
+    font-size: 1.0em;
     line-height: 1.4em;
-    padding-top: 2px;
-    display: inline-block;
+    display: inline;
 }
 
 nav {
@@ -52,7 +52,6 @@ nav {
 }
 
 #name {
-    margin-left: 2em;
     font-size: 1.3em;
     font-weight: 200;
     color: #686434;
@@ -66,7 +65,7 @@ nav {
     float: right;
     margin-top: 15px;
     margin-bottom: 7px;
-    font-size: 1.1em;
+    font-size: 0.95em;
 }
 
 .title a:link {
@@ -74,13 +73,21 @@ nav {
 }
 
 .player {
-    font-size:1.4em;
+    font-size:1.35em;
+}
+
+.player:hover {
+    opacity: 0.8;
 }
 
 .fa-info-circle {
     color: rgb(183, 184, 181);
     font-size: 1.1em;
     margin-left: 3px;
+}
+.fa-info-circle:hover {
+    opacity: 0.8;
+    cursor: help;
 }
 .fa-volume-up {
     font-size:1.4em;
@@ -99,6 +106,8 @@ nav {
 .navbar-brand {
     padding-left: 40px;
     position: relative;
+    flex: 1 100%;
+    margin-bottom: 5px;
 }
 
 .navbar-brand img {
@@ -108,22 +117,33 @@ nav {
     display: block;
 }
 
-@media (max-width: 767px) {
-    #main {
-        padding: 10px;
+@media (max-width: 1000px) {
+    .navbar {
+        flex-direction: column;
+        align-items: normal;
     }
 
     #name {
         margin: 5px 0;
-        font-size: 1.1em;
+    }
+}
+
+@media (max-width: 767px) {
+    #name {
+        margin: 5px 0;
+        font-size: 1.15em;
     }
 
     #feeds-info {
         font-size: 1.1em;
     }
 
-    .table .play-cell {
-        padding-top: 20px;
+    .table td {
+        padding: 10px 5px;
+    }
+
+    .table .text-cell {
+        padding: 13px 10px;
     }
 
     .player {
@@ -136,9 +156,7 @@ nav {
     }
 
     .title {
-        font-size: 0.9em;
+        font-size: 0.95em;
         line-height: 1.5em;
-        padding-top: 8px;
-        display: inline-block;
     }
 }
