@@ -1,23 +1,57 @@
-html, body {height: 100%;margin: 0; }
-body  {background-color: rgb(247, 247, 247);font: normal normal normal 13px/18px 'Droid+Sans+Mono', Verdana, Helvetica, Arial, sans-serif; color:rgb(12, 7, 78);}
-
-a {color:rgb(48, 69, 97)}
-a:link {text-decoration: none !important;}
-a:hover {text-decoration: none !important;}
-
-table {
-    border-collapse:collapse;
-    border:0;
-    margin-left:auto;
-    margin-right:auto;
-    width:95%;
+html,
+body {
+    height: 100%;
+    margin: 0;
 }
 
-#wrap {min-height: 100%;}
+body {
+    background-color: rgb(247, 247, 247);
+    font: normal normal normal 13px/18px 'Droid+Sans+Mono', Verdana, Helvetica, Arial, sans-serif;
+    color: rgb(12, 7, 78);
+}
 
-#header-row {width:95%; font-size:1.2em; color:#595959;}
-#header-row th {padding:20px 10px 10px 10px;font-size:100%; border-bottom:0 solid #adadad; border-top:0;}
-#header-row td {padding:3px 10px; align:right; color:#393639;}
+a {
+    color: rgb(48, 69, 97)
+}
+
+a:link {
+    text-decoration: none !important;
+}
+
+a:hover {
+    text-decoration: none !important;
+}
+
+table {
+    border-collapse: collapse;
+    border: 0;
+    margin-left: auto;
+    margin-right: auto;
+    width: 95%;
+}
+
+#wrap {
+    min-height: 100%;
+}
+
+#header-row {
+    width: 95%;
+    font-size: 1.2em;
+    color: #595959;
+}
+
+#header-row th {
+    padding: 20px 10px 10px 10px;
+    font-size: 100%;
+    border-bottom: 0 solid #adadad;
+    border-top: 0;
+}
+
+#header-row td {
+    padding: 3px 10px;
+    align: right;
+    color: #393639;
+}
 
 nav {
     background-color: #fdc07a;
@@ -37,11 +71,11 @@ nav {
 }
 
 #feeds-info {
-    font-size:1.2em;
+    font-size: 1.2em;
 }
 
 .title {
-    font-size:1.3em;
+    font-size: 1.3em;
     line-height: 1.6em;
 
     float: left;
@@ -62,7 +96,7 @@ nav {
 
 .player {
     float: left;
-    font-size:1.4em;
+    font-size: 1.4em;
 }
 
 .fa-info-circle {
@@ -70,13 +104,159 @@ nav {
     font-size: 1em;
     margin-left: 0.2em;
 }
+
 .fa-volume-up {
-    font-size:1.4em;
+    font-size: 1.4em;
     color: rgb(166, 170, 128);
-    size: 3em; 
+    size: 3em;
 }
 
 #footer {
-    font-size:1em;
+    font-size: 1em;
     height: 30px;
+}
+
+.ump-feed-master-header {
+    width: 100%;
+    padding: .75rem 1rem;
+    font-size: 1.25rem;
+
+    background: #0473b4;
+}
+
+.ump-feed-master-header a:hover {
+    color: #fff;
+}
+
+.ump-feed-master-header__brand {
+    display: flex;
+}
+
+.ump-feed-master-header__meta {
+    margin-left: calc(38px + 1rem);
+    margin-top: 0.275rem;
+    display: flex;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.875rem;
+}
+
+@media (min-width: 760px) {
+    .ump-feed-master-header__meta {
+        margin-left: calc(58px + 1rem);
+    }
+}
+
+@media (min-width: 1240px) {
+    .ump-feed-master-header {
+        display: flex;
+    }
+
+    .ump-feed-master-header__brand {
+        align-items: center;
+    }
+
+    .ump-feed-master-header__meta {
+        margin-left: auto;
+        margin-top: 0;
+        display: flex;
+        align-items: center;
+        font-size: 1rem;
+    }
+}
+
+.ump-feed-master-logo {
+    width: 38px;
+    height: 38px;
+    display: block;
+    margin-right: 1rem;
+    filter: invert(100%);
+}
+
+@media (min-width: 760px) {
+    .ump-feed-master-logo {
+        width: 58px;
+        height: 58px;
+    }
+}
+
+.ump-feed-master-name {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: bold;
+    display: block;
+    font-size: 1.25rem;
+    white-space: nowrap;
+    padding-bottom: 0.125em;
+}
+
+.ump-feed-master-info {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.ump-feed-master-header-link {
+    color: inherit;
+    text-decoration: none;
+    display: inline-block;
+    padding: 4px 0;
+    border-bottom: 1px dotted rgba(255, 255, 255, 0.75);
+}
+
+.ump-feed-master__data-row {
+    display: flex;
+    padding: 1rem;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(4, 115, 180, 0.17);
+}
+
+.ump-feed-master__data-row-player-cell {
+    width: 38px;
+    text-align: center;
+}
+
+@media (min-width: 760px) {
+    .ump-feed-master__data-row-player-cell {
+        width: 58px;
+    }
+}
+
+.ump-feed-master-program-name {
+    color: rgba(10, 107, 165, 0.87)
+}
+
+.ump-feed-master__data-row-info-cell {
+    flex: 1;
+    padding-left: 0.75rem;
+}
+
+.ump-feed-master-timestamp-cell {
+    margin-left: auto;
+    color: rgba(0, 0, 0, 0.35);
+    padding-top: 0.5rem;
+    font-size: .825rem;
+}
+
+@media (min-width: 1240px) {
+    .ump-feed-master__data-row-info-cell {
+        display: flex;
+    }
+
+    .ump-feed-master-timestamp-cell {
+        padding-top: 0;
+        font-size: 1rem;
+    }
+}
+
+.ump-feed-master-footer {
+    font-size: .825rem;
+    text-align: center;
+    padding: 1rem;
+    background: rgba(4, 115, 180, 0.17);
+}
+
+.fa-volume-up {
+    color: #0473b4;
+}
+
+.fa-info-circle {
+    color: rgba(4, 115, 180, 0.4);
 }
