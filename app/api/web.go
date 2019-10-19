@@ -33,6 +33,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			Description string
 			Link        string
 			LastUpdate  time.Time
+			Feeds       int
 			Version     string
 		}{
 			Items:       items,
@@ -40,6 +41,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			Description: s.Conf.Feeds[feedName].Description,
 			Link:        s.Conf.Feeds[feedName].Link,
 			LastUpdate:  items[0].DT,
+			Feeds:       len(s.Conf.Feeds),
 			Version:     s.Version,
 		}
 
