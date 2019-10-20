@@ -2,20 +2,12 @@ FROM umputun/baseimage:buildgo-latest as build
 
 ARG COVERALLS_TOKEN
 ARG CI
-ARG TRAVIS
-ARG TRAVIS_BRANCH
-ARG TRAVIS_COMMIT
-ARG TRAVIS_JOB_ID
-ARG TRAVIS_JOB_NUMBER
-ARG TRAVIS_OS_NAME
-ARG TRAVIS_PULL_REQUEST
-ARG TRAVIS_PULL_REQUEST_SHA
-ARG TRAVIS_REPO_SLUG
-ARG TRAVIS_TAG
-ARG TRAVIS_BUILD_NUMBER
+ARG GIT_BRANCH
 
-WORKDIR /go/src/github.com/umputun/feed-master
-ADD . /go/src/github.com/umputun/feed-master
+ENV GOFLAGS="-mod=vendor"
+
+ADD . /build/feed-master
+WORKDIR /build/feed-master
 
 # run tests
 RUN cd app && go test ./...
@@ -35,16 +27,17 @@ RUN if [ -z "$COVERALLS_TOKEN" ] ; then \
     cat .cover/cover.out
 
 RUN \
-    if [ -z "$TRAVIS" ] ; then \
-    echo "runs outside of travis" && version=$(/script/git-rev.sh); \
-    else version=${TRAVIS_BRANCH}-${TRAVIS_BUILD_NUMBER}-${TRAVIS_COMMIT:0:7}-$(date +%Y%m%dT%H:%M:%S); fi && \
+    if [ -z "$CI" ] ; then \
+    echo "runs outside of CI" && version=$(/script/git-rev.sh); \
+    else version=${GIT_BRANCH}-${GITHUB_SHA:0:7}-$(date +%Y%m%dT%H:%M:%S); fi && \
     echo "version=$version" && \
-    go build -o feed-master -ldflags "-X main.revision=${version} -s -w" ./app
+    go build -o feed-master -ldflags "-X main.revision=${version} -s -w" ./app && \
+    ls -la /build/feed-master
 
 
 FROM umputun/baseimage:app-latest
 
-COPY --from=build /go/src/github.com/umputun/feed-master/feed-master /srv/feed-master
+COPY --from=build /build/feed-master/feed-master /srv/feed-master
 COPY app/webapp /srv/webapp
 RUN \
     chown -R app:app /srv && \
