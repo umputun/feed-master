@@ -1,3 +1,4 @@
+// Package feed describes RSS format and provides parsing
 package feed
 
 // based on http://siongui.github.io/2015/03/03/go-parse-web-feed-rss-atom/
@@ -19,15 +20,14 @@ import (
 
 // Rss2 feed
 type Rss2 struct {
-	XMLName xml.Name `xml:"rss"`
-	Version string   `xml:"version,attr"`
-
-	Title         string `xml:"channel>title"`
-	Language      string `xml:"channel>lang"`
-	Link          string `xml:"channel>link"`
-	Description   string `xml:"channel>description"`
-	PubDate       string `xml:"channel>pubDate"`
-	LastBuildDate string `xml:"channel>lastBuildDate"`
+	XMLName       xml.Name `xml:"rss"`
+	Version       string   `xml:"version,attr"`
+	Title         string   `xml:"channel>title"`
+	Language      string   `xml:"channel>lang"`
+	Link          string   `xml:"channel>link"`
+	Description   string   `xml:"channel>description"`
+	PubDate       string   `xml:"channel>pubDate"`
+	LastBuildDate string   `xml:"channel>lastBuildDate"`
 
 	ItemList []Item `xml:"channel>item"`
 }
