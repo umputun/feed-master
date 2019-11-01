@@ -1,4 +1,4 @@
-# Feed Master
+# Feed Master [![Build Status](https://github.com/umputun/feed-master/workflows/build/badge.svg)](https://github.com/umputun/feed-master/actions)
 
 Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly sorted and podcast-client friendly.
 
