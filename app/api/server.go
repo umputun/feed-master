@@ -1,3 +1,4 @@
+// Package api provides rest-like server 
 package api
 
 import (

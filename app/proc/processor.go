@@ -1,3 +1,5 @@
+// Package proc provided the primary blockin loop
+// updating from sources and making feeds
 package proc
 
 import (
