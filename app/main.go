@@ -50,12 +50,12 @@ func main() {
 
 func loadConfig(fname string) (res *proc.Conf, err error) {
 	res = &proc.Conf{}
-	data, err := ioutil.ReadFile(fname)
+	data, err := ioutil.ReadFile(fname) // nolint
 	if err != nil {
 		return nil, err
 	}
 
-	if err = yaml.Unmarshal(data, res); err != nil {
+	if err := yaml.Unmarshal(data, res); err != nil {
 		return nil, err
 	}
 

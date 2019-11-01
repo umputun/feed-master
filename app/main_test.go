@@ -28,7 +28,7 @@ feeds:
 update: 600
 `)
 
-	assert.Nil(t, ioutil.WriteFile("/tmp/fm.yml", data, 0777), "failed write yml")
+	assert.Nil(t, ioutil.WriteFile("/tmp/fm.yml", data, 0777), "failed write yml") // nolint
 
 	r, err := loadConfig("/tmp/fm.yml")
 	assert.Nil(t, err)

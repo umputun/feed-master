@@ -14,10 +14,7 @@ WORKDIR /build/feed-master
 RUN \
     if [ -z "$SKIP_TEST" ] ; then \
     go test -timeout=30s  ./... && \
-    golangci-lint run --out-format=tab --disable-all --tests=false --enable=interfacer \
-    --enable=unconvert --enable=megacheck --enable=structcheck --enable=gocyclo --enable=dupl \
-    --enable=misspell --enable=maligned --enable=unparam \
-    --enable=varcheck --enable=deadcode --enable=typecheck --enable=errcheck ./... ; \
+    golangci-lint run ; \
     else echo "skip tests and linter" ; fi
 
 RUN \

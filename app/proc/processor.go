@@ -69,7 +69,7 @@ func (p *Processor) Do() {
 	}
 }
 
-func (p *Processor) feed(name string, url string, max int) {
+func (p *Processor) feed(name, url string, max int) {
 
 	rss, err := feed.Parse(url)
 	if err != nil {

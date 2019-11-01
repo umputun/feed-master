@@ -94,7 +94,7 @@ type Entry struct {
 
 // Parse gets url to rss feed and returns Rss2 items
 func Parse(uri string) (result Rss2, err error) {
-	resp, err := http.Get(uri)
+	resp, err := http.Get(uri) // nolint
 	if err != nil {
 		return result, err
 	}
@@ -130,9 +130,9 @@ func atom1ToRss2(a Atom1) Rss2 {
 		r.ItemList[i].Title = entry.Title
 		r.ItemList[i].Link = entry.Link.Href
 		if entry.Content == "" {
-			r.ItemList[i].Description = template.HTML(entry.Summary)
+			r.ItemList[i].Description = template.HTML(entry.Summary) // nolint
 		} else {
-			r.ItemList[i].Description = template.HTML(entry.Content)
+			r.ItemList[i].Description = template.HTML(entry.Content) // nolint
 		}
 	}
 	return r

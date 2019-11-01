@@ -26,7 +26,7 @@ func NewBoltDB(dbFile string) (*BoltDB, error) {
 		return nil, err
 	}
 	result := BoltDB{}
-	db, err := bolt.Open(dbFile, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	db, err := bolt.Open(dbFile, 0600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
 	if err != nil {
 		return nil, err
 	}
