@@ -2,7 +2,7 @@
 github.com/boltdb/bolt
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
-# github.com/didip/tollbooth v4.0.0+incompatible
+# github.com/didip/tollbooth v4.0.2+incompatible
 github.com/didip/tollbooth
 github.com/didip/tollbooth/errors
 github.com/didip/tollbooth/libstring
@@ -16,14 +16,14 @@ github.com/go-chi/chi/middleware
 github.com/go-chi/render
 # github.com/go-pkgz/lcw v0.3.1
 github.com/go-pkgz/lcw
-# github.com/go-pkgz/lgr v0.4.0
+# github.com/go-pkgz/lgr v0.6.3
 github.com/go-pkgz/lgr
-# github.com/go-pkgz/rest v1.4.0
+# github.com/go-pkgz/rest v1.4.1
 github.com/go-pkgz/rest
 github.com/go-pkgz/rest/logger
-# github.com/go-pkgz/syncs v1.1.0
+# github.com/go-pkgz/syncs v1.1.1
 github.com/go-pkgz/syncs
-# github.com/hashicorp/golang-lru v0.5.1
+# github.com/hashicorp/golang-lru v0.5.3
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
 # github.com/jessevdk/go-flags v1.4.0
@@ -36,9 +36,11 @@ github.com/pkg/errors
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
-# golang.org/x/sys v0.0.0-20190312061237-fead79001313
+# golang.org/x/sys v0.0.0-20191010194322-b09406accb47
 golang.org/x/sys/unix
-# golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
+# golang.org/x/time v0.0.0-20190921001708-c4c64cad1fd0
 golang.org/x/time/rate
-# gopkg.in/yaml.v2 v2.2.2
+# gopkg.in/tucnak/telebot.v2 v2.0.0-20191005061224-d0707a9d73c4
+gopkg.in/tucnak/telebot.v2
+# gopkg.in/yaml.v2 v2.2.4
 gopkg.in/yaml.v2
