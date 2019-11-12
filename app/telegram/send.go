@@ -15,8 +15,12 @@ var (
 	telegramChatID = os.Getenv("TELEGRAM_CHAT_ID")
 )
 
-// Send message
+// Send message, skip if telegram token empty
 func Send(item feed.Item) {
+	if telegramToken == "" {
+		return
+	}
+
 	bot, err := tb.NewBot(tb.Settings{
 		Token: telegramToken,
 	})
