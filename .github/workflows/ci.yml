@@ -22,8 +22,10 @@ jobs:
 
       - name: build and test
         run: |
+          export GO111MODULE=on
           export TZ="America/Chicago"
-          go test -mod=vendor -timeout=60s -covermode=count -coverprofile=$GITHUB_WORKSPACE/profile.cov_tmp ./...
+          go get -v
+          go test -timeout=60s -covermode=count -coverprofile=$GITHUB_WORKSPACE/profile.cov_tmp ./...
           cat $GITHUB_WORKSPACE/profile.cov_tmp | grep -v "_mock.go" > $GITHUB_WORKSPACE/profile.cov
 
       - name: install golangci-lint and goveralls
@@ -36,15 +38,13 @@ jobs:
 
       - name: submit coverage
         run: |
-          export GIT_BRANCH="${GITHUB_REF/refs\/heads\//}"
-          export GIT_TAG="${GITHUB_REF/refs\/tags\//}"
-          if [[ "$GIT_TAG" != "$GITHUB_REF" ]]; then
-            export GIT_BRANCH=$GIT_TAG
-          fi
-          echo "coverage for branch $GIT_BRANCH"
-          $(go env GOPATH)/bin/goveralls -service="GitHub Action" -coverprofile=$GITHUB_WORKSPACE/profile.cov
+          export GIT_BRANCH=$GITHUB_REF
+          $(go env GOPATH)/bin/goveralls -service="github" -coverprofile=$GITHUB_WORKSPACE/profile.cov
         env:
-          COVERALLS_TOKEN: ${{secrets.COVERALLS_TOKEN}}
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: build image
         run: docker build --build-arg SKIP_TEST=true --build-arg CI=github .
+
+
+
