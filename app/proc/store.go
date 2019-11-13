@@ -35,7 +35,8 @@ func NewBoltDB(dbFile string) (*BoltDB, error) {
 }
 
 // Save to bolt, skip if found
-func (b BoltDB) Save(fmFeed string, item feed.Item) error {
+func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
+	var created bool
 
 	key, err := func() ([]byte, error) {
 		ts, err := time.Parse(time.RFC1123Z, item.PubDate)
@@ -50,10 +51,10 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) error {
 	}()
 
 	if err != nil {
-		return err
+		return created, err
 	}
 
-	return b.DB.Update(func(tx *bolt.Tx) error {
+	err = b.DB.Update(func(tx *bolt.Tx) error {
 		bucket, e := tx.CreateBucketIfNotExists([]byte(fmFeed))
 		if e != nil {
 			return e
@@ -68,8 +69,16 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) error {
 		}
 
 		log.Printf("[INFO] save %s - %s - %s - %s", string(key), fmFeed, item.Title, item.GUID)
-		return bucket.Put(key, jdata)
+		e = bucket.Put(key, jdata)
+		if e != nil {
+			return e
+		}
+
+		created = true
+		return e
 	})
+
+	return created, err
 }
 
 // Load from bold for given feed, up to max

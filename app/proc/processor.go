@@ -93,8 +93,13 @@ func (p *Processor) feed(name, url, telegramChannel string, max int) {
 			continue
 		}
 
-		if err := p.Store.Save(name, item); err != nil {
+		created, err := p.Store.Save(name, item)
+		if err != nil {
 			log.Printf("[WARN] failed to save %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
+		}
+
+		if !created {
+			return
 		}
 
 		if err := p.Telegram.Send(telegramChannel, item); err != nil {
