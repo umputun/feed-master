@@ -12,7 +12,6 @@ import (
 	log "github.com/go-pkgz/lgr"
 
 	"github.com/umputun/feed-master/app/feed"
-	"github.com/umputun/feed-master/app/telegram"
 )
 
 // BoltDB store
@@ -68,7 +67,6 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) error {
 			return jerr
 		}
 
-		go telegram.Send(item)
 		log.Printf("[INFO] save %s - %s - %s - %s", string(key), fmFeed, item.Title, item.GUID)
 		return bucket.Put(key, jdata)
 	})
