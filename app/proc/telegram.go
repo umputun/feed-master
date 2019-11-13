@@ -1,7 +1,10 @@
 package proc
 
 import (
+	"fmt"
+
 	log "github.com/go-pkgz/lgr"
+	"github.com/microcosm-cc/bluemonday"
 	tb "gopkg.in/tucnak/telebot.v2"
 
 	"github.com/umputun/feed-master/app/feed"
@@ -33,16 +36,29 @@ func (client TelegramClient) Send(channelID string, item feed.Item) error {
 		return nil
 	}
 
-	_, err := client.Bot.Send(
+	description := client.deleteNotSupportHTMLTag(string(item.Description))
+	messageHTML := fmt.Sprintf("%s%s%s", item.Title, description, item.Enclosure.URL)
+
+	message, err := client.Bot.Send(
 		recipient{chatID: channelID},
-		item.Enclosure.URL,
+		messageHTML,
+		tb.ModeHTML,
 	)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG] send telegram message")
+	log.Printf("[DEBUG] send telegram message: \n%s", message.Text)
 	return err
+}
+
+// https://core.telegram.org/bots/api#html-style
+func (client TelegramClient) deleteNotSupportHTMLTag(html string) string {
+	p := bluemonday.NewPolicy()
+
+	p.AllowElements("b", "strong", "i", "em", "code", "pre")
+
+	return p.Sanitize(html)
 }
 
 type recipient struct {

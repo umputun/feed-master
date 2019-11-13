@@ -13,6 +13,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/kr/pretty v0.1.0 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a // indirect
