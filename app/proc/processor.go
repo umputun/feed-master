@@ -21,12 +21,13 @@ type Processor struct {
 // Conf for feeds config yml
 type Conf struct {
 	Feeds map[string]struct {
-		Title       string `yaml:"title"`
-		Description string `yaml:"description"`
-		Link        string `yaml:"link"`
-		Image       string `yaml:"image"`
-		Language    string `yaml:"language"`
-		Sources     []struct {
+		Title           string `yaml:"title"`
+		Description     string `yaml:"description"`
+		Link            string `yaml:"link"`
+		Image           string `yaml:"image"`
+		Language        string `yaml:"language"`
+		TelegramChannel string `yaml:"telegram_channel"`
+		Sources         []struct {
 			Name string `yaml:"name"`
 			URL  string `yaml:"url"`
 		} `yaml:"sources"`
