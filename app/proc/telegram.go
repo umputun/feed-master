@@ -2,6 +2,7 @@ package proc
 
 import (
 	"fmt"
+	"strings"
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/microcosm-cc/bluemonday"
@@ -36,12 +37,9 @@ func (client TelegramClient) Send(channelID string, item feed.Item) error {
 		return nil
 	}
 
-	description := client.tagLinkOnlySupport(string(item.Description))
-	messageHTML := fmt.Sprintf("%s%s%s", item.Title, description, item.Enclosure.URL)
-
 	message, err := client.Bot.Send(
 		recipient{chatID: channelID},
-		messageHTML,
+		client.getMessageHTML(item),
 		tb.ModeHTML,
 	)
 	if err != nil {
@@ -57,6 +55,17 @@ func (client TelegramClient) tagLinkOnlySupport(html string) string {
 	p := bluemonday.NewPolicy()
 	p.AllowAttrs("href").OnElements("a")
 	return p.Sanitize(html)
+}
+
+func (client TelegramClient) getMessageHTML(item feed.Item) string {
+	title := strings.TrimSpace(item.Title)
+
+	description := client.tagLinkOnlySupport(string(item.Description))
+	description = strings.TrimSpace(description)
+
+	messageHTML := fmt.Sprintf("%s\n\n%s\n\n%s", title, description, item.Enclosure.URL)
+
+	return messageHTML
 }
 
 type recipient struct {
