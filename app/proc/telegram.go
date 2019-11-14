@@ -41,6 +41,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) error {
 		recipient{chatID: channelID},
 		client.getMessageHTML(item),
 		tb.ModeHTML,
+		tb.NoPreview,
 	)
 	if err != nil {
 		return err
