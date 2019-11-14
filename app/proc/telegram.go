@@ -36,7 +36,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) error {
 		return nil
 	}
 
-	description := client.deleteNotSupportHTMLTag(string(item.Description))
+	description := client.tagLinkOnlySupport(string(item.Description))
 	messageHTML := fmt.Sprintf("%s%s%s", item.Title, description, item.Enclosure.URL)
 
 	message, err := client.Bot.Send(
@@ -53,11 +53,9 @@ func (client TelegramClient) Send(channelID string, item feed.Item) error {
 }
 
 // https://core.telegram.org/bots/api#html-style
-func (client TelegramClient) deleteNotSupportHTMLTag(html string) string {
+func (client TelegramClient) tagLinkOnlySupport(html string) string {
 	p := bluemonday.NewPolicy()
-
-	p.AllowElements("b", "strong", "i", "em", "code", "pre")
-
+	p.AllowAttrs("href").OnElements("a")
 	return p.Sanitize(html)
 }
 
