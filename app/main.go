@@ -17,6 +17,7 @@ var opts struct {
 	DB   string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
 	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
 	Dbg  bool   `long:"dbg" env:"DEBUG" description:"debug mode"`
+	TG   string `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"Telegram token"`
 }
 
 var revision = "local"
@@ -36,8 +37,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] can't open db %s, %v", opts.DB, err)
 	}
+	tg, err := proc.NewTelegramClient(opts.TG)
+	if err != nil {
+		log.Fatalf("[ERROR] failed initilization telegram client %s, %v", opts.TG, err)
+	}
 
-	p := &proc.Processor{Conf: conf, Store: db}
+	p := &proc.Processor{Conf: conf, Store: db, Telegram: tg}
 	go p.Do()
 
 	server := api.Server{

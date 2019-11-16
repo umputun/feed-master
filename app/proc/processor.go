@@ -14,19 +14,21 @@ import (
 
 // Processor is a feed reader and store writer
 type Processor struct {
-	Conf  *Conf
-	Store *BoltDB
+	Conf     *Conf
+	Store    *BoltDB
+	Telegram *TelegramClient
 }
 
 // Conf for feeds config yml
 type Conf struct {
 	Feeds map[string]struct {
-		Title       string `yaml:"title"`
-		Description string `yaml:"description"`
-		Link        string `yaml:"link"`
-		Image       string `yaml:"image"`
-		Language    string `yaml:"language"`
-		Sources     []struct {
+		Title           string `yaml:"title"`
+		Description     string `yaml:"description"`
+		Link            string `yaml:"link"`
+		Image           string `yaml:"image"`
+		Language        string `yaml:"language"`
+		TelegramChannel string `yaml:"telegram_channel"`
+		Sources         []struct {
 			Name string `yaml:"name"`
 			URL  string `yaml:"url"`
 		} `yaml:"sources"`
@@ -51,9 +53,9 @@ func (p *Processor) Do() {
 		swg := syncs.NewSizedGroup(p.Conf.System.Concurrent, syncs.Preemptive)
 		for name, fm := range p.Conf.Feeds {
 			for _, src := range fm.Sources {
-				name, src := name, src
+				name, src, fm := name, src, fm
 				swg.Go(func(_ context.Context) {
-					p.feed(name, src.URL, p.Conf.System.MaxItems)
+					p.feed(name, src.URL, fm.TelegramChannel, p.Conf.System.MaxItems)
 				})
 			}
 			// keep up to MaxKeepInDB items in bucket
@@ -71,7 +73,7 @@ func (p *Processor) Do() {
 	}
 }
 
-func (p *Processor) feed(name, url string, max int) {
+func (p *Processor) feed(name, url, telegramChannel string, max int) {
 
 	rss, err := feed.Parse(url)
 	if err != nil {
@@ -91,8 +93,17 @@ func (p *Processor) feed(name, url string, max int) {
 			continue
 		}
 
-		if err := p.Store.Save(name, item); err != nil {
+		created, err := p.Store.Save(name, item)
+		if err != nil {
 			log.Printf("[WARN] failed to save %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
+		}
+
+		if !created {
+			return
+		}
+
+		if err := p.Telegram.Send(telegramChannel, item); err != nil {
+			log.Printf("[WARN] failed send telegram message %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
 		}
 	}
 }
