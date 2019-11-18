@@ -46,7 +46,7 @@ func TestTagLinkOnlySupport(t *testing.T) {
 </ul>
 <p><a href="https://podcast.umputun.com/media/ump_podcast437.mp3"><em>аудио</em></a></p>`
 
-	html_expected := `
+	htmlExpected := `
 Особое канадское искусство. 
 Результаты нашего странного эксперимента.
 Теперь можно и в <a href="https://t.me/uwp_podcast">телеграмме</a>
@@ -60,7 +60,7 @@ func TestTagLinkOnlySupport(t *testing.T) {
 
 	got := client.tagLinkOnlySupport(html)
 
-	assert.Equal(t, got, html_expected, "support only html tag a")
+	assert.Equal(t, got, htmlExpected, "support only html tag a")
 }
 
 func TestGetMessageHTML(t *testing.T) {
