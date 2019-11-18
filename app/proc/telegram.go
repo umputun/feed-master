@@ -19,7 +19,7 @@ type TelegramClient struct {
 // NewTelegramClient init telegram client
 func NewTelegramClient(token string) (*TelegramClient, error) {
 	if token == "" {
-		return nil, nil
+		return &TelegramClient{Bot: nil}, nil
 	}
 
 	bot, err := tb.NewBot(tb.Settings{

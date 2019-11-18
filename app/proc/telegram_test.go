@@ -14,7 +14,7 @@ func TestNewTelegramClientIfTokenEmpty(t *testing.T) {
 	client, err := NewTelegramClient(token)
 
 	assert.Nil(t, err)
-	assert.Nil(t, client)
+	assert.Nil(t, client.Bot)
 }
 
 func TestSendIfBotIsNil(t *testing.T) {
