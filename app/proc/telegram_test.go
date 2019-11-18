@@ -10,21 +10,18 @@ import (
 )
 
 func TestNewTelegramClientIfTokenEmpty(t *testing.T) {
-	token := ""
-	client, err := NewTelegramClient(token)
+	client, err := NewTelegramClient("")
 
 	assert.Nil(t, err)
 	assert.Nil(t, client.Bot)
 }
 
 func TestSendIfBotIsNil(t *testing.T) {
-	client := TelegramClient{
-		Bot: nil,
-	}
+	client, err := NewTelegramClient("")
 
-	item := feed.Item{}
-	got := client.Send("@channel", item)
+	got := client.Send("@channel", feed.Item{})
 
+	assert.Nil(t, err)
 	assert.Nil(t, got)
 }
 
