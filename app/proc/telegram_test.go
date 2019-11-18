@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	tb "gopkg.in/tucnak/telebot.v2"
 
 	"github.com/umputun/feed-master/app/feed"
 )
@@ -23,6 +24,16 @@ func TestSendIfBotIsNil(t *testing.T) {
 
 	item := feed.Item{}
 	got := client.Send("@channel", item)
+
+	assert.Nil(t, got)
+}
+
+func TestSendIfChannelIDEmpty(t *testing.T) {
+	client := TelegramClient{
+		Bot: &tb.Bot{},
+	}
+
+	got := client.Send("", feed.Item{})
 
 	assert.Nil(t, got)
 }
