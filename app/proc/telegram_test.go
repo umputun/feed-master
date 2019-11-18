@@ -34,3 +34,31 @@ func TestSendIfChannelIDEmpty(t *testing.T) {
 
 	assert.Nil(t, got)
 }
+
+func TestTagLinkOnlySupport(t *testing.T) {
+	html := `
+<li>Особое канадское искусство. </li>
+<li>Результаты нашего странного эксперимента.</li>
+<li>Теперь можно и в <a href="https://t.me/uwp_podcast">телеграмме</a></li>
+<li>Саботаж на местах.</li>
+<li>Их нравы: кумовство и коррупция.</li>
+<li>Вопросы и ответы</li>
+</ul>
+<p><a href="https://podcast.umputun.com/media/ump_podcast437.mp3"><em>аудио</em></a></p>`
+
+	html_expected := `
+Особое канадское искусство. 
+Результаты нашего странного эксперимента.
+Теперь можно и в <a href="https://t.me/uwp_podcast">телеграмме</a>
+Саботаж на местах.
+Их нравы: кумовство и коррупция.
+Вопросы и ответы
+
+<a href="https://podcast.umputun.com/media/ump_podcast437.mp3">аудио</a>`
+
+	client := TelegramClient{}
+
+	got := client.tagLinkOnlySupport(html)
+
+	assert.Equal(t, got, html_expected, "support only html tag a")
+}
