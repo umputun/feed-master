@@ -18,6 +18,10 @@ type TelegramClient struct {
 
 // NewTelegramClient init telegram client
 func NewTelegramClient(token string) (*TelegramClient, error) {
+	if token == "" {
+		return nil, nil
+	}
+
 	bot, err := tb.NewBot(tb.Settings{
 		Token: token,
 	})
@@ -33,6 +37,10 @@ func NewTelegramClient(token string) (*TelegramClient, error) {
 
 // Send message, skip if telegram token empty
 func (client TelegramClient) Send(channelID string, item feed.Item) error {
+	if client.Bot == nil {
+		return nil
+	}
+
 	if channelID == "" {
 		return nil
 	}
