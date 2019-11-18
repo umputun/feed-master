@@ -62,3 +62,20 @@ func TestTagLinkOnlySupport(t *testing.T) {
 
 	assert.Equal(t, got, html_expected, "support only html tag a")
 }
+
+func TestGetMessageHTML(t *testing.T) {
+	item := feed.Item{
+		Title:       "\tPodcast\n\t",
+		Description: "<p>News <a href='#'>Podcast Link</a></p>\n",
+		Enclosure: feed.Enclosure{
+			URL: "https://example.com",
+		},
+	}
+
+	expected := "Podcast\n\nNews <a href=\"#\">Podcast Link</a>\n\nhttps://example.com"
+
+	client := TelegramClient{}
+	got := client.getMessageHTML(item)
+
+	assert.Equal(t, got, expected)
+}
