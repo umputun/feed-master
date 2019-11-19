@@ -12,11 +12,16 @@ import (
 	"github.com/umputun/feed-master/app/feed"
 )
 
+// Notification is interface implemented send message
+type Notification interface {
+	Send(string, feed.Item) error
+}
+
 // Processor is a feed reader and store writer
 type Processor struct {
-	Conf     *Conf
-	Store    *BoltDB
-	Telegram *TelegramClient
+	Conf         *Conf
+	Store        *BoltDB
+	Notification Notification
 }
 
 // Conf for feeds config yml
@@ -102,7 +107,7 @@ func (p *Processor) feed(name, url, telegramChannel string, max int) {
 			return
 		}
 
-		if err := p.Telegram.Send(telegramChannel, item); err != nil {
+		if err := p.Notification.Send(telegramChannel, item); err != nil {
 			log.Printf("[WARN] failed send telegram message %s (%s) to channel (%s), %v", item.GUID, item.PubDate, telegramChannel, err)
 		}
 	}

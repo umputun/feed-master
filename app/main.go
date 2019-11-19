@@ -42,7 +42,7 @@ func main() {
 		log.Fatalf("[ERROR] failed initilization telegram client %s, %v", opts.TG, err)
 	}
 
-	p := &proc.Processor{Conf: conf, Store: db, Telegram: tg}
+	p := &proc.Processor{Conf: conf, Store: db, Notification: tg}
 	go p.Do()
 
 	server := api.Server{
