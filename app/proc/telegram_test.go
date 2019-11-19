@@ -79,3 +79,16 @@ func TestGetMessageHTML(t *testing.T) {
 
 	assert.Equal(t, got, expected)
 }
+
+func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
+	cases := []string{"channel", "@channel"}
+	expected := "@channel"
+
+	for _, channelID := range cases {
+		t.Run("", func(t *testing.T) {
+			got := recipient{chatID: channelID} //nolint
+
+			assert.Equal(t, got.Recipient(), expected)
+		})
+	}
+}

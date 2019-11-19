@@ -82,5 +82,9 @@ type recipient struct {
 }
 
 func (r recipient) Recipient() string {
+	if !strings.HasPrefix(r.chatID, "@") {
+		return "@" + r.chatID
+	}
+
 	return r.chatID
 }
