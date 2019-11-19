@@ -103,7 +103,7 @@ func (p *Processor) feed(name, url, telegramChannel string, max int) {
 		}
 
 		if err := p.Telegram.Send(telegramChannel, item); err != nil {
-			log.Printf("[WARN] failed send telegram message %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
+			log.Printf("[WARN] failed send telegram message %s (%s) to channel (%s), %v", item.GUID, item.PubDate, telegramChannel, err)
 		}
 	}
 }
