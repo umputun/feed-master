@@ -1,8 +1,10 @@
 package proc
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/microcosm-cc/bluemonday"
@@ -45,18 +47,38 @@ func (client TelegramClient) Send(channelID string, item feed.Item) error {
 		return nil
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	response := make(chan *responseTelegram)
+	go client.send(channelID, item, response)
+
+	select {
+	case <-ctx.Done():
+		log.Printf("[WARN] timeout send telegram channel: [%s], title: [%s], url: [%s]", channelID, item.Title, item.Enclosure.URL)
+		return nil
+	case got := <-response:
+		if got.err != nil {
+			return got.err
+		}
+
+		log.Printf("[DEBUG] send telegram message: \n%s", got.message.Text)
+		return got.err
+	}
+}
+
+func (client TelegramClient) send(channelID string, item feed.Item, responseCh chan<- *responseTelegram) {
 	message, err := client.Bot.Send(
 		recipient{chatID: channelID},
 		client.getMessageHTML(item),
 		tb.ModeHTML,
 		tb.NoPreview,
 	)
-	if err != nil {
-		return err
-	}
 
-	log.Printf("[DEBUG] send telegram message: \n%s", message.Text)
-	return err
+	responseCh <- &responseTelegram{
+		message: message,
+		err:     err,
+	}
 }
 
 // https://core.telegram.org/bots/api#html-style
@@ -87,4 +109,9 @@ func (r recipient) Recipient() string {
 	}
 
 	return r.chatID
+}
+
+type responseTelegram struct {
+	message *tb.Message
+	err     error
 }
