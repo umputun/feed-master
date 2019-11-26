@@ -2,7 +2,9 @@ package proc
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
+	"time"
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/microcosm-cc/bluemonday"
@@ -23,7 +25,8 @@ func NewTelegramClient(token string) (*TelegramClient, error) {
 	}
 
 	bot, err := tb.NewBot(tb.Settings{
-		Token: token,
+		Token:  token,
+		Client: &http.Client{Timeout: 10 * time.Second},
 	})
 	if err != nil {
 		return nil, err
