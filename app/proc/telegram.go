@@ -1,9 +1,8 @@
 package proc
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"path"
 	"strings"
@@ -113,13 +112,14 @@ func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Mes
 }
 
 func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Message, error) {
-	file, err := client.downloadAudio(item.Enclosure.URL)
+	httpBody, err := client.downloadAudio(item.Enclosure.URL)
+	defer httpBody.Close() //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}
 
 	audio := tb.Audio{
-		File:     tb.FromReader(bytes.NewReader(file)),
+		File:     tb.FromReader(httpBody),
 		FileName: client.getFilenameByURL(item.Enclosure.URL),
 		MIME:     "audio/mpeg",
 		Caption:  client.getMessageHTML(item),
@@ -137,24 +137,17 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 	return message, err
 }
 
-func (client TelegramClient) downloadAudio(url string) ([]byte, error) {
+func (client TelegramClient) downloadAudio(url string) (io.ReadCloser, error) {
 	clientHTTP := &http.Client{Timeout: client.Timeout * time.Second}
 
 	resp, err := clientHTTP.Get(url)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	log.Printf("[DEBUG] start download audio: %s", url)
 
-	file, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("[DEBUG] finish download audio: %s", url)
-	return file, err
+	return resp.Body, err
 }
 
 // https://core.telegram.org/bots/api#html-style
