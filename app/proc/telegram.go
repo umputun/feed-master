@@ -16,6 +16,10 @@ import (
 	"github.com/umputun/feed-master/app/feed"
 )
 
+const (
+	maxTelegramFileSize = 50_000_000
+)
+
 // TelegramClient client
 type TelegramClient struct {
 	Bot *tb.Bot
@@ -58,7 +62,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) error {
 
 	var message *tb.Message
 
-	if contentLength < 50_000_000 {
+	if contentLength < maxTelegramFileSize {
 		message, err = client.sendAudio(channelID, item)
 	} else {
 		message, err = client.sendText(channelID, item)
