@@ -104,6 +104,7 @@ func TestGetFilenameByURL(t *testing.T) {
 		{"https://example.com/", ""},
 	}
 
+	//nolint:scopelint
 	for _, tc := range cases {
 		t.Run("", func(t *testing.T) {
 			client := TelegramClient{}

@@ -110,7 +110,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 	}
 
 	audio := tb.Audio{
-		File:     tb.FromReader(bytes.NewReader(*file)),
+		File:     tb.FromReader(bytes.NewReader(file)),
 		FileName: client.getFilenameByURL(item.Enclosure.URL),
 		MIME:     "audio/mpeg",
 		Caption:  client.getMessageHTML(item),
@@ -128,7 +128,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 	return message, err
 }
 
-func (client TelegramClient) downloadAudio(url string) (*[]byte, error) {
+func (client TelegramClient) downloadAudio(url string) ([]byte, error) {
 	clientHTTP := &http.Client{Timeout: 60 * 10 * time.Second}
 
 	resp, err := clientHTTP.Get(url)
@@ -145,7 +145,7 @@ func (client TelegramClient) downloadAudio(url string) (*[]byte, error) {
 	}
 
 	log.Printf("[DEBUG] finish download audio: %s", url)
-	return &file, err
+	return file, err
 }
 
 // https://core.telegram.org/bots/api#html-style
