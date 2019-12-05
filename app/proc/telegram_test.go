@@ -92,3 +92,24 @@ func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
 		})
 	}
 }
+
+func TestGetFilenameByURL(t *testing.T) {
+	cases := []struct {
+		url, expected string
+	}{
+		{"https://example.com/100500/song.mp3", "song.mp3"},
+		{"https://example.com//song.mp3", "song.mp3"},
+		{"https://example.com/song.mp3", "song.mp3"},
+		{"https://example.com/song.mp3/", ""},
+		{"https://example.com/", ""},
+	}
+
+	for _, tc := range cases {
+		t.Run("", func(t *testing.T) {
+			client := TelegramClient{}
+			got := client.getFilenameByURL(tc.url)
+
+			assert.Equal(t, got, tc.expected)
+		})
+	}
+}

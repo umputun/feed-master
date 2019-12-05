@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -110,7 +111,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 
 	audio := tb.Audio{
 		File:     tb.FromReader(bytes.NewReader(*file)),
-		FileName: "1.mp3",
+		FileName: client.getFilenameByURL(item.Enclosure.URL),
 		MIME:     "audio/mpeg",
 		Caption:  client.getMessageHTML(item),
 		Title:    item.Title,
@@ -163,6 +164,11 @@ func (client TelegramClient) getMessageHTML(item feed.Item) string {
 	messageHTML := fmt.Sprintf("%s\n\n%s\n\n%s", title, description, item.Enclosure.URL)
 
 	return messageHTML
+}
+
+func (client TelegramClient) getFilenameByURL(url string) string {
+	_, filename := path.Split(url)
+	return filename
 }
 
 type recipient struct {
