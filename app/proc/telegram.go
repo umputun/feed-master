@@ -2,7 +2,6 @@ package proc
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -85,7 +84,7 @@ func getContentLength(url string) (int64, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return 0, errors.New("status code != 200")
+		return 0, fmt.Errorf("resp.StatusCode: %d, not equal 200", resp.StatusCode)
 	}
 
 	log.Printf("[DEBUG] Content-Length: %d, url: %s", resp.ContentLength, url)
