@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/jessevdk/go-flags"
@@ -14,10 +15,11 @@ import (
 )
 
 var opts struct {
-	DB   string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
-	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
-	Dbg  bool   `long:"dbg" env:"DEBUG" description:"debug mode"`
-	TG   string `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"Telegram token"`
+	DB              string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
+	Conf            string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
+	Dbg             bool   `long:"dbg" env:"DEBUG" description:"debug mode"`
+	TG              string `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"Telegram token"`
+	TelegramTimeout int64  `long:"telegram_timeout" env:"TELEGRAM_TIMEOUT" description:"Telegram timeout"`
 }
 
 var revision = "local"
@@ -37,7 +39,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] can't open db %s, %v", opts.DB, err)
 	}
-	tg, err := proc.NewTelegramClient(opts.TG)
+	tg, err := proc.NewTelegramClient(opts.TG, time.Duration(opts.TelegramTimeout))
 	if err != nil {
 		log.Fatalf("[ERROR] failed initilization telegram client %s, %v", opts.TG, err)
 	}

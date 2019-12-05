@@ -22,25 +22,34 @@ const (
 
 // TelegramClient client
 type TelegramClient struct {
-	Bot *tb.Bot
+	Bot     *tb.Bot
+	Timeout time.Duration
 }
 
 // NewTelegramClient init telegram client
-func NewTelegramClient(token string) (*TelegramClient, error) {
+func NewTelegramClient(token string, timeout time.Duration) (*TelegramClient, error) {
+	if timeout == 0 {
+		timeout = time.Duration(60 * 10)
+	}
+
 	if token == "" {
-		return &TelegramClient{Bot: nil}, nil
+		return &TelegramClient{
+			Bot:     nil,
+			Timeout: timeout,
+		}, nil
 	}
 
 	bot, err := tb.NewBot(tb.Settings{
 		Token:  token,
-		Client: &http.Client{Timeout: 60 * 10 * time.Second},
+		Client: &http.Client{Timeout: timeout * time.Second},
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	result := TelegramClient{
-		Bot: bot,
+		Bot:     bot,
+		Timeout: timeout,
 	}
 	return &result, err
 }
@@ -129,7 +138,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 }
 
 func (client TelegramClient) downloadAudio(url string) ([]byte, error) {
-	clientHTTP := &http.Client{Timeout: 60 * 10 * time.Second}
+	clientHTTP := &http.Client{Timeout: client.Timeout * time.Second}
 
 	resp, err := clientHTTP.Get(url)
 	if err != nil {

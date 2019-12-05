@@ -2,6 +2,7 @@ package proc
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	tb "gopkg.in/tucnak/telebot.v2"
@@ -10,14 +11,34 @@ import (
 )
 
 func TestNewTelegramClientIfTokenEmpty(t *testing.T) {
-	client, err := NewTelegramClient("")
+	client, err := NewTelegramClient("", 0)
 
 	assert.Nil(t, err)
 	assert.Nil(t, client.Bot)
 }
 
+func TestNewTelegramClientCheckTimeout(t *testing.T) {
+	cases := []struct {
+		timeout, expected time.Duration
+	}{
+		{0, 600},
+		{300, 300},
+		{100500, 100500},
+	}
+
+	//nolint:scopelint
+	for _, tc := range cases {
+		t.Run("", func(t *testing.T) {
+			client, err := NewTelegramClient("", tc.timeout)
+
+			assert.Nil(t, err)
+			assert.Equal(t, tc.expected, client.Timeout)
+		})
+	}
+}
+
 func TestSendIfBotIsNil(t *testing.T) {
-	client, err := NewTelegramClient("")
+	client, err := NewTelegramClient("", 0)
 
 	got := client.Send("@channel", feed.Item{})
 
