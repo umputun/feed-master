@@ -102,7 +102,7 @@ func getContentLength(url string) (int, error) {
 func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Message, error) {
 	message, err := client.Bot.Send(
 		recipient{chatID: channelID},
-		client.getMessageHTML(item),
+		client.getMessageHTML(item, true),
 		tb.ModeHTML,
 		tb.NoPreview,
 	)
@@ -121,7 +121,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		File:     tb.FromReader(httpBody),
 		FileName: client.getFilenameByURL(item.Enclosure.URL),
 		MIME:     "audio/mpeg",
-		Caption:  client.getMessageHTML(item),
+		Caption:  client.getMessageHTML(item, false),
 		Title:    item.Title,
 	}
 
@@ -156,13 +156,16 @@ func (client TelegramClient) tagLinkOnlySupport(html string) string {
 	return p.Sanitize(html)
 }
 
-func (client TelegramClient) getMessageHTML(item feed.Item) string {
+func (client TelegramClient) getMessageHTML(item feed.Item, withMp3Link bool) string {
 	title := strings.TrimSpace(item.Title)
 
 	description := client.tagLinkOnlySupport(string(item.Description))
 	description = strings.TrimSpace(description)
 
-	messageHTML := fmt.Sprintf("%s\n\n%s\n\n%s\n%s", title, description, item.Enclosure.URL, item.Link)
+	messageHTML := fmt.Sprintf("<a href=\"%s\">%s</a>\n\n%s", item.Link, title, description)
+	if withMp3Link {
+		messageHTML = fmt.Sprintf("<a href=\"%s\">%s</a>\n\n%s\n\n%s", item.Link, title, description, item.Enclosure.URL)
+	}
 
 	return messageHTML
 }

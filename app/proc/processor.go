@@ -32,19 +32,7 @@ type Processor struct {
 
 // Conf for feeds config yml
 type Conf struct {
-	Feeds map[string]struct {
-		Title           string `yaml:"title"`
-		Description     string `yaml:"description"`
-		Link            string `yaml:"link"`
-		Image           string `yaml:"image"`
-		Language        string `yaml:"language"`
-		TelegramChannel string `yaml:"telegram_channel"`
-		Sources         []struct {
-			Name string `yaml:"name"`
-			URL  string `yaml:"url"`
-		} `yaml:"sources"`
-	} `yaml:"feeds"`
-
+	Feeds  map[string]Feed `yaml:"feeds"`
 	System struct {
 		UpdateInterval time.Duration `yaml:"update"`
 		MaxItems       int           `yaml:"max_per_feed"`
@@ -53,6 +41,20 @@ type Conf struct {
 		Concurrent     int           `yaml:"concurrent"`
 		BaseURL        string        `yaml:"base_url"`
 	} `yaml:"system"`
+}
+
+// Feed defines config section for a feed~
+type Feed struct {
+	Title           string `yaml:"title"`
+	Description     string `yaml:"description"`
+	Link            string `yaml:"link"`
+	Image           string `yaml:"image"`
+	Language        string `yaml:"language"`
+	TelegramChannel string `yaml:"telegram_channel"`
+	Sources         []struct {
+		Name string `yaml:"name"`
+		URL  string `yaml:"url"`
+	} `yaml:"sources"`
 }
 
 // Do activates loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent

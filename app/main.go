@@ -22,6 +22,10 @@ var opts struct {
 	DB   string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
 	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
 
+	// single feed overrides
+	Feed            string `long:"feed" env:"FM_FEED" description:"single feed, overrides config"`
+	TelegramChannel string `long:"telegram_chan" env:"TELEGRAM_CHAN" description:"single telegram channel, overrides config"`
+
 	TelegramToken   string        `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"telegram token"`
 	TelegramTimeout time.Duration `long:"telegram_timeout" env:"TELEGRAM_TIMEOUT" default:"1m" description:"telegram timeout"`
 
@@ -43,9 +47,27 @@ func main() {
 	}
 	setupLog(opts.Dbg)
 
-	conf, err := loadConfig(opts.Conf)
-	if err != nil {
-		log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
+	var conf = &proc.Conf{}
+	if opts.Feed != "" { // single feed (no config) mode
+		f := proc.Feed{
+			TelegramChannel: opts.TelegramChannel,
+			Sources: []struct {
+				Name string `yaml:"name"`
+				URL  string `yaml:"url"`
+			}{
+				{Name: "auto", URL: opts.Feed},
+			},
+		}
+		conf.Feeds = map[string]proc.Feed{}
+		conf.Feeds["auto"] = f
+	}
+
+	var err error
+	if opts.Feed == "" {
+		conf, err = loadConfig(opts.Conf)
+		if err != nil {
+			log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
+		}
 	}
 
 	db, err := proc.NewBoltDB(opts.DB)
