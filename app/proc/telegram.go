@@ -162,7 +162,7 @@ func (client TelegramClient) getMessageHTML(item feed.Item) string {
 	description := client.tagLinkOnlySupport(string(item.Description))
 	description = strings.TrimSpace(description)
 
-	messageHTML := fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s", title, description, item.Enclosure.URL, item.Link)
+	messageHTML := fmt.Sprintf("%s\n\n%s\n\n%s\n%s", title, description, item.Enclosure.URL, item.Link)
 
 	return messageHTML
 }
