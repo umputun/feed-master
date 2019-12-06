@@ -1,6 +1,9 @@
 package proc
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
@@ -125,6 +128,41 @@ func TestGetFilenameByURL(t *testing.T) {
 			client := TelegramClient{}
 			fname := client.getFilenameByURL(tt.url)
 			assert.Equal(t, tt.expected, fname)
+		})
+	}
+}
+
+func TestGetContentLengthNotFound(t *testing.T) {
+	cases := []struct {
+		statusCode     int
+		contentLength  int
+		expectedLength int
+		expectedError  string
+	}{
+		{http.StatusInternalServerError, 100500, 0, "non-200 status, 500"},
+		{http.StatusMethodNotAllowed, 100500, 0, "non-200 status, 405"},
+		{http.StatusOK, 4, 4, ""},
+	}
+
+	// nolint:scopelint
+	for i, tc := range cases {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tc.statusCode)
+				w.Header().Set("Content-Length", string(tc.contentLength))
+				if tc.contentLength > 0 {
+					fmt.Fprint(w, "abcd")
+				}
+			}))
+
+			defer ts.Close()
+
+			length, err := getContentLength(ts.URL)
+
+			assert.Equal(t, tc.expectedLength, length)
+			if err != nil {
+				assert.Equal(t, tc.expectedError, err.Error())
+			}
 		})
 	}
 }
