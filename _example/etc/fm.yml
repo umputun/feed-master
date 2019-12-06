@@ -4,6 +4,7 @@ feeds:
     description: Общий фид всех подкастов с участием Umputun
     link: http://umputun.com
     language: "ru-ru"
+    telegram_channel: udev_test
     sources:
       - name: Еженедельный подкаст от Umputun (UWP)
         url: http://feeds.rucast.net/Umputun
