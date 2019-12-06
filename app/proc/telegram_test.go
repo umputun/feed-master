@@ -86,9 +86,10 @@ func TestGetMessageHTML(t *testing.T) {
 		Enclosure: feed.Enclosure{
 			URL: "https://example.com",
 		},
+		Link: "https://example.com/xyz",
 	}
 
-	expected := "Podcast\n\nNews <a href=\"#\">Podcast Link</a>\n\nhttps://example.com"
+	expected := "Podcast\n\nNews <a href=\"#\">Podcast Link</a>\n\nhttps://example.com\nhttps://example.com/xyz"
 
 	client := TelegramClient{}
 	msg := client.getMessageHTML(item)
