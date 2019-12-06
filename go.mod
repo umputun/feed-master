@@ -1,7 +1,9 @@
 module github.com/umputun/feed-master
 
 require (
+	github.com/ChimeraCoder/anaconda v2.0.0+incompatible
 	github.com/boltdb/bolt v1.3.1
+	github.com/denisbrodbeck/striphtmltags v6.6.6+incompatible
 	github.com/didip/tollbooth v4.0.2+incompatible
 	github.com/didip/tollbooth_chi v0.0.0-20170928041846-6ab5f3083f3d
 	github.com/go-chi/chi v4.0.2+incompatible
@@ -16,6 +18,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.3.0
+	github.com/umputun/rss2twitter v0.5.0
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a // indirect
 	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
 	golang.org/x/time v0.0.0-20190921001708-c4c64cad1fd0 // indirect
