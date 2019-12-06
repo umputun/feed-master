@@ -18,7 +18,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.3.0
-	github.com/umputun/rss2twitter v0.5.0
+	github.com/umputun/rss2twitter v0.5.0 // indirect
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a // indirect
 	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
 	golang.org/x/time v0.0.0-20190921001708-c4c64cad1fd0 // indirect
