@@ -58,9 +58,21 @@ func main() {
 		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
 	}
 
+	p := &proc.Processor{Conf: conf, Store: db, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter()}
+	go p.Do()
+
+	server := api.Server{
+		Version: revision,
+		Conf:    *conf,
+		Store:   db,
+	}
+	server.Run(8080)
+}
+
+func makeTwitter() *proc.TwitterClient {
 	twitterFmtFn := func(item feed.Item) string {
 		b1 := bytes.Buffer{}
-		if err := template.Must(template.New("twi").Parse(opts.TwitterTemplate)).Execute(&b1, item); err != nil { //nolint
+		if err := template.Must(template.New("twi").Parse(opts.TwitterTemplate)).Execute(&b1, item); err != nil { // nolint
 			// template failed to parse record, backup predefined format
 			return fmt.Sprintf("%s - %s", item.Title, item.Link)
 		}
@@ -74,17 +86,7 @@ func main() {
 		AccessSecret:   opts.TwitterAccessSecret,
 	}
 
-	tw := proc.NewTwitterClient(twiAuth, twitterFmtFn)
-
-	p := &proc.Processor{Conf: conf, Store: db, TelegramNotif: telegramNotif, TwitterNotif: tw}
-	go p.Do()
-
-	server := api.Server{
-		Version: revision,
-		Conf:    *conf,
-		Store:   db,
-	}
-	server.Run(8080)
+	return proc.NewTwitterClient(twiAuth, twitterFmtFn)
 }
 
 func loadConfig(fname string) (res *proc.Conf, err error) {

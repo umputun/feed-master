@@ -18,6 +18,7 @@ type TwitterClient struct {
 	formatter func(feed.Item) string
 }
 
+// TwitterAuth contains keys and secrets for twitter API
 type TwitterAuth struct {
 	ConsumerKey, ConsumerSecret string
 	AccessToken, AccessSecret   string
@@ -28,7 +29,7 @@ func NewTwitterClient(auth TwitterAuth, formatter func(feed.Item) string) *Twitt
 	return &TwitterClient{TwitterAuth: auth, formatter: formatter}
 }
 
-// Publish to twitter
+// Send formatted item to twitter
 func (t *TwitterClient) Send(item feed.Item) error {
 	if t.ConsumerKey == "" || t.ConsumerSecret == "" || t.AccessToken == "" || t.AccessSecret == "" {
 		return nil
