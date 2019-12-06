@@ -12,33 +12,27 @@ import (
 	"github.com/umputun/feed-master/app/feed"
 )
 
-// Notification is interface implemented send message
-type Notification interface {
-	Send(string, feed.Item) error
+// TelegramNotif is interface to send messages to telegram
+type TelegramNotif interface {
+	Send(chanID string, item feed.Item) error
+}
+
+// TwitterNotif is interface to send message to twitter
+type TwitterNotif interface {
+	Send(item feed.Item) error
 }
 
 // Processor is a feed reader and store writer
 type Processor struct {
-	Conf         *Conf
-	Store        *BoltDB
-	Notification Notification
+	Conf          *Conf
+	Store         *BoltDB
+	TelegramNotif TelegramNotif
+	TwitterNotif  TwitterNotif
 }
 
 // Conf for feeds config yml
 type Conf struct {
-	Feeds map[string]struct {
-		Title           string `yaml:"title"`
-		Description     string `yaml:"description"`
-		Link            string `yaml:"link"`
-		Image           string `yaml:"image"`
-		Language        string `yaml:"language"`
-		TelegramChannel string `yaml:"telegram_channel"`
-		Sources         []struct {
-			Name string `yaml:"name"`
-			URL  string `yaml:"url"`
-		} `yaml:"sources"`
-	} `yaml:"feeds"`
-
+	Feeds  map[string]Feed `yaml:"feeds"`
 	System struct {
 		UpdateInterval time.Duration `yaml:"update"`
 		MaxItems       int           `yaml:"max_per_feed"`
@@ -47,6 +41,20 @@ type Conf struct {
 		Concurrent     int           `yaml:"concurrent"`
 		BaseURL        string        `yaml:"base_url"`
 	} `yaml:"system"`
+}
+
+// Feed defines config section for a feed~
+type Feed struct {
+	Title           string `yaml:"title"`
+	Description     string `yaml:"description"`
+	Link            string `yaml:"link"`
+	Image           string `yaml:"image"`
+	Language        string `yaml:"language"`
+	TelegramChannel string `yaml:"telegram_channel"`
+	Sources         []struct {
+		Name string `yaml:"name"`
+		URL  string `yaml:"url"`
+	} `yaml:"sources"`
 }
 
 // Do activates loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent
@@ -107,8 +115,13 @@ func (p *Processor) feed(name, url, telegramChannel string, max int) {
 			return
 		}
 
-		if err := p.Notification.Send(telegramChannel, item); err != nil {
-			log.Printf("[WARN] failed send telegram message, url=%s to channel=%s, %v", item.Enclosure.URL, telegramChannel, err)
+		if err := p.TelegramNotif.Send(telegramChannel, item); err != nil {
+			log.Printf("[WARN] failed to send telegram message, url=%s to channel=%s, %v",
+				item.Enclosure.URL, telegramChannel, err)
+		}
+
+		if err := p.TwitterNotif.Send(item); err != nil {
+			log.Printf("[WARN] failed send twitter message, url=%s, %v", item.Enclosure.URL, err)
 		}
 	}
 }

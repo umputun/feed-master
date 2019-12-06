@@ -1,13 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
+	"text/template"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/jessevdk/go-flags"
+	"github.com/umputun/feed-master/app/feed"
 	"gopkg.in/yaml.v2"
 
 	"github.com/umputun/feed-master/app/api"
@@ -15,11 +19,23 @@ import (
 )
 
 var opts struct {
-	DB              string        `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
-	Conf            string        `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
+	DB   string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
+	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
+
+	// single feed overrides
+	Feed            string `long:"feed" env:"FM_FEED" description:"single feed, overrides config"`
+	TelegramChannel string `long:"telegram_chan" env:"TELEGRAM_CHAN" description:"single telegram channel, overrides config"`
+
 	TelegramToken   string        `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"telegram token"`
 	TelegramTimeout time.Duration `long:"telegram_timeout" env:"TELEGRAM_TIMEOUT" default:"1m" description:"telegram timeout"`
-	Dbg             bool          `long:"dbg" env:"DEBUG" description:"debug mode"`
+
+	TwitterConsumerKey    string `long:"consumer-key" env:"TWI_CONSUMER_KEY" description:"twitter consumer key"`
+	TwitterConsumerSecret string `long:"consumer-secret" env:"TWI_CONSUMER_SECRET" description:"twitter consumer secret"`
+	TwitterAccessToken    string `long:"access-token" env:"TWI_ACCESS_TOKEN" description:"twitter access token"`
+	TwitterAccessSecret   string `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
+	TwitterTemplate       string `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
+
+	Dbg bool `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
 
 var revision = "local"
@@ -31,9 +47,26 @@ func main() {
 	}
 	setupLog(opts.Dbg)
 
-	conf, err := loadConfig(opts.Conf)
-	if err != nil {
-		log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
+	var conf = &proc.Conf{}
+	if opts.Feed != "" { // single feed (no config) mode
+		f := proc.Feed{
+			TelegramChannel: opts.TelegramChannel,
+			Sources: []struct {
+				Name string `yaml:"name"`
+				URL  string `yaml:"url"`
+			}{
+				{Name: "auto", URL: opts.Feed},
+			},
+		}
+		conf.Feeds = map[string]proc.Feed{"auto": f}
+	}
+
+	var err error
+	if opts.Feed == "" {
+		conf, err = loadConfig(opts.Conf)
+		if err != nil {
+			log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
+		}
 	}
 
 	db, err := proc.NewBoltDB(opts.DB)
@@ -41,12 +74,12 @@ func main() {
 		log.Fatalf("[ERROR] can't open db %s, %v", opts.DB, err)
 	}
 
-	tg, err := proc.NewTelegramClient(opts.TelegramToken, opts.TelegramTimeout)
+	telegramNotif, err := proc.NewTelegramClient(opts.TelegramToken, opts.TelegramTimeout)
 	if err != nil {
 		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
 	}
 
-	p := &proc.Processor{Conf: conf, Store: db, Notification: tg}
+	p := &proc.Processor{Conf: conf, Store: db, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter()}
 	go p.Do()
 
 	server := api.Server{
@@ -55,6 +88,26 @@ func main() {
 		Store:   db,
 	}
 	server.Run(8080)
+}
+
+func makeTwitter() *proc.TwitterClient {
+	twitterFmtFn := func(item feed.Item) string {
+		b1 := bytes.Buffer{}
+		if err := template.Must(template.New("twi").Parse(opts.TwitterTemplate)).Execute(&b1, item); err != nil { // nolint
+			// template failed to parse record, backup predefined format
+			return fmt.Sprintf("%s - %s", item.Title, item.Link)
+		}
+		return strings.Replace(proc.CleanText(b1.String(), 275), `\n`, "\n", -1) // \n in template
+	}
+
+	twiAuth := proc.TwitterAuth{
+		ConsumerKey:    opts.TwitterConsumerKey,
+		ConsumerSecret: opts.TwitterConsumerSecret,
+		AccessToken:    opts.TwitterAccessToken,
+		AccessSecret:   opts.TwitterAccessSecret,
+	}
+
+	return proc.NewTwitterClient(twiAuth, twitterFmtFn)
 }
 
 func loadConfig(fname string) (res *proc.Conf, err error) {
