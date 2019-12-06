@@ -58,8 +58,7 @@ func main() {
 				{Name: "auto", URL: opts.Feed},
 			},
 		}
-		conf.Feeds = map[string]proc.Feed{}
-		conf.Feeds["auto"] = f
+		conf.Feeds = map[string]proc.Feed{"auto": f}
 	}
 
 	var err error

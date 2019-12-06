@@ -89,10 +89,10 @@ func TestGetMessageHTML(t *testing.T) {
 		Link: "https://example.com/xyz",
 	}
 
-	expected := "Podcast\n\nNews <a href=\"#\">Podcast Link</a>\n\nhttps://example.com\nhttps://example.com/xyz"
+	expected := "<a href=\"https://example.com/xyz\">Podcast</a>\n\nNews <a href=\"#\">Podcast Link</a>\n\nhttps://example.com"
 
 	client := TelegramClient{}
-	msg := client.getMessageHTML(item)
+	msg := client.getMessageHTML(item, true)
 	assert.Equal(t, expected, msg)
 }
 
