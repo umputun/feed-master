@@ -1,6 +1,6 @@
 # Feed Master [![Build Status](https://github.com/umputun/feed-master/workflows/build/badge.svg)](https://github.com/umputun/feed-master/actions)
 
-Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly sorted and podcast-client friendly.
+Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly sorted and podcast-client friendly. Optionally posts the new items to telegram's channel.
 
 ## Run in docker (short version)
 
