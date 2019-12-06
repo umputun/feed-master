@@ -58,9 +58,9 @@ func (p *Processor) Do() {
 		swg := syncs.NewSizedGroup(p.Conf.System.Concurrent, syncs.Preemptive)
 		for name, fm := range p.Conf.Feeds {
 			for _, src := range fm.Sources {
-				name, src, fm := name, src, fm
-				swg.Go(func(_ context.Context) {
-					p.feed(name, src.URL, fm.TelegramChannel, p.Conf.System.MaxItems)
+				name, src, tgChan := name, src, fm.TelegramChannel
+				swg.Go(func(context.Context) {
+					p.feed(name, src.URL, tgChan, p.Conf.System.MaxItems)
 				})
 			}
 			// keep up to MaxKeepInDB items in bucket

@@ -15,11 +15,11 @@ import (
 )
 
 var opts struct {
-	DB              string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
-	Conf            string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
-	Dbg             bool   `long:"dbg" env:"DEBUG" description:"debug mode"`
-	TG              string `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"Telegram token"`
-	TelegramTimeout int64  `long:"telegram_timeout" env:"TELEGRAM_TIMEOUT" description:"Telegram timeout"`
+	DB              string        `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
+	Conf            string        `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
+	TelegramToken   string        `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"telegram token"`
+	TelegramTimeout time.Duration `long:"telegram_timeout" env:"TELEGRAM_TIMEOUT" default:"1m" description:"telegram timeout"`
+	Dbg             bool          `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
 
 var revision = "local"
@@ -35,13 +35,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
 	}
+
 	db, err := proc.NewBoltDB(opts.DB)
 	if err != nil {
 		log.Fatalf("[ERROR] can't open db %s, %v", opts.DB, err)
 	}
-	tg, err := proc.NewTelegramClient(opts.TG, time.Duration(opts.TelegramTimeout))
+
+	tg, err := proc.NewTelegramClient(opts.TelegramToken, opts.TelegramTimeout)
 	if err != nil {
-		log.Fatalf("[ERROR] failed initilization telegram client %s, %v", opts.TG, err)
+		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
 	}
 
 	p := &proc.Processor{Conf: conf, Store: db, Notification: tg}

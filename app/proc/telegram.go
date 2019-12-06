@@ -10,14 +10,13 @@ import (
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/pkg/errors"
 	tb "gopkg.in/tucnak/telebot.v2"
 
 	"github.com/umputun/feed-master/app/feed"
 )
 
-const (
-	maxTelegramFileSize = 50_000_000
-)
+const maxTelegramFileSize = 50_000_000
 
 // TelegramClient client
 type TelegramClient struct {
@@ -54,18 +53,17 @@ func NewTelegramClient(token string, timeout time.Duration) (*TelegramClient, er
 }
 
 // Send message, skip if telegram token empty
-func (client TelegramClient) Send(channelID string, item feed.Item) error {
-	if client.Bot == nil {
+func (client TelegramClient) Send(channelID string, item feed.Item) (err error) {
+
+	if client.Bot == nil || channelID == "" {
 		return nil
 	}
 
-	if channelID == "" {
-		return nil
-	}
-
-	contentLength, err := getContentLength(item.Enclosure.URL)
-	if err != nil {
-		return err
+	contentLength := item.Enclosure.Length
+	if contentLength <= 0 {
+		if contentLength, err = getContentLength(item.Enclosure.URL); err != nil {
+			return errors.Wrapf(err, "can't get length for %s", item.Enclosure.URL)
+		}
 	}
 
 	var message *tb.Message
@@ -77,27 +75,28 @@ func (client TelegramClient) Send(channelID string, item feed.Item) error {
 	}
 
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "can't send to telegram for %+v", item.Enclosure)
 	}
 
-	log.Printf("[DEBUG] send telegram message: \n%s", message.Text)
-	return err
+	log.Printf("[DEBUG] telegram message sent: \n%s", message.Text)
+	return nil
 }
 
-func getContentLength(url string) (int64, error) {
+// getContentLength uses HEAD request and called as a fallback in case of item.Enclosure.Length not populated
+func getContentLength(url string) (int, error) {
 	resp, err := http.Head(url) //nolint:gosec
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrapf(err, "can't HEAD %s", url)
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return 0, fmt.Errorf("resp.StatusCode: %d, not equal 200", resp.StatusCode)
+		return 0, errors.Errorf("non-200 status, %d", resp.StatusCode)
 	}
 
 	log.Printf("[DEBUG] Content-Length: %d, url: %s", resp.ContentLength, url)
-	return resp.ContentLength, err
+	return int(resp.ContentLength), err
 }
 
 func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Message, error) {

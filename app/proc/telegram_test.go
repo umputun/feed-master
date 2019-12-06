@@ -1,10 +1,12 @@
 package proc
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	tb "gopkg.in/tucnak/telebot.v2"
 
 	"github.com/umputun/feed-master/app/feed"
@@ -12,13 +14,12 @@ import (
 
 func TestNewTelegramClientIfTokenEmpty(t *testing.T) {
 	client, err := NewTelegramClient("", 0)
-
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, client.Bot)
 }
 
 func TestNewTelegramClientCheckTimeout(t *testing.T) {
-	cases := []struct {
+	tbl := []struct {
 		timeout, expected time.Duration
 	}{
 		{0, 600},
@@ -27,23 +28,20 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 	}
 
 	//nolint:scopelint
-	for _, tc := range cases {
-		t.Run("", func(t *testing.T) {
-			client, err := NewTelegramClient("", tc.timeout)
-
-			assert.Nil(t, err)
-			assert.Equal(t, tc.expected, client.Timeout)
+	for i, tt := range tbl {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			client, err := NewTelegramClient("", tt.timeout)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expected, client.Timeout)
 		})
 	}
 }
 
 func TestSendIfBotIsNil(t *testing.T) {
 	client, err := NewTelegramClient("", 0)
-
-	got := client.Send("@channel", feed.Item{})
-
-	assert.Nil(t, err)
-	assert.Nil(t, got)
+	require.NoError(t, err)
+	err = client.Send("@channel", feed.Item{})
+	assert.NoError(t, err)
 }
 
 func TestSendIfChannelIDEmpty(t *testing.T) {
@@ -51,9 +49,8 @@ func TestSendIfChannelIDEmpty(t *testing.T) {
 		Bot: &tb.Bot{},
 	}
 
-	got := client.Send("", feed.Item{})
-
-	assert.Nil(t, got)
+	err := client.Send("", feed.Item{})
+	assert.NoError(t, err)
 }
 
 func TestTagLinkOnlySupport(t *testing.T) {
@@ -78,10 +75,8 @@ func TestTagLinkOnlySupport(t *testing.T) {
 <a href="https://podcast.umputun.com/media/ump_podcast437.mp3">аудио</a>`
 
 	client := TelegramClient{}
-
 	got := client.tagLinkOnlySupport(html)
-
-	assert.Equal(t, got, htmlExpected, "support only html tag a")
+	assert.Equal(t, htmlExpected, got, "support only html tag a")
 }
 
 func TestGetMessageHTML(t *testing.T) {
@@ -96,26 +91,24 @@ func TestGetMessageHTML(t *testing.T) {
 	expected := "Podcast\n\nNews <a href=\"#\">Podcast Link</a>\n\nhttps://example.com"
 
 	client := TelegramClient{}
-	got := client.getMessageHTML(item)
-
-	assert.Equal(t, got, expected)
+	msg := client.getMessageHTML(item)
+	assert.Equal(t, expected, msg)
 }
 
 func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
 	cases := []string{"channel", "@channel"}
 	expected := "@channel"
 
-	for _, channelID := range cases {
-		t.Run("", func(t *testing.T) {
+	for i, channelID := range cases {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			got := recipient{chatID: channelID} //nolint
-
-			assert.Equal(t, got.Recipient(), expected)
+			assert.Equal(t, expected, got.Recipient())
 		})
 	}
 }
 
 func TestGetFilenameByURL(t *testing.T) {
-	cases := []struct {
+	tbl := []struct {
 		url, expected string
 	}{
 		{"https://example.com/100500/song.mp3", "song.mp3"},
@@ -125,13 +118,12 @@ func TestGetFilenameByURL(t *testing.T) {
 		{"https://example.com/", ""},
 	}
 
-	//nolint:scopelint
-	for _, tc := range cases {
-		t.Run("", func(t *testing.T) {
+	// nolint:scopelint
+	for i, tt := range tbl {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			client := TelegramClient{}
-			got := client.getFilenameByURL(tc.url)
-
-			assert.Equal(t, got, tc.expected)
+			fname := client.getFilenameByURL(tt.url)
+			assert.Equal(t, tt.expected, fname)
 		})
 	}
 }
