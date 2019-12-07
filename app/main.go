@@ -11,10 +11,10 @@ import (
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/jessevdk/go-flags"
-	"github.com/umputun/feed-master/app/feed"
 	"gopkg.in/yaml.v2"
 
 	"github.com/umputun/feed-master/app/api"
+	"github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/proc"
 )
 
@@ -23,17 +23,17 @@ var opts struct {
 	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
 
 	// single feed overrides
-	Feed            string `long:"feed" env:"FM_FEED" description:"single feed, overrides config"`
-	TelegramChannel string `long:"telegram_chan" env:"TELEGRAM_CHAN" description:"single telegram channel, overrides config"`
+	Feed            string        `long:"feed" env:"FM_FEED" description:"single feed, overrides config"`
+	TelegramChannel string        `long:"telegram_chan" env:"TELEGRAM_CHAN" description:"single telegram channel, overrides config"`
+	UpdateInterval  time.Duration `long:"update-interval" env:"UPDATE_INTERVAL" default:"1m" description:"update interval, overrides config"`
 
-	TelegramToken   string        `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"telegram token"`
-	TelegramTimeout time.Duration `long:"telegram_timeout" env:"TELEGRAM_TIMEOUT" default:"1m" description:"telegram timeout"`
-
-	TwitterConsumerKey    string `long:"consumer-key" env:"TWI_CONSUMER_KEY" description:"twitter consumer key"`
-	TwitterConsumerSecret string `long:"consumer-secret" env:"TWI_CONSUMER_SECRET" description:"twitter consumer secret"`
-	TwitterAccessToken    string `long:"access-token" env:"TWI_ACCESS_TOKEN" description:"twitter access token"`
-	TwitterAccessSecret   string `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
-	TwitterTemplate       string `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
+	TelegramToken         string        `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"telegram token"`
+	TelegramTimeout       time.Duration `long:"telegram_timeout" env:"TELEGRAM_TIMEOUT" default:"1m" description:"telegram timeout"`
+	TwitterConsumerKey    string        `long:"consumer-key" env:"TWI_CONSUMER_KEY" description:"twitter consumer key"`
+	TwitterConsumerSecret string        `long:"consumer-secret" env:"TWI_CONSUMER_SECRET" description:"twitter consumer secret"`
+	TwitterAccessToken    string        `long:"access-token" env:"TWI_ACCESS_TOKEN" description:"twitter access token"`
+	TwitterAccessSecret   string        `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
+	TwitterTemplate       string        `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
 
 	Dbg bool `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
@@ -49,16 +49,7 @@ func main() {
 
 	var conf = &proc.Conf{}
 	if opts.Feed != "" { // single feed (no config) mode
-		f := proc.Feed{
-			TelegramChannel: opts.TelegramChannel,
-			Sources: []struct {
-				Name string `yaml:"name"`
-				URL  string `yaml:"url"`
-			}{
-				{Name: "auto", URL: opts.Feed},
-			},
-		}
-		conf.Feeds = map[string]proc.Feed{"auto": f}
+		conf = singleFeedConf()
 	}
 
 	var err error
@@ -88,6 +79,22 @@ func main() {
 		Store:   db,
 	}
 	server.Run(8080)
+}
+
+func singleFeedConf() *proc.Conf {
+	conf := proc.Conf{}
+	f := proc.Feed{
+		TelegramChannel: opts.TelegramChannel,
+		Sources: []struct {
+			Name string `yaml:"name"`
+			URL  string `yaml:"url"`
+		}{
+			{Name: "auto", URL: opts.Feed},
+		},
+	}
+	conf.Feeds = map[string]proc.Feed{"auto": f}
+	conf.System.UpdateInterval = opts.UpdateInterval
+	return &conf
 }
 
 func makeTwitter() *proc.TwitterClient {
