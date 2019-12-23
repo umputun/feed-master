@@ -129,3 +129,68 @@ func TestParseAtom(t *testing.T) {
 
 	assert.Equal(t, got.ItemList[1].Description, template.HTML("Example content"))
 }
+
+func TestParseFeedContentIfRSSVersionNot2_0(t *testing.T) {
+	rss := `<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/" version="3.0">
+  <channel>
+    <title>Радио-Т</title>
+    <link>https://radio-t.com</link>
+    <language>ru</language>
+  </channel>
+</rss>`
+
+	_, err := parseFeedContent([]byte(rss))
+
+	assert.Equal(t, err.Error(), "not RSS 2.0")
+}
+
+func TestParseFeedContentIfAtom1_0(t *testing.T) {
+	atom1 := `<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Example Feed</title>
+  <link href="http://example.org/"/>
+  <updated>2003-12-13T18:30:02Z</updated>
+</feed>`
+
+	got, err := parseFeedContent([]byte(atom1))
+
+	assert.Nil(t, err)
+	assert.Equal(t, got.Title, "Example Feed")
+}
+
+func TestParseFeedContentIfNotAtom1_0(t *testing.T) {
+	atom1 := `<?xml version="2.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Example Feed</title>
+  <link href="http://example.org/"/>
+  <updated>2003-12-13T18:30:02Z</updated>
+</feed>`
+
+	_, err := parseFeedContent([]byte(atom1))
+
+	assert.Equal(t, err.Error(), "can't parse feed content: xml: unsupported version \"2.0\"; only version 1.0 is supported")
+}
+
+func TestParseFeedContentIfRSSVersionEmptyContent(t *testing.T) {
+	rss := `<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+  <channel>
+    <title>Радио-Т</title>
+    <link>https://radio-t.com</link>
+    <language>ru</language>
+
+	<item>
+	  <title>Example</title>
+	  <descrption>Description</descrption>
+	  <encoded>Content</encoded>
+	</item>
+  </channel>
+</rss>`
+
+	got, err := parseFeedContent([]byte(rss))
+
+	assert.Nil(t, err)
+	assert.Equal(t, got.ItemList[0].Content, template.HTML("Content"))
+	assert.Equal(t, got.ItemList[0].Description, template.HTML("Content"))
+}
