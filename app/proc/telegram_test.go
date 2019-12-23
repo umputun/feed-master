@@ -166,3 +166,17 @@ func TestGetContentLengthNotFound(t *testing.T) {
 		})
 	}
 }
+
+func TestGetContentLengthIfErrorConnect(t *testing.T) {
+	var ts *httptest.Server
+	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ts.CloseClientConnections()
+	}))
+
+	defer ts.Close()
+
+	length, err := getContentLength(ts.URL)
+
+	assert.Equal(t, length, 0)
+	assert.Equal(t, err.Error(), fmt.Sprintf("can't HEAD %s: Head %s: EOF", ts.URL, ts.URL))
+}
