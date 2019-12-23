@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -50,6 +51,30 @@ func TestNormalizeDate(t *testing.T) {
 		ts, err := rss.normalizeDate(tb.inp)
 		assert.Equal(t, tb.err, err)
 		assert.Equal(t, tb.out, ts.Format(time.RFC822Z))
+	}
+}
+
+func TestNormalizeIfLastBuildDateAndPubDateInvalidFormat(t *testing.T) {
+	cases := []struct {
+		lastBuildDate string
+		pubDate       string
+	}{
+		{"invalidFormat", "02 Jan 06 15:04 MST"},
+		{"02 Jan 06 15:04 MST", "invalidFormat"},
+	}
+
+	for i, tc := range cases {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			rss := Rss2{
+				LastBuildDate: tc.lastBuildDate,
+				PubDate:       tc.pubDate,
+			}
+
+			got, err := rss.Normalize()
+
+			assert.Nil(t, err)
+			assert.Equal(t, got.PubDate, "Mon, 02 Jan 2006 15:04:00 +0000")
+		})
 	}
 }
 
