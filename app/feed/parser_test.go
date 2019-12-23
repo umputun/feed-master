@@ -2,6 +2,8 @@ package feed
 
 import (
 	"log"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -12,6 +14,17 @@ func TestFeedParse(t *testing.T) {
 	r, err := Parse("http://feeds.rucast.net/radio-t")
 	assert.Nil(t, err)
 	log.Printf("%+v", r.ItemList[0])
+}
+
+func TestFeedParseHttpError(t *testing.T) {
+	var ts *httptest.Server
+	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ts.CloseClientConnections()
+	}))
+
+	_, err := Parse(ts.URL)
+
+	assert.NotNil(t, err)
 }
 
 func TestNormalizeDate(t *testing.T) {
