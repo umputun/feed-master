@@ -215,9 +215,6 @@ func (rss *Rss2) normalizeDate(dt string) (time.Time, error) {
 	if ts, err := time.Parse("2006-01-02 15:04:05 -0700", dt); err == nil {
 		return ts, nil
 	}
-	if ts, err := time.Parse("02 Jan 06 15:04 -0700", dt); err == nil {
-		return ts, nil
-	}
 	log.Printf("[DEBUG] can't normalize %s", dt)
 	return time.Now(), fmt.Errorf("can't normalize %s", dt)
 }
