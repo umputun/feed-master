@@ -200,9 +200,6 @@ func (rss *Rss2) normalizeDate(dt string) (time.Time, error) {
 	if dt == "" {
 		return time.Now(), fmt.Errorf("can't normalize empty pubDate")
 	}
-	if ts, err := time.Parse(time.RFC1123, dt); err == nil {
-		return ts, nil
-	}
 	if ts, err := time.Parse(time.RFC822, dt); err == nil {
 		return ts, nil
 	}
