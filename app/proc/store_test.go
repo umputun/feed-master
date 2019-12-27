@@ -9,6 +9,7 @@ import (
 	"github.com/umputun/feed-master/app/feed"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const pubDate = "Mon, 02 Jan 2006 15:04:05 -0700"
@@ -71,7 +72,8 @@ func TestSaveIfItemIsExists(t *testing.T) {
 	item := feed.Item{
 		PubDate: pubDate,
 	}
-	boltDB.Save("radio-t", item) //nolint:gosec
+	_, err := boltDB.Save("radio-t", item)
+	require.NoError(t, err)
 
 	created, err := boltDB.Save("radio-t", item)
 
@@ -95,7 +97,8 @@ func TestLoad(t *testing.T) {
 	defer os.Remove(tmpfile.Name())
 
 	boltDB, _ := NewBoltDB(tmpfile.Name())
-	boltDB.Save("radio-t", feed.Item{PubDate: pubDate}) //nolint:gosec
+	_, err := boltDB.Save("radio-t", feed.Item{PubDate: pubDate})
+	require.NoError(t, err)
 
 	items, err := boltDB.Load("radio-t", 5)
 
@@ -108,9 +111,14 @@ func TestLoadChackMax(t *testing.T) {
 	tmpfile, _ := ioutil.TempFile("", "")
 	defer os.Remove(tmpfile.Name())
 
-	boltDB, _ := NewBoltDB(tmpfile.Name())
-	boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"}) //nolint:gosec
-	boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"}) //nolint:gosec
+	boltDB, err := NewBoltDB(tmpfile.Name())
+	require.NoError(t, err)
+
+	_, err = boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"})
+	require.NoError(t, err)
+
+	_, err = boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"})
+	require.NoError(t, err)
 
 	cases := []struct {
 		max   int
@@ -142,7 +150,9 @@ func TestBuckets(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(got))
 
-	boltDB.Save("radio-t", feed.Item{PubDate: pubDate}) //nolint:gosec
+	_, err = boltDB.Save("radio-t", feed.Item{PubDate: pubDate})
+	require.NoError(t, err)
+
 	got, err = boltDB.Buckets()
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(got))
@@ -175,8 +185,11 @@ func TestRemoveOld(t *testing.T) {
 			tmpfile, _ := ioutil.TempFile("", "")
 			defer os.Remove(tmpfile.Name())
 			boltDB, _ := NewBoltDB(tmpfile.Name())
-			boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"}) //nolint:gosec
-			boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"}) //nolint:gosec
+			_, err := boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"})
+			require.NoError(t, err)
+
+			_, err = boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"})
+			require.NoError(t, err)
 
 			count, err := boltDB.removeOld("radio-t", tc.keep)
 
