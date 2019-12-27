@@ -71,9 +71,9 @@ func TestSaveIfItemIsExists(t *testing.T) {
 	item := feed.Item{
 		PubDate: pubDate,
 	}
-	created, err := boltDB.Save("radio-t", item)
+	boltDB.Save("radio-t", item) //nolint:gosec
 
-	created, err = boltDB.Save("radio-t", item)
+	created, err := boltDB.Save("radio-t", item)
 
 	assert.False(t, created)
 	assert.Nil(t, err)
@@ -82,8 +82,7 @@ func TestSaveIfItemIsExists(t *testing.T) {
 func TestLoadIfNotBucket(t *testing.T) {
 	tmpfile, _ := ioutil.TempFile("", "")
 	defer os.Remove(tmpfile.Name())
-
-	boltDB, err := NewBoltDB(tmpfile.Name())
+	boltDB, _ := NewBoltDB(tmpfile.Name())
 
 	feedItems, err := boltDB.Load("100500", 5)
 
@@ -96,7 +95,7 @@ func TestLoad(t *testing.T) {
 	defer os.Remove(tmpfile.Name())
 
 	boltDB, _ := NewBoltDB(tmpfile.Name())
-	boltDB.Save("radio-t", feed.Item{PubDate: pubDate})
+	boltDB.Save("radio-t", feed.Item{PubDate: pubDate}) //nolint:gosec
 
 	items, err := boltDB.Load("radio-t", 5)
 
@@ -110,8 +109,8 @@ func TestLoadChackMax(t *testing.T) {
 	defer os.Remove(tmpfile.Name())
 
 	boltDB, _ := NewBoltDB(tmpfile.Name())
-	boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"})
-	boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"})
+	boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"}) //nolint:gosec
+	boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"}) //nolint:gosec
 
 	cases := []struct {
 		max   int
@@ -123,6 +122,7 @@ func TestLoadChackMax(t *testing.T) {
 		{5, 2},
 	}
 
+	//nolint:scopelint
 	for i, tc := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			items, err := boltDB.Load("radio-t", tc.max)
@@ -142,7 +142,7 @@ func TestBuckets(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(got))
 
-	boltDB.Save("radio-t", feed.Item{PubDate: pubDate})
+	boltDB.Save("radio-t", feed.Item{PubDate: pubDate}) //nolint:gosec
 	got, err = boltDB.Buckets()
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(got))
@@ -169,13 +169,14 @@ func TestRemoveOld(t *testing.T) {
 		{2, 0},
 	}
 
+	//nolint:scopelint
 	for i, tc := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			tmpfile, _ := ioutil.TempFile("", "")
 			defer os.Remove(tmpfile.Name())
 			boltDB, _ := NewBoltDB(tmpfile.Name())
-			boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"})
-			boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"})
+			boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"}) //nolint:gosec
+			boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"}) //nolint:gosec
 
 			count, err := boltDB.removeOld("radio-t", tc.keep)
 
