@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	tb "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tb "gopkg.in/tucnak/telebot.v2"
 
 	"github.com/umputun/feed-master/app/feed"
 )
@@ -49,7 +49,7 @@ func TestSendIfBotIsNil(t *testing.T) {
 
 func TestSendIfChannelIDEmpty(t *testing.T) {
 	client := TelegramClient{
-		Bot: &tb.Bot{},
+		Bot: &tb.BotAPI{},
 	}
 
 	err := client.Send("", feed.Item{})

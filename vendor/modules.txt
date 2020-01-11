@@ -38,6 +38,8 @@ github.com/go-pkgz/rest
 github.com/go-pkgz/rest/logger
 # github.com/go-pkgz/syncs v1.1.1
 github.com/go-pkgz/syncs
+# github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
+github.com/go-telegram-bot-api/telegram-bot-api
 # github.com/hashicorp/golang-lru v0.5.3
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
@@ -54,6 +56,8 @@ github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# github.com/technoweenie/multipartstreamer v1.0.1
+github.com/technoweenie/multipartstreamer
 # golang.org/x/net v0.0.0-20190311183353-d8887717615a
 golang.org/x/net/context
 golang.org/x/net/html
@@ -62,7 +66,5 @@ golang.org/x/net/html/atom
 golang.org/x/sys/unix
 # golang.org/x/time v0.0.0-20190921001708-c4c64cad1fd0
 golang.org/x/time/rate
-# gopkg.in/tucnak/telebot.v2 v2.0.0-20191005061224-d0707a9d73c4
-gopkg.in/tucnak/telebot.v2
 # gopkg.in/yaml.v2 v2.2.4
 gopkg.in/yaml.v2

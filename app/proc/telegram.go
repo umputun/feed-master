@@ -3,24 +3,24 @@ package proc
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
+	tb "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/pkg/errors"
-	tb "gopkg.in/tucnak/telebot.v2"
 
 	"github.com/umputun/feed-master/app/feed"
 )
 
-const maxTelegramFileSize = 50_000_000
-
 // TelegramClient client
 type TelegramClient struct {
-	Bot     *tb.Bot
+	Bot     *tb.BotAPI
 	Timeout time.Duration
 }
 
@@ -37,10 +37,7 @@ func NewTelegramClient(token string, timeout time.Duration) (*TelegramClient, er
 		}, nil
 	}
 
-	bot, err := tb.NewBot(tb.Settings{
-		Token:  token,
-		Client: &http.Client{Timeout: timeout * time.Second},
-	})
+	bot, err := tb.NewBotAPIWithClient(token, &http.Client{Timeout: timeout * time.Second})
 	if err != nil {
 		return nil, err
 	}
@@ -59,20 +56,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 		return nil
 	}
 
-	contentLength := item.Enclosure.Length
-	if contentLength <= 0 {
-		if contentLength, err = getContentLength(item.Enclosure.URL); err != nil {
-			return errors.Wrapf(err, "can't get length for %s", item.Enclosure.URL)
-		}
-	}
-
-	var message *tb.Message
-
-	if contentLength < maxTelegramFileSize {
-		message, err = client.sendAudio(channelID, item)
-	} else {
-		message, err = client.sendText(channelID, item)
-	}
+	message, err := client.sendAudio(channelID, item)
 
 	if err != nil {
 		return errors.Wrapf(err, "can't send to telegram for %+v", item.Enclosure)
@@ -99,41 +83,27 @@ func getContentLength(url string) (int, error) {
 	return int(resp.ContentLength), err
 }
 
-func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Message, error) {
-	message, err := client.Bot.Send(
-		recipient{chatID: channelID},
-		client.getMessageHTML(item, true),
-		tb.ModeHTML,
-		tb.NoPreview,
-	)
-
-	return message, err
-}
-
 func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Message, error) {
+	channel, _ := strconv.ParseInt(channelID, 10, 64)
+
 	httpBody, err := client.downloadAudio(item.Enclosure.URL)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(httpBody)
 	defer httpBody.Close() //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}
 
-	audio := tb.Audio{
-		File:     tb.FromReader(httpBody),
-		FileName: client.getFilenameByURL(item.Enclosure.URL),
-		MIME:     "audio/mpeg",
-		Caption:  client.getMessageHTML(item, false),
-		Title:    item.Title,
-	}
+	audioConfig := tb.NewAudioUpload(channel, tb.FileBytes{Bytes: data, Name: item.Title})
+	audioConfig.Caption = client.getMessageHTML(item, false)
+	audioConfig.Title = client.getFilenameByURL(item.Enclosure.URL)
+	audioConfig.ParseMode = tb.ModeHTML
 
-	message, err := audio.Send(
-		client.Bot,
-		recipient{chatID: channelID},
-		&tb.SendOptions{
-			ParseMode: tb.ModeHTML,
-		},
-	)
-
-	return message, err
+	message, err := client.Bot.Send(audioConfig)
+	return &message, err
 }
 
 func (client TelegramClient) downloadAudio(url string) (io.ReadCloser, error) {
