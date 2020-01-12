@@ -56,6 +56,28 @@ func TestSendIfChannelIDEmpty(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestSendIfContentLengthZero(t *testing.T) {
+	client := TelegramClient{
+		Bot: &tb.Bot{},
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Length", string(0))
+	}))
+	defer ts.Close()
+
+	err := client.Send("100500", feed.Item{
+		Enclosure: feed.Enclosure{
+			URL:    ts.URL,
+			Length: 0,
+		},
+	})
+
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), fmt.Sprintf("can't get length for %s: non-200 status, 500", ts.URL))
+}
+
 func TestTagLinkOnlySupport(t *testing.T) {
 	html := `
 <li>Особое канадское искусство. </li>
