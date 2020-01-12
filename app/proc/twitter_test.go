@@ -4,8 +4,62 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/umputun/feed-master/app/feed"
+
 	"github.com/stretchr/testify/assert"
 )
+
+func TestNewTwitterClient(t *testing.T) {
+	twiAuth := TwitterAuth{
+		ConsumerKey:    "a",
+		ConsumerSecret: "b",
+		AccessToken:    "c",
+		AccessSecret:   "d",
+	}
+
+	twitterFmtFn := func(item feed.Item) string {
+		return ""
+	}
+
+	client := NewTwitterClient(twiAuth, twitterFmtFn)
+
+	assert.Equal(t, client.TwitterAuth.ConsumerKey, "a")
+	assert.Equal(t, client.TwitterAuth.ConsumerSecret, "b")
+	assert.Equal(t, client.TwitterAuth.AccessToken, "c")
+	assert.Equal(t, client.TwitterAuth.AccessSecret, "d")
+}
+
+func TestTwitterSendIfFieldsTwitterAuthEmpty(t *testing.T) {
+	cases := []struct {
+		consumerKey, consumerSecret, accessToken, accessSecret string
+	}{
+		{"a", "", "", ""},
+		{"", "b", "", ""},
+		{"", "", "c", ""},
+		{"", "", "", "d"},
+	}
+
+	//nolint:scopelint
+	for i, tt := range cases {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			twiAuth := TwitterAuth{
+				ConsumerKey:    tt.consumerKey,
+				ConsumerSecret: tt.consumerSecret,
+				AccessToken:    tt.accessToken,
+				AccessSecret:   tt.accessSecret,
+			}
+
+			twitterFmtFn := func(item feed.Item) string {
+				return ""
+			}
+
+			client := NewTwitterClient(twiAuth, twitterFmtFn)
+
+			assert.Nil(t, client.Send(feed.Item{}))
+		})
+	}
+
+}
 
 func TestCleanText(t *testing.T) {
 	tbl := []struct {
