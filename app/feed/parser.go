@@ -23,7 +23,7 @@ type Rss2 struct {
 	XMLName       xml.Name `xml:"rss"`
 	Version       string   `xml:"version,attr"`
 	Title         string   `xml:"channel>title"`
-	Language      string   `xml:"channel>lang"`
+	Language      string   `xml:"channel>language"`
 	Link          string   `xml:"channel>link"`
 	Description   string   `xml:"channel>description"`
 	PubDate       string   `xml:"channel>pubDate"`
