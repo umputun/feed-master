@@ -82,7 +82,7 @@ func main() {
 	server.Run(8080)
 }
 
-func singleFeedConf(feed, channel string, updateInterval time.Duration) *proc.Conf {
+func singleFeedConf(feedURL, channel string, updateInterval time.Duration) *proc.Conf {
 	conf := proc.Conf{}
 	f := proc.Feed{
 		TelegramChannel: channel,
@@ -90,7 +90,7 @@ func singleFeedConf(feed, channel string, updateInterval time.Duration) *proc.Co
 			Name string `yaml:"name"`
 			URL  string `yaml:"url"`
 		}{
-			{Name: "auto", URL: feed},
+			{Name: "auto", URL: feedURL},
 		},
 	}
 	conf.Feeds = map[string]proc.Feed{"auto": f}
