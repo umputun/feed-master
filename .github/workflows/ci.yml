@@ -21,11 +21,10 @@ jobs:
         uses: actions/checkout@v1
 
       - name: build and test
-        run: |
-          export GO111MODULE=on
-          export TZ="America/Chicago"
-          go test -timeout=60s -covermode=count -coverprofile=$GITHUB_WORKSPACE/profile.cov_tmp ./...
-          cat $GITHUB_WORKSPACE/profile.cov_tmp | grep -v "_mock.go" > $GITHUB_WORKSPACE/profile.cov
+        run: go test -mod=vendor -timeout=60s -covermode=count -coverprofile=$GITHUB_WORKSPACE/profile.cov ./...
+        env:
+          GO111MODULE: on
+          TZ: "America/Chicago"
 
       - name: install golangci-lint and goveralls
         run: |
@@ -36,14 +35,9 @@ jobs:
         run: $GITHUB_WORKSPACE/golangci-lint run
 
       - name: submit coverage
-        run: |
-          export GIT_BRANCH=$GITHUB_REF
-          $(go env GOPATH)/bin/goveralls -service="github" -coverprofile=$GITHUB_WORKSPACE/profile.cov
+        run: $(go env GOPATH)/bin/goveralls -service="github" -coverprofile=$GITHUB_WORKSPACE/profile.cov
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: build image
         run: docker build --build-arg SKIP_TEST=true --build-arg CI=github .
-
-
-
