@@ -25,7 +25,7 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 	tbl := []struct {
 		timeout, expected time.Duration
 	}{
-		{0, 600},
+		{0, time.Second * 60},
 		{300, 300},
 		{100500, 100500},
 	}
