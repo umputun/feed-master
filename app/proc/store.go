@@ -83,7 +83,6 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
 
 // Load from bold for given feed, up to max
 func (b BoltDB) Load(fmFeed string, max int) ([]feed.Item, error) {
-
 	result := []feed.Item{}
 
 	err := b.DB.View(func(tx *bolt.Tx) error {
@@ -109,7 +108,6 @@ func (b BoltDB) Load(fmFeed string, max int) ([]feed.Item, error) {
 }
 
 func (b BoltDB) removeOld(fmFeed string, keep int) (int, error) {
-
 	deleted := 0
 	err := b.DB.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(fmFeed))
@@ -135,9 +133,8 @@ func (b BoltDB) removeOld(fmFeed string, keep int) (int, error) {
 
 // Buckets returns list of buckets
 func (b BoltDB) Buckets() (result []string, err error) {
-
 	err = b.DB.View(func(tx *bolt.Tx) error {
-		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error { //nolint
+		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error { // nolint
 			result = append(result, string(name))
 			return nil
 		})

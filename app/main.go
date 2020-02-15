@@ -18,7 +18,7 @@ import (
 	"github.com/umputun/feed-master/app/proc"
 )
 
-var opts struct {
+type opts struct {
 	DB   string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
 	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
 
@@ -42,6 +42,7 @@ var revision = "local"
 
 func main() {
 	fmt.Printf("feed-master %s\n", revision)
+	var opts opts
 	if _, err := flags.Parse(&opts); err != nil {
 		os.Exit(1)
 	}
@@ -49,7 +50,7 @@ func main() {
 
 	var conf = &proc.Conf{}
 	if opts.Feed != "" { // single feed (no config) mode
-		conf = singleFeedConf()
+		conf = singleFeedConf(opts)
 	}
 
 	var err error
@@ -70,7 +71,7 @@ func main() {
 		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
 	}
 
-	p := &proc.Processor{Conf: conf, Store: db, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter()}
+	p := &proc.Processor{Conf: conf, Store: db, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter(opts)}
 	go p.Do()
 
 	server := api.Server{
@@ -81,7 +82,7 @@ func main() {
 	server.Run(8080)
 }
 
-func singleFeedConf() *proc.Conf {
+func singleFeedConf(opts opts) *proc.Conf {
 	conf := proc.Conf{}
 	f := proc.Feed{
 		TelegramChannel: opts.TelegramChannel,
@@ -97,7 +98,7 @@ func singleFeedConf() *proc.Conf {
 	return &conf
 }
 
-func makeTwitter() *proc.TwitterClient {
+func makeTwitter(opts opts) *proc.TwitterClient {
 	twitterFmtFn := func(item feed.Item) string {
 		b1 := bytes.Buffer{}
 		if err := template.Must(template.New("twi").Parse(opts.TwitterTemplate)).Execute(&b1, item); err != nil { // nolint

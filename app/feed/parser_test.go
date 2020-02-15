@@ -31,7 +31,6 @@ func TestFeedParseHttpError(t *testing.T) {
 }
 
 func TestNormalizeDate(t *testing.T) {
-
 	tbl := []struct {
 		inp string
 		err error
@@ -63,7 +62,7 @@ func TestNormalizeIfLastBuildDateAndPubDateInvalidFormat(t *testing.T) {
 		{"02 Jan 06 15:04 MST", "invalidFormat"},
 	}
 
-	//nolint:scopelint
+	// nolint:scopelint
 	for i, tc := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			rss := Rss2{
