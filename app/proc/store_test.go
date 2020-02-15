@@ -130,7 +130,7 @@ func TestLoadChackMax(t *testing.T) {
 		{5, 2},
 	}
 
-	//nolint:scopelint
+	// nolint:scopelint
 	for i, tc := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			items, err := boltDB.Load("radio-t", tc.max)
@@ -179,7 +179,7 @@ func TestRemoveOld(t *testing.T) {
 		{2, 0},
 	}
 
-	//nolint:scopelint
+	// nolint:scopelint
 	for i, tc := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			tmpfile, _ := ioutil.TempFile("", "")

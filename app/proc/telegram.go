@@ -27,7 +27,7 @@ type TelegramClient struct {
 // NewTelegramClient init telegram client
 func NewTelegramClient(token string, timeout time.Duration) (*TelegramClient, error) {
 	if timeout == 0 {
-		timeout = time.Duration(60 * 10)
+		timeout = time.Second * 60
 	}
 
 	if token == "" {
@@ -54,7 +54,6 @@ func NewTelegramClient(token string, timeout time.Duration) (*TelegramClient, er
 
 // Send message, skip if telegram token empty
 func (client TelegramClient) Send(channelID string, item feed.Item) (err error) {
-
 	if client.Bot == nil || channelID == "" {
 		return nil
 	}
@@ -84,7 +83,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 
 // getContentLength uses HEAD request and called as a fallback in case of item.Enclosure.Length not populated
 func getContentLength(url string) (int, error) {
-	resp, err := http.Head(url) //nolint:gosec
+	resp, err := http.Head(url) // nolint:gosec
 	if err != nil {
 		return 0, errors.Wrapf(err, "can't HEAD %s", url)
 	}
@@ -112,7 +111,7 @@ func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Mes
 
 func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Message, error) {
 	httpBody, err := client.downloadAudio(item.Enclosure.URL)
-	defer httpBody.Close() //nolint:staticcheck
+	defer httpBody.Close() // nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}
@@ -143,6 +142,7 @@ func (client TelegramClient) downloadAudio(url string) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	log.Printf("[DEBUG] start download audio: %s", url)
 

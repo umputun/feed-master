@@ -87,7 +87,6 @@ func (p *Processor) Do() {
 }
 
 func (p *Processor) feed(name, url, telegramChannel string, max int) {
-
 	rss, err := feed.Parse(url)
 	if err != nil {
 		log.Printf("[WARN] failed to parse %s, %v", url, err)

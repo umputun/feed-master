@@ -25,12 +25,12 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 	tbl := []struct {
 		timeout, expected time.Duration
 	}{
-		{0, 600},
+		{0, time.Second * 60},
 		{300, 300},
 		{100500, 100500},
 	}
 
-	//nolint:scopelint
+	// nolint:scopelint
 	for i, tt := range tbl {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			client, err := NewTelegramClient("", tt.timeout)
@@ -105,7 +105,7 @@ func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
 
 	for i, channelID := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			got := recipient{chatID: channelID} //nolint
+			got := recipient{chatID: channelID} // nolint
 			assert.Equal(t, expected, got.Recipient())
 		})
 	}
