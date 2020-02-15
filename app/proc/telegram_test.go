@@ -178,5 +178,5 @@ func TestGetContentLengthIfErrorConnect(t *testing.T) {
 	length, err := getContentLength(ts.URL)
 
 	assert.Equal(t, length, 0)
-	assert.Equal(t, err.Error(), fmt.Sprintf("can't HEAD %s: Head %s: EOF", ts.URL, ts.URL))
+	assert.EqualError(t, err, fmt.Sprintf("can't HEAD %s: Head %s: EOF", ts.URL, ts.URL))
 }
