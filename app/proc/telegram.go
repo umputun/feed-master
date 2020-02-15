@@ -111,10 +111,10 @@ func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Mes
 
 func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Message, error) {
 	httpBody, err := client.downloadAudio(item.Enclosure.URL)
-	defer httpBody.Close() // nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}
+	defer httpBody.Close()
 
 	audio := tb.Audio{
 		File:     tb.FromReader(httpBody),
