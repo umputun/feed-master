@@ -27,7 +27,7 @@ type TelegramClient struct {
 // NewTelegramClient init telegram client
 func NewTelegramClient(token string, timeout time.Duration) (*TelegramClient, error) {
 	if timeout == 0 {
-		timeout = time.Duration(60 * 10)
+		timeout = time.Second * 60
 	}
 
 	if token == "" {
