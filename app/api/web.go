@@ -83,12 +83,12 @@ func (s *Server) addFileServer(r chi.Router, path string, root http.FileSystem) 
 	}
 	path += "*"
 
-	r.Get(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
 		// don't show dirs, just serve files
 		if strings.HasSuffix(r.URL.Path, "/") {
 			http.NotFound(w, r)
 			return
 		}
 		fs.ServeHTTP(w, r)
-	}))
+	})
 }
