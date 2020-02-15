@@ -182,7 +182,7 @@ func TestParseFeedContentIfRSSVersionEmptyContent(t *testing.T) {
 
 	<item>
 	  <title>Example</title>
-	  <descrption>Description</descrption>
+	  <description>Description</description>
 	  <encoded>Content</encoded>
 	</item>
   </channel>
