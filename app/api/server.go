@@ -112,7 +112,7 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
-	fmt.Fprintf(w, "%s", string(b))
+	_, _ = fmt.Fprintf(w, "%s", string(b))
 }
 
 // GET /image/{name}
