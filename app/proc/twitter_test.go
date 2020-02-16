@@ -18,8 +18,9 @@ func TestCleanText(t *testing.T) {
 		{"<b>test12345 aaaa</b>", "test12 ...", 6},
 	}
 
-	// nolint:scopelint
 	for i, tt := range tbl {
+		i := i
+		tt := tt
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			out := CleanText(tt.inp, tt.max)
 			assert.Equal(t, tt.out, out)

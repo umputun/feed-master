@@ -62,8 +62,9 @@ func TestNormalizeIfLastBuildDateAndPubDateInvalidFormat(t *testing.T) {
 		{"02 Jan 06 15:04 MST", "invalidFormat"},
 	}
 
-	// nolint:scopelint
 	for i, tc := range cases {
+		i := i
+		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			rss := Rss2{
 				LastBuildDate: tc.lastBuildDate,
