@@ -27,7 +27,7 @@ func TestNewBoltDB(t *testing.T) {
 func TestNewBoltDBFileNotExists(t *testing.T) {
 	boltDB, err := NewBoltDB("")
 
-	assert.Equal(t, err.Error(), "open : no such file or directory")
+	assert.EqualError(t, err, "open : no such file or directory")
 	assert.Nil(t, boltDB)
 }
 
@@ -44,7 +44,7 @@ func TestSaveIfInvalidPubDate(t *testing.T) {
 	created, err := boltDB.Save("radio-t", item)
 
 	assert.False(t, created)
-	assert.Equal(t, err.Error(), "parsing time \"100500\" as \"Mon, 02 Jan 2006 15:04:05 -0700\": cannot parse \"100500\" as \"Mon\"")
+	assert.EqualError(t, err, "parsing time \"100500\" as \"Mon, 02 Jan 2006 15:04:05 -0700\": cannot parse \"100500\" as \"Mon\"")
 }
 
 func TestSave(t *testing.T) {
@@ -89,7 +89,7 @@ func TestLoadIfNotBucket(t *testing.T) {
 	feedItems, err := boltDB.Load("100500", 5)
 
 	assert.Equal(t, len(feedItems), 0)
-	assert.Equal(t, err.Error(), "no bucket for 100500")
+	assert.EqualError(t, err, "no bucket for 100500")
 }
 
 func TestLoad(t *testing.T) {
@@ -130,8 +130,9 @@ func TestLoadChackMax(t *testing.T) {
 		{5, 2},
 	}
 
-	// nolint:scopelint
 	for i, tc := range cases {
+		i := i
+		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			items, err := boltDB.Load("radio-t", tc.max)
 
@@ -165,7 +166,7 @@ func TestRemoveOldIfNotExistsBucket(t *testing.T) {
 
 	count, err := boltDB.removeOld("radio-t", 5)
 
-	assert.Equal(t, err.Error(), "no bucket for radio-t")
+	assert.EqualError(t, err, "no bucket for radio-t")
 	assert.Equal(t, 0, count)
 }
 
@@ -179,8 +180,9 @@ func TestRemoveOld(t *testing.T) {
 		{2, 0},
 	}
 
-	// nolint:scopelint
 	for i, tc := range cases {
+		i := i
+		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			tmpfile, _ := ioutil.TempFile("", "")
 			defer os.Remove(tmpfile.Name())

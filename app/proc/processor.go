@@ -1,4 +1,4 @@
-// Package proc provided the primary blockin loop
+// Package proc provided the primary blocking loop
 // updating from sources and making feeds
 package proc
 

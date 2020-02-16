@@ -30,8 +30,9 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 		{100500, 100500},
 	}
 
-	// nolint:scopelint
 	for i, tt := range tbl {
+		i := i
+		tt := tt
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			client, err := NewTelegramClient("", tt.timeout)
 			assert.NoError(t, err)
@@ -122,8 +123,9 @@ func TestGetFilenameByURL(t *testing.T) {
 		{"https://example.com/", ""},
 	}
 
-	// nolint:scopelint
 	for i, tt := range tbl {
+		i := i
+		tt := tt
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			client := TelegramClient{}
 			fname := client.getFilenameByURL(tt.url)
@@ -144,8 +146,9 @@ func TestGetContentLengthNotFound(t *testing.T) {
 		{http.StatusOK, 4, 4, ""},
 	}
 
-	// nolint:scopelint
 	for i, tc := range cases {
+		i := i
+		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tc.statusCode)
@@ -178,5 +181,5 @@ func TestGetContentLengthIfErrorConnect(t *testing.T) {
 	length, err := getContentLength(ts.URL)
 
 	assert.Equal(t, length, 0)
-	assert.Equal(t, err.Error(), fmt.Sprintf("can't HEAD %s: Head %s: EOF", ts.URL, ts.URL))
+	assert.EqualError(t, err, fmt.Sprintf("can't HEAD %s: Head %s: EOF", ts.URL, ts.URL))
 }
