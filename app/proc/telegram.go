@@ -83,7 +83,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 
 // getContentLength uses HEAD request and called as a fallback in case of item.Enclosure.Length not populated
 func getContentLength(url string) (int, error) {
-	resp, err := http.Head(url) // nolint:gosec
+	resp, err := http.Head(url) // nolint:gosec // URL considered safe
 	if err != nil {
 		return 0, errors.Wrapf(err, "can't HEAD %s", url)
 	}
