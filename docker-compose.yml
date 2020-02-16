@@ -2,7 +2,11 @@ version: "2"
 
 services:
     feed-master:
-        build: .
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+            - SKIP_TEST
         image: umputun/feed-master:master
         container_name: feed-master
         hostname: feed-master
