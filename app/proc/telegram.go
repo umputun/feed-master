@@ -142,7 +142,6 @@ func (client TelegramClient) downloadAudio(url string) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	log.Printf("[DEBUG] start download audio: %s", url)
 
