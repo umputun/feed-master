@@ -39,8 +39,9 @@ func TestTwitterSendIfFieldsTwitterAuthEmpty(t *testing.T) {
 		{"", "", "", "d"},
 	}
 
-	//nolint:scopelint
 	for i, tt := range cases {
+		i := i
+		tt := tt
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			twiAuth := TwitterAuth{
 				ConsumerKey:    tt.consumerKey,
