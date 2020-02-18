@@ -37,3 +37,19 @@ update: 600
 	assert.Equal(t, 1, len(r.Feeds["second"].Sources), "1 feed in second")
 	assert.Equal(t, "https://bbb.com/u1", r.Feeds["second"].Sources[0].URL)
 }
+
+func TestLoadConfigNotFoundFile(t *testing.T) {
+	r, err := loadConfig("/tmp/29e28b3c-e1a4-4269-a10b-3e9a89a08d45.txt")
+
+	assert.Nil(t, r)
+	assert.EqualError(t, err, "open /tmp/29e28b3c-e1a4-4269-a10b-3e9a89a08d45.txt: no such file or directory")
+}
+
+func TestLoadConfigInvalidYaml(t *testing.T) {
+	assert.Nil(t, ioutil.WriteFile("/tmp/fm.txt", []byte(`Not Yaml`), 0777), "failed write yml") // nolint
+
+	r, err := loadConfig("/tmp/fm.txt")
+
+	assert.Nil(t, r)
+	assert.EqualError(t, err, "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `Not Yaml` into proc.Conf")
+}
