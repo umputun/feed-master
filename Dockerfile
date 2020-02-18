@@ -32,6 +32,11 @@ COPY app/webapp /srv/webapp
 RUN \
     chown -R app:app /srv && \
     chmod +x /srv/feed-master
+    
+COPY uploader /srv/uploader
+RUN apk add --no-cache python3 && \
+    pip3 install --upgrade pip && \
+    pip3 install -r /srv/uploader/requirements.txt
 
 WORKDIR /srv
 

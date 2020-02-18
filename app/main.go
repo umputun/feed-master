@@ -35,6 +35,8 @@ var opts struct {
 	TwitterAccessSecret   string        `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
 	TwitterTemplate       string        `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
 
+	TelegramUploaderConfig proc.TelegramUploaderConfig `long:"uploader" description:"experimental uploader configuration to upload audio >50MB"`
+
 	Dbg bool `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
 
@@ -65,7 +67,11 @@ func main() {
 		log.Fatalf("[ERROR] can't open db %s, %v", opts.DB, err)
 	}
 
-	telegramNotif, err := proc.NewTelegramClient(opts.TelegramToken, opts.TelegramTimeout)
+	telegramNotif, err := proc.NewTelegramClient(
+		opts.TelegramToken,
+		opts.TelegramTimeout,
+		&opts.TelegramUploaderConfig,
+	)
 	if err != nil {
 		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
 	}

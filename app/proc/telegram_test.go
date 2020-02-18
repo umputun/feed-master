@@ -16,7 +16,7 @@ import (
 )
 
 func TestNewTelegramClientIfTokenEmpty(t *testing.T) {
-	client, err := NewTelegramClient("", 0)
+	client, err := NewTelegramClient("", 0, nil)
 	assert.NoError(t, err)
 	assert.Nil(t, client.Bot)
 }
@@ -33,7 +33,7 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 	//nolint:scopelint
 	for i, tt := range tbl {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			client, err := NewTelegramClient("", tt.timeout)
+			client, err := NewTelegramClient("", tt.timeout, nil)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected, client.Timeout)
 		})
@@ -41,7 +41,7 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 }
 
 func TestSendIfBotIsNil(t *testing.T) {
-	client, err := NewTelegramClient("", 0)
+	client, err := NewTelegramClient("", 0, nil)
 	require.NoError(t, err)
 	err = client.Send("@channel", feed.Item{})
 	assert.NoError(t, err)

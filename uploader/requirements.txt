@@ -1,0 +1,3 @@
+Telethon==1.10.10
+progressbar==2.5
+eyeD3==0.9
