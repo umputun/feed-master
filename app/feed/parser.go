@@ -23,7 +23,7 @@ type Rss2 struct {
 	XMLName       xml.Name `xml:"rss"`
 	Version       string   `xml:"version,attr"`
 	Title         string   `xml:"channel>title"`
-	Language      string   `xml:"channel>lang"`
+	Language      string   `xml:"channel>language"`
 	Link          string   `xml:"channel>link"`
 	Description   string   `xml:"channel>description"`
 	PubDate       string   `xml:"channel>pubDate"`
@@ -175,7 +175,6 @@ func parseFeedContent(content []byte) (Rss2, error) {
 
 // Normalize converts to RFC822 = "02 Jan 06 15:04 MST"
 func (rss *Rss2) Normalize() (Rss2, error) {
-
 	dt, err := rss.normalizeDate(rss.LastBuildDate)
 	if err != nil {
 		dt, err = rss.normalizeDate(rss.PubDate)

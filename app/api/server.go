@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -37,7 +39,6 @@ type Server struct {
 
 // Run starts http server for API with all routes
 func (s *Server) Run(port int) {
-
 	var err error
 	if s.cache, err = lcw.NewExpirableCache(lcw.TTL(time.Minute*5), lcw.MaxCacheSize(10*1024*1024)); err != nil {
 		log.Printf("[PANIC] failed to make loading cache, %v", err)
@@ -63,6 +64,8 @@ func (s *Server) Run(port int) {
 		rimg.Use(l.Handler)
 		rimg.Get("/images/{name}", s.getImageCtrl)
 		rimg.Get("/image/{name}", s.getImageCtrl)
+		rimg.Head("/image/{name}", s.getImageHeadCtrl)
+		rimg.Head("/images/{name}", s.getImageHeadCtrl)
 	})
 
 	router.Group(func(rrss chi.Router) {
@@ -109,12 +112,11 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
-	fmt.Fprintf(w, "%s", string(b))
+	_, _ = fmt.Fprintf(w, "%s", string(b))
 }
 
 // GET /image/{name}
 func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
-
 	fm := chi.URLParam(r, "name")
 	fm = strings.TrimRight(fm, ".png")
 	feedConf, found := s.Conf.Feeds[fm]
@@ -134,6 +136,26 @@ func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(b); err != nil {
 		log.Printf("[WARN] failed to send image, %s", err)
 	}
+}
+
+// HEAD /image/{name}
+func (s *Server) getImageHeadCtrl(w http.ResponseWriter, r *http.Request) {
+	fm := chi.URLParam(r, "name")
+	fm = strings.TrimRight(fm, ".png")
+	feedConf, found := s.Conf.Feeds[fm]
+	if !found {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	info, err := os.Stat(feedConf.Image)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Length", strconv.Itoa(int(info.Size())))
+	w.WriteHeader(http.StatusOK)
 }
 
 // GET /list - returns feed's image

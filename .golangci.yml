@@ -70,4 +70,4 @@ issues:
   exclude-use-default: false
 
 service:
-  golangci-lint-version: 1.20.x
+  golangci-lint-version: 1.23.x

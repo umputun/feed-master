@@ -1,4 +1,4 @@
-// Package proc provided the primary blockin loop
+// Package proc provided the primary blocking loop
 // updating from sources and making feeds
 package proc
 
@@ -87,7 +87,6 @@ func (p *Processor) Do() {
 }
 
 func (p *Processor) feed(name, url, telegramChannel string, max int) {
-
 	rss, err := feed.Parse(url)
 	if err != nil {
 		log.Printf("[WARN] failed to parse %s, %v", url, err)

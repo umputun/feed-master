@@ -8,6 +8,24 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 - Create `etc/fm.yml` (sample provided in `_example`)
 - Start container with `docker-compose up -d`
 
+### Application parameters
+
+| Command line     | Environment       | Default               | Description                         |
+| -----------------| ------------------| ----------------------| ----------------------------------- |
+| db               | FM_DB             | `var/feed-master.bdb` | bolt db file                        |
+| conf             | FM_CONF           | `feed-master.yml`     | config file (yml)                   |
+| feed             | FM_FEED           |                 | single feed, overrides config             |
+| update-interval  | UPDATE_INTERVAL   | `1m`            | update interval, overrides config         |
+| telegram_chan    | TELEGRAM_CHAN     |                 | single telegram channel, overrides config |
+| telegram_token   | TELEGRAM_TOKEN    |                 | telegram token           |
+| telegram_timeout | TELEGRAM_TIMEOUT  | `1m`            | telegram timeout         |
+| consumer-key     | TWI_CONSUMER_KEY  |                 | twitter consumer key     |
+| consumer-secret  | TWI_CONSUMER_SECRET |               | twitter consumer secret  |
+| access-token     | TWI_ACCESS_TOKEN  |                 | twitter access token     |
+| access-secret    | TWI_ACCESS_SECRET |                 | twitter access secret    |
+| template         | TEMPLATE | `{{.Title}} - {{.Link}}` | twitter message template |
+| dbg              | DEBUG             | `false`         | debug mode               |
+
 ## API
 
 - `GET /rss/{name}` - returns feed-set for given name
