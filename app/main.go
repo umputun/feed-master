@@ -35,7 +35,13 @@ var opts struct {
 	TwitterAccessSecret   string        `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
 	TwitterTemplate       string        `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
 
-	TelegramUploaderConfig proc.TelegramUploaderConfig `long:"uploader" description:"experimental uploader configuration to upload audio >50MB"`
+	Uploader struct {
+		Enabled      bool   `long:"enabled" env:"UPLOADER_ENABLED" description:"Enables experimental Telegram large files uploader"`
+		PathToScript string `long:"path" env:"PATH_TO_SCRIPT" description:"Path to Python uploader script"`
+		APIID        string `long:"api_id" env:"API_ID" description:"Telegram APP API ID in format like 0000000"`
+		APIHash      string `long:"api_hash" env:"API_HASH" description:"Telegram APP API Hash in format like 0123456789acbdefghijklmnopqrstuw"`
+		Session      string `long:"session" env:"SESSION" description:"Path to Telegram client session file (created by uploader/auth.py script)"`
+	} `group:"uploader" namespace:"uploader" env-namespace:"UPLOADER"`
 
 	Dbg bool `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
@@ -70,7 +76,13 @@ func main() {
 	telegramNotif, err := proc.NewTelegramClient(
 		opts.TelegramToken,
 		opts.TelegramTimeout,
-		&opts.TelegramUploaderConfig,
+		proc.TelegramUploaderConfig{
+			Enabled:      opts.Uploader.Enabled,
+			PathToScript: opts.Uploader.PathToScript,
+			APIID:        opts.Uploader.APIID,
+			APIHash:      opts.Uploader.APIHash,
+			Session:      opts.Uploader.Session,
+		},
 	)
 	if err != nil {
 		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)

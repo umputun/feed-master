@@ -26,7 +26,7 @@ const maxTelegramFileSize = 50_000_000
 type TelegramClient struct {
 	Bot            *tb.Bot
 	Timeout        time.Duration
-	uploaderConfig *TelegramUploaderConfig
+	uploaderConfig TelegramUploaderConfig
 }
 
 // TelegramUploaderConfig struct used to configure
@@ -40,7 +40,7 @@ type TelegramUploaderConfig struct {
 }
 
 // NewTelegramClient init telegram client
-func NewTelegramClient(token string, timeout time.Duration, uploaderConfig *TelegramUploaderConfig) (*TelegramClient, error) {
+func NewTelegramClient(token string, timeout time.Duration, uploaderConfig TelegramUploaderConfig) (*TelegramClient, error) {
 	if timeout == 0 {
 		timeout = time.Duration(60 * 10)
 	}
@@ -131,10 +131,10 @@ func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Mes
 
 func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Message, error) {
 	httpBody, err := client.downloadAudio(item.Enclosure.URL)
-	defer httpBody.Close() //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}
+	defer httpBody.Close() //nolint:staticcheck
 
 	audio := tb.Audio{
 		File:     tb.FromReader(httpBody),
@@ -155,35 +155,32 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 
 func (client TelegramClient) sendAudioWithExternalUploader(channelID string, item feed.Item) (*tb.Message, error) {
 	httpBody, err := client.downloadAudio(item.Enclosure.URL)
-	defer httpBody.Close() //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}
+	defer httpBody.Close() //nolint:staticcheck
 
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "feed-master-")
 	if err != nil {
-		return nil, errors.Wrap(err, "create temoprary file")
+		return nil, errors.Wrap(err, "create temporary file")
 	}
 	defer os.Remove(tmpFile.Name())
 
-	_, err = io.Copy(tmpFile, httpBody)
-	if err != nil {
+	if _, err = io.Copy(tmpFile, httpBody); err != nil {
 		return nil, errors.Wrap(err, "write to temporary file")
 	}
 
-	output, err := execute(
-		"python3 "+client.uploaderConfig.PathToScript,
-		map[string]string{
-			"API_ID":            client.uploaderConfig.APIID,
-			"API_HASH":          client.uploaderConfig.APIHash,
-			"SESSION":           client.uploaderConfig.Session,
-			"SEND_TO":           channelID,
-			"FILE_PATH":         tmpFile.Name(),
-			"CAPTION":           client.getMessageHTML(item, false),
-			"PARSE_MODE":        "html",
-			"SHOW_PROGRESS_BAR": "false",
-		},
-	)
+	output, err := execute(fmt.Sprintf(
+		"python3 %s --session=%s --api_id=%s --api_hash=%s --file_path=%s --send_to=%s --caption=%s --parse_mode=%s",
+		client.uploaderConfig.PathToScript,
+		client.uploaderConfig.Session,
+		client.uploaderConfig.APIID,
+		client.uploaderConfig.APIHash,
+		tmpFile.Name(),
+		channelID,
+		client.getMessageHTML(item, false),
+		"html",
+	))
 	if err != nil {
 		return nil, errors.Wrap(err, "execute experimental audio uploader")
 	}
@@ -244,7 +241,7 @@ func (r recipient) Recipient() string {
 	return r.chatID
 }
 
-func execute(command string, env map[string]string) (string, error) {
+func execute(command string) (string, error) {
 	args := strings.Split(command, " ")
 
 	var stdout, stderr bytes.Buffer
@@ -252,12 +249,6 @@ func execute(command string, env map[string]string) (string, error) {
 	cmd := exec.Command(args[0], args[1:]...) // #nosec
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-
-	cmdEnv := []string{}
-	for key, value := range env {
-		cmdEnv = append(cmdEnv, key+"="+value)
-	}
-	cmd.Env = cmdEnv
 
 	err := cmd.Run()
 	if err != nil {

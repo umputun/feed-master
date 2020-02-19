@@ -5,39 +5,43 @@ from telethon.tl.types import DocumentAttributeAudio
 import progressbar as pb
 import eyed3
 from sys import stdin
-from os import environ, path
+from os import path
+from optparse import OptionParser
 
-api_id = environ.get('API_ID')
-api_hash = environ.get('API_HASH')
-session = environ.get('SESSION')
-file_path = environ.get('FILE_PATH')
-send_to = environ.get('SEND_TO')
-caption = environ.get('CAPTION')
-parse_mode = environ.get('PARSE_MODE')
-show_progress_bar = environ.get('SHOW_PROGRESS_BAR') in ["true", "1", "y", "yes"]
+parser = OptionParser()
+parser.add_option("-s", "--session", type="string", help="Name of the session")
+parser.add_option("-i", "--api_id", type="string", help="Telegram App API ID")
+parser.add_option("-a", "--api_hash", type="string", help="Telegram App API Hash")
+parser.add_option("-t", "--send_to", type="string", help="Channel, username or botname to send MP3 file to")
+parser.add_option("-f", "--file_path", type="string", help="Path to MP3 file", metavar="FILE")
+parser.add_option("-c", "--caption", type="string", help="Caption for Telegram audio file message")
+parser.add_option("-m", "--parse_mode", type="string", default="html", help="Telegram message parse mode (html, md)")
+parser.add_option("-p", "--show_progress_bar", action="store_true", default=False, help="Show progress bar")
 
-if show_progress_bar:
+(options, args) = parser.parse_args()
+
+if options.show_progress_bar:
     widgets = ['Uploading: ', pb.Percentage(), ' ',
             pb.Bar(), ' ',
             pb.SimpleProgress(), ' ',
             pb.ETA()]
-    bar = pb.ProgressBar(widgets=widgets, maxval=path.getsize(file_path))
+    bar = pb.ProgressBar(widgets=widgets, maxval=path.getsize(options.file_path))
 
 def progress(sent, total):
-    if show_progress_bar:
+    if options.show_progress_bar:
         bar.update(sent)
 
-with TelegramClient(session, api_id, api_hash) as client:
-    file = eyed3.load(file_path)
+with TelegramClient(options.session, options.api_id, options.api_hash) as client:
+    file = eyed3.load(options.file_path)
     title = "%s – %s" % (file.tag.title, file.tag.artist)
 
-    if show_progress_bar:
+    if options.show_progress_bar:
         bar.start()
 
-    client.parse_mode=parse_mode
+    client.parse_mode=options.parse_mode
     message = client.send_file(
-        send_to,
-        file_path,
+        options.send_to,
+        options.file_path,
         progress_callback=progress,
         attributes=[DocumentAttributeAudio(
             duration=int(file.info.time_secs),
@@ -45,10 +49,10 @@ with TelegramClient(session, api_id, api_hash) as client:
             title=file.tag.title,
             performer=file.tag.artist
         )],
-        caption=caption
+        caption=options.caption
     )
 
-    if show_progress_bar:
+    if options.show_progress_bar:
         bar.finish()
 
     client.disconnect()
