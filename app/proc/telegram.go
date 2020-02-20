@@ -42,7 +42,7 @@ type TelegramUploaderConfig struct {
 // NewTelegramClient init telegram client
 func NewTelegramClient(token string, timeout time.Duration, uploaderConfig TelegramUploaderConfig) (*TelegramClient, error) {
 	if timeout == 0 {
-		timeout = time.Duration(60 * 10)
+		timeout = time.Second * 60
 	}
 
 	if token == "" {
@@ -70,7 +70,6 @@ func NewTelegramClient(token string, timeout time.Duration, uploaderConfig Teleg
 
 // Send message, skip if telegram token empty
 func (client TelegramClient) Send(channelID string, item feed.Item) (err error) {
-
 	if client.Bot == nil || channelID == "" {
 		return nil
 	}
@@ -93,7 +92,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 
 // getContentLength uses HEAD request and called as a fallback in case of item.Enclosure.Length not populated
 func getContentLength(url string) (int, error) {
-	resp, err := http.Head(url) //nolint:gosec
+	resp, err := http.Head(url) // nolint:gosec // URL considered safe
 	if err != nil {
 		return 0, errors.Wrapf(err, "can't HEAD %s", url)
 	}
@@ -134,7 +133,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 	if err != nil {
 		return nil, err
 	}
-	defer httpBody.Close() //nolint:staticcheck
+	defer httpBody.Close()
 
 	audio := tb.Audio{
 		File:     tb.FromReader(httpBody),
@@ -158,7 +157,7 @@ func (client TelegramClient) sendAudioWithExternalUploader(channelID string, ite
 	if err != nil {
 		return nil, err
 	}
-	defer httpBody.Close() //nolint:staticcheck
+	defer httpBody.Close()
 
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "feed-master-")
 	if err != nil {

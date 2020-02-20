@@ -22,7 +22,7 @@ RUN \
     echo "runs outside of CI" && version=$(/script/git-rev.sh); \
     else version=${GIT_BRANCH}-${GITHUB_SHA:0:7}-$(date +%Y%m%dT%H:%M:%S); fi && \
     echo "version=$version" && \
-    go build -o feed-master -ldflags "-X main.revision=${version} -s -w" ./app 
+    go build -o feed-master -ldflags "-X main.revision=${version} -s -w" ./app
 
 
 FROM umputun/baseimage:app-latest

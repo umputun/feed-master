@@ -18,7 +18,7 @@ import (
 	"github.com/umputun/feed-master/app/proc"
 )
 
-var opts struct {
+type options struct {
 	DB   string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
 	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
 
@@ -50,6 +50,7 @@ var revision = "local"
 
 func main() {
 	fmt.Printf("feed-master %s\n", revision)
+	var opts options
 	if _, err := flags.Parse(&opts); err != nil {
 		os.Exit(1)
 	}
@@ -57,7 +58,7 @@ func main() {
 
 	var conf = &proc.Conf{}
 	if opts.Feed != "" { // single feed (no config) mode
-		conf = singleFeedConf()
+		conf = singleFeedConf(opts.Feed, opts.TelegramChannel, opts.UpdateInterval)
 	}
 
 	var err error
@@ -88,7 +89,7 @@ func main() {
 		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
 	}
 
-	p := &proc.Processor{Conf: conf, Store: db, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter()}
+	p := &proc.Processor{Conf: conf, Store: db, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter(opts)}
 	go p.Do()
 
 	server := api.Server{
@@ -99,23 +100,23 @@ func main() {
 	server.Run(8080)
 }
 
-func singleFeedConf() *proc.Conf {
+func singleFeedConf(feedURL, channel string, updateInterval time.Duration) *proc.Conf {
 	conf := proc.Conf{}
 	f := proc.Feed{
-		TelegramChannel: opts.TelegramChannel,
+		TelegramChannel: channel,
 		Sources: []struct {
 			Name string `yaml:"name"`
 			URL  string `yaml:"url"`
 		}{
-			{Name: "auto", URL: opts.Feed},
+			{Name: "auto", URL: feedURL},
 		},
 	}
 	conf.Feeds = map[string]proc.Feed{"auto": f}
-	conf.System.UpdateInterval = opts.UpdateInterval
+	conf.System.UpdateInterval = updateInterval
 	return &conf
 }
 
-func makeTwitter() *proc.TwitterClient {
+func makeTwitter(opts options) *proc.TwitterClient {
 	twitterFmtFn := func(item feed.Item) string {
 		b1 := bytes.Buffer{}
 		if err := template.Must(template.New("twi").Parse(opts.TwitterTemplate)).Execute(&b1, item); err != nil { // nolint

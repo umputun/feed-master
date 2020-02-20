@@ -31,7 +31,6 @@ func TestFeedParseHttpError(t *testing.T) {
 }
 
 func TestNormalizeDate(t *testing.T) {
-
 	tbl := []struct {
 		inp string
 		err error
@@ -63,8 +62,9 @@ func TestNormalizeIfLastBuildDateAndPubDateInvalidFormat(t *testing.T) {
 		{"02 Jan 06 15:04 MST", "invalidFormat"},
 	}
 
-	//nolint:scopelint
 	for i, tc := range cases {
+		i := i
+		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			rss := Rss2{
 				LastBuildDate: tc.lastBuildDate,
@@ -84,7 +84,7 @@ func TestParseAtomInvalidContent(t *testing.T) {
 
 	_, err := parseAtom(invalidContent)
 
-	assert.Equal(t, err.Error(), "can't parse atom1: XML syntax error on line 1: unexpected EOF")
+	assert.EqualError(t, err, "can't parse atom1: XML syntax error on line 1: unexpected EOF")
 }
 
 func TestParseAtom(t *testing.T) {
@@ -143,7 +143,7 @@ func TestParseFeedContentIfRSSVersionNot2_0(t *testing.T) {
 
 	_, err := parseFeedContent([]byte(rss))
 
-	assert.Equal(t, err.Error(), "not RSS 2.0")
+	assert.EqualError(t, err, "not RSS 2.0")
 }
 
 func TestParseFeedContentIfAtom1_0(t *testing.T) {
@@ -170,7 +170,7 @@ func TestParseFeedContentIfNotAtom1_0(t *testing.T) {
 
 	_, err := parseFeedContent([]byte(atom1))
 
-	assert.Equal(t, err.Error(), "can't parse feed content: xml: unsupported version \"2.0\"; only version 1.0 is supported")
+	assert.EqualError(t, err, "can't parse feed content: xml: unsupported version \"2.0\"; only version 1.0 is supported")
 }
 
 func TestParseFeedContentIfRSSVersionEmptyContent(t *testing.T) {
@@ -183,7 +183,7 @@ func TestParseFeedContentIfRSSVersionEmptyContent(t *testing.T) {
 
 	<item>
 	  <title>Example</title>
-	  <descrption>Description</descrption>
+	  <description>Description</description>
 	  <encoded>Content</encoded>
 	</item>
   </channel>

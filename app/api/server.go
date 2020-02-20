@@ -39,7 +39,6 @@ type Server struct {
 
 // Run starts http server for API with all routes
 func (s *Server) Run(port int) {
-
 	var err error
 	if s.cache, err = lcw.NewExpirableCache(lcw.TTL(time.Minute*5), lcw.MaxCacheSize(10*1024*1024)); err != nil {
 		log.Printf("[PANIC] failed to make loading cache, %v", err)
@@ -113,12 +112,11 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
-	fmt.Fprintf(w, "%s", string(b))
+	_, _ = fmt.Fprintf(w, "%s", string(b))
 }
 
 // GET /image/{name}
 func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
-
 	fm := chi.URLParam(r, "name")
 	fm = strings.TrimRight(fm, ".png")
 	feedConf, found := s.Conf.Feeds[fm]
@@ -142,7 +140,6 @@ func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
 
 // HEAD /image/{name}
 func (s *Server) getImageHeadCtrl(w http.ResponseWriter, r *http.Request) {
-
 	fm := chi.URLParam(r, "name")
 	fm = strings.TrimRight(fm, ".png")
 	feedConf, found := s.Conf.Feeds[fm]

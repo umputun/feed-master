@@ -57,11 +57,10 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data.([]byte)) //nolint
+	_, _ = w.Write(data.([]byte)) // nolint
 }
 
 func (s *Server) renderErrorPage(w http.ResponseWriter, r *http.Request, err error, errCode int) {
-
 	tmplData := struct {
 		Status int
 		Error  string
@@ -84,12 +83,12 @@ func (s *Server) addFileServer(r chi.Router, path string, root http.FileSystem) 
 	}
 	path += "*"
 
-	r.Get(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
 		// don't show dirs, just serve files
 		if strings.HasSuffix(r.URL.Path, "/") {
 			http.NotFound(w, r)
 			return
 		}
 		fs.ServeHTTP(w, r)
-	}))
+	})
 }
