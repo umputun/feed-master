@@ -8,8 +8,8 @@ import (
 	"path"
 	"time"
 
-	"github.com/boltdb/bolt"
 	log "github.com/go-pkgz/lgr"
+	bolt "go.etcd.io/bbolt"
 
 	"github.com/umputun/feed-master/app/feed"
 )

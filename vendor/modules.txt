@@ -4,8 +4,6 @@ github.com/ChimeraCoder/anaconda
 github.com/ChimeraCoder/tokenbucket
 # github.com/azr/backoff v0.0.0-20160115115103-53511d3c7330
 github.com/azr/backoff
-# github.com/boltdb/bolt v1.3.1
-github.com/boltdb/bolt
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/denisbrodbeck/striphtmltags v6.6.6+incompatible
@@ -66,11 +64,13 @@ github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.5.1
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# go.etcd.io/bbolt v1.3.4
+go.etcd.io/bbolt
 # golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.0.0-20190624142023-c5567b49c5d0
+# golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5
 golang.org/x/sys/unix
 # golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 golang.org/x/time/rate
