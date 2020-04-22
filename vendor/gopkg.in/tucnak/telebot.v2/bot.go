@@ -149,11 +149,6 @@ var (
 	cbackRx = regexp.MustCompile(`^\f(\w+)(\|(.+))?$`)
 )
 
-func (b *Bot) handleCommand(m *Message, cmdName, cmdBot string) bool {
-
-	return false
-}
-
 // Start brings bot into motion by consuming incoming
 // updates (see Bot.Updates channel).
 func (b *Bot) Start() {
@@ -282,7 +277,7 @@ func (b *Bot) incomingUpdate(upd *Update) {
 							defer b.deferDebug()
 						}
 						handler(from, to)
-					}(b, handler, m.MigrateFrom, m.MigrateTo)
+					}(b, handler, m.Chat.ID, m.MigrateTo)
 
 				} else {
 					panic("telebot: migration handler is bad")
@@ -312,8 +307,13 @@ func (b *Bot) incomingUpdate(upd *Update) {
 
 	if upd.Callback != nil {
 		if upd.Callback.Data != "" {
-			data := upd.Callback.Data
+			if upd.Callback.MessageID != "" {
+				upd.Callback.Message = &Message{
+					InlineID: upd.Callback.MessageID,
+				}
+			}
 
+			data := upd.Callback.Data
 			if data[0] == '\f' {
 				match := cbackRx.FindAllStringSubmatch(data, -1)
 
@@ -503,7 +503,7 @@ func (b *Bot) Stop() {
 // some Sendable (or string!) and optional send options.
 //
 // Note: since most arguments are of type interface{}, but have pointer
-// 		method recievers, make sure to pass them by-pointer, NOT by-value.
+// 		method receivers, make sure to pass them by-pointer, NOT by-value.
 //
 // What is a send option exactly? It can be one of the following types:
 //
@@ -540,14 +540,15 @@ func (b *Bot) SendAlbum(to Recipient, a Album, options ...interface{}) ([]Messag
 
 		f := x.MediaFile()
 
-		if f.InCloud() {
+		switch {
+		case f.InCloud():
 			mediaRepr = f.FileID
-		} else if f.FileURL != "" {
+		case f.FileURL != "":
 			mediaRepr = f.FileURL
-		} else if f.OnDisk() || f.FileReader != nil {
+		case f.OnDisk() || f.FileReader != nil:
 			mediaRepr = "attach://" + strconv.Itoa(i)
 			files[strconv.Itoa(i)] = *f
-		} else {
+		default:
 			return nil, errors.Errorf(
 				"telebot: album entry #%d doesn't exist anywhere", i)
 		}
@@ -555,13 +556,15 @@ func (b *Bot) SendAlbum(to Recipient, a Album, options ...interface{}) ([]Messag
 		switch y := x.(type) {
 		case *Photo:
 			jsonRepr, _ = json.Marshal(struct {
-				Type    string `json:"type"`
-				Caption string `json:"caption"`
-				Media   string `json:"media"`
+				Type      string    `json:"type"`
+				Media     string    `json:"media"`
+				Caption   string    `json:"caption,omitempty"`
+				ParseMode ParseMode `json:"parse_mode,omitempty"`
 			}{
 				"photo",
-				y.Caption,
 				mediaRepr,
+				y.Caption,
+				y.ParseMode,
 			})
 		case *Video:
 			jsonRepr, _ = json.Marshal(struct {
@@ -616,7 +619,7 @@ func (b *Bot) SendAlbum(to Recipient, a Album, options ...interface{}) ([]Messag
 		return nil, errors.Errorf("api error: %s", resp.Description)
 	}
 
-	for attachName, _ := range files {
+	for attachName := range files {
 		i, _ := strconv.Atoi(attachName)
 
 		var newID string
@@ -739,10 +742,10 @@ func (b *Bot) EditReplyMarkup(message Editable, markup *ReplyMarkup) (*Message, 
 	return extractMsgResponse(respJSON)
 }
 
-// EditCaption used to edit already sent photo caption with known recepient and message id.
+// EditCaption used to edit already sent photo caption with known recipient and message id.
 //
 // On success, returns edited message object
-func (b *Bot) EditCaption(message Editable, caption string) (*Message, error) {
+func (b *Bot) EditCaption(message Editable, caption string, options ...interface{}) (*Message, error) {
 	messageID, chatID := message.MessageSig()
 
 	params := map[string]string{"caption": caption}
@@ -755,6 +758,9 @@ func (b *Bot) EditCaption(message Editable, caption string) (*Message, error) {
 		params["message_id"] = messageID
 	}
 
+	sendOpts := extractOptions(options)
+	embedSendOptions(params, sendOpts)
+
 	respJSON, err := b.Raw("editMessageCaption", params)
 	if err != nil {
 		return nil, err
@@ -763,7 +769,7 @@ func (b *Bot) EditCaption(message Editable, caption string) (*Message, error) {
 	return extractMsgResponse(respJSON)
 }
 
-// EditMedia used to edit already sent media with known recepient and message id.
+// EditMedia used to edit already sent media with known recipient and message id.
 //
 // Use cases:
 //
@@ -778,28 +784,34 @@ func (b *Bot) EditMedia(message Editable, inputMedia InputMedia, options ...inte
 	file := make(map[string]File)
 
 	f := inputMedia.MediaFile()
+	thumbAttachName := "thumb"
 
-	if f.InCloud() {
+	switch {
+	case f.InCloud():
 		mediaRepr = f.FileID
-	} else if f.FileURL != "" {
+	case f.FileURL != "":
 		mediaRepr = f.FileURL
-	} else if f.OnDisk() || f.FileReader != nil {
+	case f.OnDisk() || f.FileReader != nil:
 		s := f.FileLocal
 		if f.FileReader != nil {
 			s = "0"
 		}
+		if s == thumbAttachName {
+			thumbAttachName = "thumb2"
+		}
 		mediaRepr = "attach://" + s
 		file[s] = *f
-	} else {
+	default:
 		return nil, errors.Errorf(
 			"telebot: can't edit media, it doesn't exist anywhere")
 	}
 
-	type FileJson struct {
+	type FileJSON struct {
 		// All types.
-		Type    string `json:"type"`
-		Caption string `json:"caption"`
-		Media   string `json:"media"`
+		Type      string    `json:"type"`
+		Caption   string    `json:"caption"`
+		Media     string    `json:"media"`
+		ParseMode ParseMode `json:"parse_mode,omitempty"`
 
 		// Video.
 		Width             int  `json:"width,omitempty"`
@@ -821,7 +833,12 @@ func (b *Bot) EditMedia(message Editable, inputMedia InputMedia, options ...inte
 		Performer string `json:"performer,omitempty"`
 	}
 
-	resultMedia := &FileJson{Media: mediaRepr}
+	resultMedia := &FileJSON{Media: mediaRepr}
+
+	sendOpts := extractOptions(options)
+	if sendOpts != nil {
+		resultMedia.ParseMode = sendOpts.ParseMode
+	}
 
 	switch y := inputMedia.(type) {
 	case *Photo:
@@ -837,7 +854,7 @@ func (b *Bot) EditMedia(message Editable, inputMedia InputMedia, options ...inte
 		resultMedia.MIME = y.MIME
 		thumb = y.Thumbnail
 		if thumb != nil {
-			resultMedia.Thumbnail = "attach://thumb"
+			resultMedia.Thumbnail = "attach://" + thumbAttachName
 		}
 	case *Document:
 		resultMedia.Type = "document"
@@ -846,7 +863,7 @@ func (b *Bot) EditMedia(message Editable, inputMedia InputMedia, options ...inte
 		resultMedia.MIME = y.MIME
 		thumb = y.Thumbnail
 		if thumb != nil {
-			resultMedia.Thumbnail = "attach://thumb"
+			resultMedia.Thumbnail = "attach://" + thumbAttachName
 		}
 	case *Audio:
 		resultMedia.Type = "audio"
@@ -855,6 +872,10 @@ func (b *Bot) EditMedia(message Editable, inputMedia InputMedia, options ...inte
 		resultMedia.MIME = y.MIME
 		resultMedia.Title = y.Title
 		resultMedia.Performer = y.Performer
+		thumb = y.Thumbnail
+		if thumb != nil {
+			resultMedia.Thumbnail = "attach://" + thumbAttachName
+		}
 	default:
 		return nil, errors.Errorf("telebot: inputMedia entry is not valid")
 	}
@@ -874,10 +895,9 @@ func (b *Bot) EditMedia(message Editable, inputMedia InputMedia, options ...inte
 	}
 
 	if thumb != nil {
-		file["thumb"] = *thumb.MediaFile()
+		file[thumbAttachName] = *thumb.MediaFile()
 	}
 
-	sendOpts := extractOptions(options)
 	embedSendOptions(params, sendOpts)
 
 	respJSON, err := b.sendFiles("editMessageMedia", file, params)
@@ -920,7 +940,7 @@ func (b *Bot) Delete(message Editable) error {
 // Chat action is a status message that recipient would see where
 // you typically see "Harry is typing" status message. The only
 // difference is that bots' chat actions live only for 5 seconds
-// and die just once the client recieves a message from the bot.
+// and die just once the client receives a message from the bot.
 //
 // Currently, Telegram supports only a narrow range of possible
 // actions, these are aligned as constants of this package.
@@ -1068,15 +1088,23 @@ func (b *Bot) GetFile(file *File) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
+	// save FilePath
+	file.FilePath = f.FilePath
 
-	url := b.URL + "/file/bot" + b.Token + "/" + f.FilePath
-
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", b.URL+"/file/bot"+b.Token+"/"+f.FilePath, nil)
 	if err != nil {
-		return nil, err
+		return nil, wrapSystem(err)
 	}
-	// set FilePath
-	*file = f
+
+	resp, err := b.client.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "file http.GET failed")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, errors.Errorf("api error: expected 200 OK but got %s", resp.Status)
+	}
 
 	return resp.Body, nil
 }
@@ -1133,7 +1161,7 @@ func (b *Bot) GetInviteLink(chat *Chat) (string, error) {
 	return resp.Result, nil
 }
 
-// SetChatTitle should be used to update group title.
+// SetGroupTitle should be used to update group title.
 func (b *Bot) SetGroupTitle(chat *Chat, newTitle string) error {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),

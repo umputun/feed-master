@@ -1,5 +1,7 @@
 package telebot
 
+import "encoding/json"
+
 // CallbackEndpoint is an interface any element capable
 // of responding to a callback `\f<unique>`.
 type CallbackEndpoint interface {
@@ -25,6 +27,11 @@ type Callback struct {
 	// Data associated with the callback button. Be aware that
 	// a bad client can send arbitrary data in this field.
 	Data string `json:"data"`
+}
+
+// IsInline says whether message is an inline message.
+func (c *Callback) IsInline() bool {
+	return c.MessageID != ""
 }
 
 // CallbackResponse builds a response to a Callback query.
@@ -67,6 +74,7 @@ type InlineButton struct {
 	Data            string `json:"callback_data,omitempty"`
 	InlineQuery     string `json:"switch_inline_query,omitempty"`
 	InlineQueryChat string `json:"switch_inline_query_current_chat"`
+	Login           *Login `json:"login_url,omitempty"`
 
 	Action func(*Callback) `json:"-"`
 }
@@ -79,4 +87,31 @@ func (t *InlineButton) CallbackUnique() string {
 // CallbackUnique returns KeyboardButton.Text.
 func (t *ReplyButton) CallbackUnique() string {
 	return t.Text
+}
+
+// Login represents a parameter of the inline keyboard button
+// used to automatically authorize a user. Serves as a great replacement
+// for the Telegram Login Widget when the user is coming from Telegram.
+type Login struct {
+	URL         string `json:"url"`
+	Text        string `json:"forward_text,omitempty"`
+	Username    string `json:"bot_username,omitempty"`
+	WriteAccess bool   `json:"request_write_access,omitempty"`
+}
+
+// MarshalJSON implements Marshaler interface.
+// It needed to avoid InlineQueryChat and Login fields conflict.
+// If you have Login field in your button, InlineQueryChat must be skipped.
+func (t *InlineButton) MarshalJSON() ([]byte, error) {
+	type InineButtonJSON InlineButton
+
+	if t.Login != nil {
+		return json.Marshal(struct {
+			InineButtonJSON
+			InlineQueryChat string `json:"switch_inline_query_current_chat,omitempty"`
+		}{
+			InineButtonJSON: InineButtonJSON(*t),
+		})
+	}
+	return json.Marshal(InineButtonJSON(*t))
 }
