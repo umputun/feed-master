@@ -2,7 +2,9 @@ package main
 
 import (
 	"io/ioutil"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -52,4 +54,32 @@ func TestLoadConfigInvalidYaml(t *testing.T) {
 
 	assert.Nil(t, r)
 	assert.EqualError(t, err, "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `Not Yaml` into proc.Conf")
+}
+
+
+func TestSingleFeedConf(t *testing.T) {
+	cases := []struct{
+		feedURL, channel string
+		updateInterval time.Duration
+	}{
+		{"example.com/feed", "Feed", 10},
+		{"example.com/my/feed", "My feed", 20},
+	}
+
+	for i, tc := range cases {
+		i := i
+		tc := tc
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			conf := singleFeedConf(tc.feedURL, tc.channel, tc.updateInterval)
+
+			assert.Len(t, conf.Feeds, 1)
+			assert.Equal(t, conf.System.UpdateInterval, tc.updateInterval)
+
+			feed := conf.Feeds["auto"]
+			assert.Equal(t, feed.TelegramChannel, tc.channel)
+			assert.Len(t, feed.Sources, 1)
+			assert.Equal(t, feed.Sources[0].Name, "auto")
+			assert.Equal(t, feed.Sources[0].URL, tc.feedURL)
+		})
+	}
 }
