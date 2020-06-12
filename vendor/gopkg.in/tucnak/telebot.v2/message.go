@@ -9,6 +9,8 @@ import (
 type Message struct {
 	ID int `json:"message_id"`
 
+	InlineID string `json:"-"`
+
 	// For message sent to channels, Sender will be nil
 	Sender *User `json:"from"`
 
@@ -85,6 +87,9 @@ type Message struct {
 	// For a video, information about it.
 	Video *Video `json:"video"`
 
+	// For a animation, information about it.
+	Animation *Animation `json:"animation"`
+
 	// For a contact, contact information itself.
 	Contact *Contact `json:"contact"`
 
@@ -136,7 +141,7 @@ type Message struct {
 
 	// For a service message, true if group has been created.
 	//
-	// You would recieve such a message if you are one of
+	// You would receive such a message if you are one of
 	// initial group chat members.
 	//
 	// Sender would lead to creator of the chat.
@@ -144,7 +149,7 @@ type Message struct {
 
 	// For a service message, true if super group has been created.
 	//
-	// You would recieve such a message if you are one of
+	// You would receive such a message if you are one of
 	// initial group chat members.
 	//
 	// Sender would lead to creator of the chat.
@@ -152,7 +157,7 @@ type Message struct {
 
 	// For a service message, true if channel has been created.
 	//
-	// You would recieve such a message if you are one of
+	// You would receive such a message if you are one of
 	// initial channel administrators.
 	//
 	// Sender would lead to creator of the chat.
@@ -161,7 +166,7 @@ type Message struct {
 	// For a service message, the destination (super group) you
 	// migrated to.
 	//
-	// You would recieve such a message when your chat has migrated
+	// You would receive such a message when your chat has migrated
 	// to a super group.
 	//
 	// Sender would lead to creator of the migration.
@@ -170,7 +175,7 @@ type Message struct {
 	// For a service message, the Origin (normal group) you migrated
 	// from.
 	//
-	// You would recieve such a message when your chat has migrated
+	// You would receive such a message when your chat has migrated
 	// to a super group.
 	//
 	// Sender would lead to creator of the migration.
@@ -180,6 +185,9 @@ type Message struct {
 	// in this field will not contain further ReplyTo fields even
 	// if it is itself a reply.
 	PinnedMessage *Message `json:"pinned_message"`
+
+	// Inline keyboard attached to the message.
+	ReplyMarkup InlineKeyboardMarkup `json:"reply_markup"`
 }
 
 // MessageEntity object represents "special" parts of text messages,
@@ -205,6 +213,9 @@ type MessageEntity struct {
 
 // MessageSig satisfies Editable interface (see Editable.)
 func (m *Message) MessageSig() (string, int64) {
+	if m.InlineID != "" {
+		return m.InlineID, 0
+	}
 	return strconv.Itoa(m.ID), m.Chat.ID
 }
 

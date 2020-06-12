@@ -26,7 +26,8 @@ type Photo struct {
 	Height int `json:"height"`
 
 	// (Optional)
-	Caption string `json:"caption,omitempty"`
+	Caption   string    `json:"caption,omitempty"`
+	ParseMode ParseMode `json:"parse_mode,omitempty"`
 }
 
 type photoSize struct {
@@ -80,6 +81,7 @@ type Audio struct {
 
 	// (Optional)
 	Caption   string `json:"caption,omitempty"`
+	Thumbnail *Photo `json:"thumb,omitempty"`
 	Title     string `json:"title,omitempty"`
 	Performer string `json:"performer,omitempty"`
 	MIME      string `json:"mime_type,omitempty"`
@@ -127,6 +129,27 @@ type Video struct {
 
 // MediaFile returns &Video.File
 func (v *Video) MediaFile() *File {
+	return &v.File
+}
+
+// Animation object represents a animation file.
+type Animation struct {
+	File
+
+	Width  int `json:"width"`
+	Height int `json:"height"`
+
+	Duration int `json:"duration,omitempty"`
+
+	// (Optional)
+	Caption   string `json:"caption,omitempty"`
+	Thumbnail *Photo `json:"thumb,omitempty"`
+	MIME      string `json:"mime_type,omitempty"`
+	FileName  string `json:"file_name,omitempty"`
+}
+
+// MediaFile returns &Animation.File
+func (v *Animation) MediaFile() *File {
 	return &v.File
 }
 
