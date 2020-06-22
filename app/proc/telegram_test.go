@@ -76,7 +76,7 @@ func TestSendIfContentLengthZero(t *testing.T) {
 	})
 
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), fmt.Sprintf("can't get length for %s: non-200 status, 500", ts.URL))
+	assert.EqualError(t, err, fmt.Sprintf("can't get length for %s: non-200 status, 500", ts.URL))
 }
 
 func TestTagLinkOnlySupport(t *testing.T) {
@@ -186,7 +186,7 @@ func TestGetContentLengthNotFound(t *testing.T) {
 
 			assert.Equal(t, tc.expectedLength, length)
 			if err != nil {
-				assert.Equal(t, tc.expectedError, err.Error())
+				assert.EqualError(t, err, tc.expectedError)
 			}
 		})
 	}
@@ -218,7 +218,7 @@ func TestDownloadAudioIfRequestError(t *testing.T) {
 	got, err := client.downloadAudio(ts.URL)
 
 	assert.Nil(t, got)
-	assert.Equal(t, err.Error(), fmt.Sprintf("Get %s: EOF", ts.URL))
+	assert.EqualError(t, err, fmt.Sprintf("Get %s: EOF", ts.URL))
 }
 
 func TestDownloadAudio(t *testing.T) {
