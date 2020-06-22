@@ -75,7 +75,7 @@ func TestSendIfContentLengthZero(t *testing.T) {
 		},
 	})
 
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	assert.Equal(t, err.Error(), fmt.Sprintf("can't get length for %s: non-200 status, 500", ts.URL))
 }
 
