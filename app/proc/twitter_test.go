@@ -17,16 +17,11 @@ func TestNewTwitterClient(t *testing.T) {
 		AccessSecret:   "d",
 	}
 
-	twitterFmtFn := func(item feed.Item) string {
+	client := NewTwitterClient(twiAuth, func(item feed.Item) string {
 		return ""
-	}
+	})
 
-	client := NewTwitterClient(twiAuth, twitterFmtFn)
-
-	assert.Equal(t, client.TwitterAuth.ConsumerKey, "a")
-	assert.Equal(t, client.TwitterAuth.ConsumerSecret, "b")
-	assert.Equal(t, client.TwitterAuth.AccessToken, "c")
-	assert.Equal(t, client.TwitterAuth.AccessSecret, "d")
+	assert.EqualValues(t, twiAuth, client.TwitterAuth)
 }
 
 func TestTwitterSendIfFieldsTwitterAuthEmpty(t *testing.T) {

@@ -12,17 +12,18 @@ func TestSetDefault(t *testing.T) {
 		Conf: &Conf{},
 	}
 
-	assert.Equal(t, p.Conf.System.Concurrent, 0)
-	assert.Equal(t, p.Conf.System.MaxItems, 0)
-	assert.Equal(t, p.Conf.System.MaxTotal, 0)
-	assert.Equal(t, p.Conf.System.MaxKeepInDB, 0)
-	assert.Equal(t, p.Conf.System.UpdateInterval, time.Duration(0))
-
 	p.setDefaults()
 
-	assert.Equal(t, p.Conf.System.Concurrent, 8)
-	assert.Equal(t, p.Conf.System.MaxItems, 5)
-	assert.Equal(t, p.Conf.System.MaxTotal, 100)
-	assert.Equal(t, p.Conf.System.MaxKeepInDB, 5000)
-	assert.Equal(t, p.Conf.System.UpdateInterval, time.Minute*5)
+	expectedConf := Conf{
+		System: struct {
+			UpdateInterval time.Duration `yaml:"update"`
+			MaxItems       int           `yaml:"max_per_feed"`
+			MaxTotal       int           `yaml:"max_total"`
+			MaxKeepInDB    int           `yaml:"max_keep"`
+			Concurrent     int           `yaml:"concurrent"`
+			BaseURL        string        `yaml:"base_url"`
+		}{UpdateInterval: time.Minute * 5, MaxItems: 5, MaxTotal: 100, MaxKeepInDB: 5000, Concurrent: 8, BaseURL: ""},
+	}
+
+	assert.EqualValues(t, expectedConf.System, p.Conf.System)
 }

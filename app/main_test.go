@@ -98,8 +98,3 @@ func TestMakeTwitter(t *testing.T) {
 	assert.Equal(t, client.AccessToken, "c")
 	assert.Equal(t, client.AccessSecret, "d")
 }
-
-func TestSetupLog(t *testing.T) { //nolint
-	setupLog(true)
-	setupLog(false)
-}
