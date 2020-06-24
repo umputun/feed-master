@@ -56,11 +56,10 @@ func TestLoadConfigInvalidYaml(t *testing.T) {
 	assert.EqualError(t, err, "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `Not Yaml` into proc.Conf")
 }
 
-
 func TestSingleFeedConf(t *testing.T) {
-	cases := []struct{
+	cases := []struct {
 		feedURL, channel string
-		updateInterval time.Duration
+		updateInterval   time.Duration
 	}{
 		{"example.com/feed", "Feed", 10},
 		{"example.com/my/feed", "My feed", 20},
@@ -86,10 +85,10 @@ func TestSingleFeedConf(t *testing.T) {
 
 func TestMakeTwitter(t *testing.T) {
 	opts := options{
-		TwitterConsumerKey: "a",
+		TwitterConsumerKey:    "a",
 		TwitterConsumerSecret: "b",
-		TwitterAccessToken: "c",
-		TwitterAccessSecret: "d",
+		TwitterAccessToken:    "c",
+		TwitterAccessSecret:   "d",
 	}
 
 	client := makeTwitter(opts)
