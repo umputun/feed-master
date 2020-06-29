@@ -57,6 +57,28 @@ func TestSendIfChannelIDEmpty(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestSendIfContentLengthZero(t *testing.T) {
+	client := TelegramClient{
+		Bot: &tb.Bot{},
+	}
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Length", string(0))
+	}))
+	defer ts.Close()
+
+	err := client.Send("100500", feed.Item{
+		Enclosure: feed.Enclosure{
+			URL:    ts.URL,
+			Length: 0,
+		},
+	})
+
+	assert.Error(t, err)
+	assert.EqualError(t, err, fmt.Sprintf("can't get length for %s: non-200 status, 500", ts.URL))
+}
+
 func TestTagLinkOnlySupport(t *testing.T) {
 	html := `
 <li>Особое канадское искусство. </li>
@@ -164,7 +186,7 @@ func TestGetContentLengthNotFound(t *testing.T) {
 
 			assert.Equal(t, tc.expectedLength, length)
 			if err != nil {
-				assert.Equal(t, tc.expectedError, err.Error())
+				assert.EqualError(t, err, tc.expectedError)
 			}
 		})
 	}
@@ -182,4 +204,34 @@ func TestGetContentLengthIfErrorConnect(t *testing.T) {
 
 	assert.Equal(t, length, 0)
 	assert.EqualError(t, err, fmt.Sprintf("can't HEAD %s: Head %s: EOF", ts.URL, ts.URL))
+}
+
+func TestDownloadAudioIfRequestError(t *testing.T) {
+	var ts *httptest.Server
+	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ts.CloseClientConnections()
+	}))
+
+	defer ts.Close()
+
+	client := TelegramClient{}
+	got, err := client.downloadAudio(ts.URL)
+
+	assert.Nil(t, got)
+	assert.EqualError(t, err, fmt.Sprintf("Get %s: EOF", ts.URL))
+}
+
+func TestDownloadAudio(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Length", string(4))
+		fmt.Fprint(w, "abcd")
+	}))
+	defer ts.Close()
+
+	client := TelegramClient{}
+	got, err := client.downloadAudio(ts.URL)
+
+	assert.NotNil(t, got)
+	assert.Nil(t, err)
 }

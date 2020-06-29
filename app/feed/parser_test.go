@@ -27,7 +27,7 @@ func TestFeedParseHttpError(t *testing.T) {
 
 	_, err := Parse(ts.URL)
 
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }
 
 func TestNormalizeDate(t *testing.T) {
