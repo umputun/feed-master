@@ -86,7 +86,7 @@ func TestLoadIfNotBucket(t *testing.T) {
 	defer os.Remove(tmpfile.Name())
 	boltDB, _ := NewBoltDB(tmpfile.Name())
 
-	feedItems, err := boltDB.Load("100500", 5)
+	feedItems, err := boltDB.Load("100500", 5, false)
 
 	assert.Equal(t, len(feedItems), 0)
 	assert.EqualError(t, err, "no bucket for 100500")
@@ -100,7 +100,7 @@ func TestLoad(t *testing.T) {
 	_, err := boltDB.Save("radio-t", feed.Item{PubDate: pubDate})
 	require.NoError(t, err)
 
-	items, err := boltDB.Load("radio-t", 5)
+	items, err := boltDB.Load("radio-t", 5, false)
 
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(items))
@@ -134,7 +134,7 @@ func TestLoadChackMax(t *testing.T) {
 		i := i
 		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			items, err := boltDB.Load("radio-t", tc.max)
+			items, err := boltDB.Load("radio-t", tc.max, false)
 
 			assert.Nil(t, err)
 			assert.Equal(t, tc.count, len(items))

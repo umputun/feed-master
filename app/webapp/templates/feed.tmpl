@@ -34,7 +34,11 @@
 
 <main class="ump-feed-master">
     {{range .Items}}
+    {{if .Junk}}
+    <div class="ump-feed-master__data-row junk-row">
+    {{else}}
     <div class="ump-feed-master__data-row">
+    {{end}}
         <div class="ump-feed-master__data-row-player-cell">
             <a href="{{.Enclosure.URL}}" target="_blank">
                 <i class="fas fa-volume-up"></i>
@@ -50,7 +54,14 @@
                     </i>
                 </a>
             </div>
-            <div class="ump-feed-master-timestamp-cell">{{.DT.Format "02 Jan 15:04"}}</div>
+            <div class="ump-feed-master-timestamp-cell">
+                {{if .Junk}}
+                <i class="fas fa-exclamation-circle"
+                   data-toggle="tooltip"
+                   title="Junk - excluded from target rss feed">
+                </i>
+                {{end}}
+                {{.DT.Format "02 Jan 15:04"}}</div>
         </div>
     </div>
     {{end}}

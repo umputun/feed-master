@@ -112,12 +112,15 @@ func (p *Processor) feed(name, url, telegramChannel string, max int, filter Filt
 			continue
 		}
 
-		if (Filter{}) != filter {
-			skip, _ := filter.skip(item)
-			if skip {
-				continue
-			}
+		skip, err := filter.skip(item)
+		if err != nil {
+			log.Printf("[WARN] failed to filter %s (%s) to %s, save as is, %v", item.GUID, item.PubDate, name, err)
 		}
+		if skip {
+			item.Junk = true
+			log.Printf("[INFO] Junked %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
+		}
+
 		created, err := p.Store.Save(name, item)
 		if err != nil {
 			log.Printf("[WARN] failed to save %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
@@ -160,7 +163,6 @@ func (filter *Filter) skip(item feed.Item) (bool, error) {
 	if filter.Title != "" {
 		matched, err := regexp.MatchString(filter.Title, item.Title)
 		if err != nil {
-			log.Printf("[WARN] wrong title's regular expression: %s", filter.Title)
 			return matched, err
 		}
 		if matched {

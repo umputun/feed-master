@@ -82,7 +82,7 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
 }
 
 // Load from bold for given feed, up to max
-func (b BoltDB) Load(fmFeed string, max int) ([]feed.Item, error) {
+func (b BoltDB) Load(fmFeed string, max int, skipJunk bool) ([]feed.Item, error) {
 	result := []feed.Item{}
 
 	err := b.DB.View(func(tx *bolt.Tx) error {
@@ -95,6 +95,9 @@ func (b BoltDB) Load(fmFeed string, max int) ([]feed.Item, error) {
 			item := feed.Item{}
 			if err := json.Unmarshal(v, &item); err != nil {
 				log.Printf("[WARN] failed to unmarshal, %v", err)
+				continue
+			}
+			if skipJunk && item.Junk {
 				continue
 			}
 			if len(result) >= max {

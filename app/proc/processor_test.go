@@ -1,6 +1,8 @@
 package proc
 
 import (
+	"regexp/syntax"
+	"strconv"
 	"testing"
 	"time"
 
@@ -29,23 +31,39 @@ func TestSetDefault(t *testing.T) {
 	assert.EqualValues(t, expectedConf.System, p.Conf.System)
 }
 
-func TestFilter(t *testing.T) {
-	feedItem := feed.Item{Title: "Foo Bar (Part 1)"}
-	filter := Filter{Title: "(Part \\d+)"}
-	result, _ := filter.skip(feedItem)
-	assert.True(t, result)
-}
+func TestFilterAllCases(t *testing.T) {
+	tbl := []struct {
+		filter Filter
+		inp    feed.Item
+		err    error
+		out    bool
+	}{
+		{
+			Filter{Title: "(Part \\d+)"},
+			feed.Item{Title: "Title (Part 1)"},
+			nil,
+			true,
+		},
+		{
+			Filter{},
+			feed.Item{Title: "Title"},
+			nil,
+			false,
+		},
+		{
+			Filter{Title: "("},
+			feed.Item{Title: "Title"},
+			&syntax.Error{Code: "missing closing )", Expr: "("},
+			false,
+		},
+	}
 
-func TestBlankFilter(t *testing.T) {
-	feedItem := feed.Item{Title: "Foo Bar (Part 1)"}
-	filter := Filter{}
-	result, _ := filter.skip(feedItem)
-	assert.False(t, result)
-}
-
-func TestErrorFilter(t *testing.T) {
-	feedItem := feed.Item{Title: "Foo Bar (Part 1)"}
-	filter := Filter{"("}
-	result, _ := filter.skip(feedItem)
-	assert.False(t, result)
+	for i, tb := range tbl {
+		tb := tb
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			result, err := tb.filter.skip(tb.inp)
+			assert.Equal(t, tb.out, result)
+			assert.Equal(t, tb.err, err)
+		})
+	}
 }

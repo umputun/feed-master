@@ -46,7 +46,8 @@ type Item struct {
 	GUID      string        `xml:"guid"`
 
 	// Internal
-	DT time.Time `xml:"-"`
+	DT   time.Time `xml:"-"`
+	Junk bool      `xml:"-"`
 }
 
 // Enclosure element from item
