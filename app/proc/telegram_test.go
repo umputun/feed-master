@@ -64,7 +64,7 @@ func TestSendIfContentLengthZero(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Length", string(0))
+		w.Header().Set("Content-Length", fmt.Sprint(0))
 	}))
 	defer ts.Close()
 
@@ -174,7 +174,7 @@ func TestGetContentLengthNotFound(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tc.statusCode)
-				w.Header().Set("Content-Length", string(tc.contentLength))
+				w.Header().Set("Content-Length", fmt.Sprint(tc.contentLength))
 				if tc.contentLength > 0 {
 					fmt.Fprint(w, "abcd")
 				}
@@ -203,7 +203,7 @@ func TestGetContentLengthIfErrorConnect(t *testing.T) {
 	length, err := getContentLength(ts.URL)
 
 	assert.Equal(t, length, 0)
-	assert.EqualError(t, err, fmt.Sprintf("can't HEAD %s: Head %s: EOF", ts.URL, ts.URL))
+	assert.EqualError(t, err, fmt.Sprintf("can't HEAD %s: Head %q: EOF", ts.URL, ts.URL))
 }
 
 func TestDownloadAudioIfRequestError(t *testing.T) {
@@ -218,13 +218,13 @@ func TestDownloadAudioIfRequestError(t *testing.T) {
 	got, err := client.downloadAudio(ts.URL)
 
 	assert.Nil(t, got)
-	assert.EqualError(t, err, fmt.Sprintf("Get %s: EOF", ts.URL))
+	assert.EqualError(t, err, fmt.Sprintf("Get %q: EOF", ts.URL))
 }
 
 func TestDownloadAudio(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Length", string(4))
+		w.Header().Set("Content-Length", fmt.Sprint(4))
 		fmt.Fprint(w, "abcd")
 	}))
 	defer ts.Close()
