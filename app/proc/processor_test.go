@@ -42,3 +42,10 @@ func TestBlankFilter(t *testing.T) {
 	result, _ := filter.skip(feedItem)
 	assert.False(t, result)
 }
+
+func TestErrorFilter(t *testing.T) {
+	feedItem := feed.Item{Title: "Foo Bar (Part 1)"}
+	filter := Filter{"("}
+	result, _ := filter.skip(feedItem)
+	assert.False(t, result)
+}

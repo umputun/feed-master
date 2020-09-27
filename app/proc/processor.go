@@ -160,6 +160,7 @@ func (filter *Filter) skip(item feed.Item) (bool, error) {
 	if filter.Title != "" {
 		matched, err := regexp.MatchString(filter.Title, item.Title)
 		if err != nil {
+			log.Printf("[WARN] wrong title's regular expression: %s", filter.Title)
 			return matched, err
 		}
 		if matched {
