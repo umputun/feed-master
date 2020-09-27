@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/umputun/feed-master/app/feed"
 )
 
 func TestSetDefault(t *testing.T) {
@@ -26,4 +27,18 @@ func TestSetDefault(t *testing.T) {
 	}
 
 	assert.EqualValues(t, expectedConf.System, p.Conf.System)
+}
+
+func TestFilter(t *testing.T) {
+	feedItem := feed.Item{Title: "Foo Bar (Part 1)"}
+	filter := Filter{Title: "(Part \\d+)"}
+	result, _ := filter.skip(feedItem)
+	assert.True(t, result)
+}
+
+func TestBlankFilter(t *testing.T) {
+	feedItem := feed.Item{Title: "Foo Bar (Part 1)"}
+	filter := Filter{}
+	result, _ := filter.skip(feedItem)
+	assert.False(t, result)
 }

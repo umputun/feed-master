@@ -73,6 +73,18 @@ feeds:
       - name: Большой дозор
         url: http://echo.msk.ru/programs/dozor/rss-audio.xml
 
+  echo-msk-filtered-example:
+    title: Пример фильтрации постов в фиде
+    description: Фид с фильтром на базе http://feeds.rucast.net/echomsk
+    link: http://echo.msk.ru
+    language: "ru-ru"
+    image: images/echomsk.png
+    sources:
+      - name: Правильный, фильтрованный, комбинированный фид избранных передач
+        url: http://feeds.rucast.net/echomsk
+    filter:
+      title: (Часть \d+)
+
 system:
   update: 1m
   max_per_feed: 5
