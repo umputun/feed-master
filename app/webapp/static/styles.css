@@ -223,6 +223,10 @@ nav {
     color: rgba(10, 107, 165, 0.87)
 }
 
+.junk-row .ump-feed-master-program-name {
+    color: rgba(140, 140, 140, 0.87)
+}
+
 .ump-feed-master__data-row-info-cell {
     flex: 1;
     padding-left: 0.75rem;
@@ -257,6 +261,15 @@ nav {
     color: #0473b4;
 }
 
+.junk-row .fa-volume-up {
+    color: #666666;
+}
+
 .fa-info-circle {
     color: rgba(4, 115, 180, 0.4);
+}
+
+.junk-row 
+.fa-info-circle {
+    color: rgba(70, 70, 70, 0.4);
 }

@@ -23,7 +23,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
 
 	data, err := s.cache.Get(feedName, func() (lcw.Value, error) {
-		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal)
+		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, false)
 		if err != nil {
 			return nil, err
 		}

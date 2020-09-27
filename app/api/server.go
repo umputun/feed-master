@@ -84,7 +84,7 @@ func (s *Server) Run(port int) {
 // GET /rss/{name} - returns rss for given feeds set
 func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
-	items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal)
+	items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, true)
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest, err, "failed to get feed")
 		return
