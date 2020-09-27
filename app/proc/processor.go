@@ -4,6 +4,7 @@ package proc
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
@@ -51,10 +52,16 @@ type Feed struct {
 	Image           string `yaml:"image"`
 	Language        string `yaml:"language"`
 	TelegramChannel string `yaml:"telegram_channel"`
+	Filter          Filter `yaml:"filter"`
 	Sources         []struct {
 		Name string `yaml:"name"`
 		URL  string `yaml:"url"`
 	} `yaml:"sources"`
+}
+
+// Filter defines feed section for a feed filter~
+type Filter struct {
+	Title string `yaml:"title"`
 }
 
 // Do activates loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent
@@ -68,7 +75,7 @@ func (p *Processor) Do() {
 			for _, src := range fm.Sources {
 				name, src, fm := name, src, fm
 				swg.Go(func(context.Context) {
-					p.feed(name, src.URL, fm.TelegramChannel, p.Conf.System.MaxItems)
+					p.feed(name, src.URL, fm.TelegramChannel, p.Conf.System.MaxItems, fm.Filter)
 				})
 			}
 			// keep up to MaxKeepInDB items in bucket
@@ -86,7 +93,7 @@ func (p *Processor) Do() {
 	}
 }
 
-func (p *Processor) feed(name, url, telegramChannel string, max int) {
+func (p *Processor) feed(name, url, telegramChannel string, max int, filter Filter) {
 	rss, err := feed.Parse(url)
 	if err != nil {
 		log.Printf("[WARN] failed to parse %s, %v", url, err)
@@ -105,6 +112,12 @@ func (p *Processor) feed(name, url, telegramChannel string, max int) {
 			continue
 		}
 
+		if (Filter{}) != filter {
+			skip, _ := filter.skip(item)
+			if skip {
+				continue
+			}
+		}
 		created, err := p.Store.Save(name, item)
 		if err != nil {
 			log.Printf("[WARN] failed to save %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
@@ -141,4 +154,18 @@ func (p *Processor) setDefaults() {
 	if p.Conf.System.UpdateInterval == 0 {
 		p.Conf.System.UpdateInterval = time.Minute * 5
 	}
+}
+
+func (filter *Filter) skip(item feed.Item) (bool, error) {
+	if filter.Title != "" {
+		matched, err := regexp.MatchString(filter.Title, item.Title)
+		if err != nil {
+			return matched, err
+		}
+		if matched {
+			return true, err
+		}
+	}
+
+	return false, nil
 }
