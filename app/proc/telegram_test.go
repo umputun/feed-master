@@ -203,7 +203,7 @@ func TestGetContentLengthIfErrorConnect(t *testing.T) {
 	length, err := getContentLength(ts.URL)
 
 	assert.Equal(t, length, 0)
-	assert.EqualError(t, err, fmt.Sprintf("can't HEAD %s: Head %q: EOF", ts.URL, ts.URL))
+	assert.EqualError(t, err, fmt.Sprintf("can't HEAD %s: Head %s: EOF", ts.URL, ts.URL))
 }
 
 func TestDownloadAudioIfRequestError(t *testing.T) {
@@ -218,7 +218,7 @@ func TestDownloadAudioIfRequestError(t *testing.T) {
 	got, err := client.downloadAudio(ts.URL)
 
 	assert.Nil(t, got)
-	assert.EqualError(t, err, fmt.Sprintf("Get %q: EOF", ts.URL))
+	assert.EqualError(t, err, fmt.Sprintf("Get %s: EOF", ts.URL))
 }
 
 func TestDownloadAudio(t *testing.T) {
