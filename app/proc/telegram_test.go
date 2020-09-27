@@ -224,7 +224,7 @@ func TestDownloadAudioIfRequestError(t *testing.T) {
 func TestDownloadAudio(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Length", fmt.Sprint(4))
+		w.Header().Set("Content-Length", "4")
 		fmt.Fprint(w, "abcd")
 	}))
 	defer ts.Close()
