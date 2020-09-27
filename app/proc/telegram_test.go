@@ -64,7 +64,7 @@ func TestSendIfContentLengthZero(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Length", fmt.Sprint(0))
+		w.Header().Set("Content-Length", "0")
 	}))
 	defer ts.Close()
 
@@ -174,7 +174,7 @@ func TestGetContentLengthNotFound(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tc.statusCode)
-				w.Header().Set("Content-Length", fmt.Sprint(tc.contentLength))
+				w.Header().Set("Content-Length", strconv.Itoa(tc.contentLength))
 				if tc.contentLength > 0 {
 					fmt.Fprint(w, "abcd")
 				}
