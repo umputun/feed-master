@@ -112,8 +112,7 @@ func (p *Processor) feed(name, url, telegramChannel string, max int, filter Filt
 			continue
 		}
 
-		skip := filter.skip(item)
-		if skip {
+		if filter.skip(item) {
 			item.Junk = true
 			log.Printf("[INFO] Junked %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
 		}
