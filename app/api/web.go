@@ -35,6 +35,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			LastUpdate  time.Time
 			Feeds       int
 			Version     string
+			RSSLink     string
 		}{
 			Items:       items,
 			Name:        s.Conf.Feeds[feedName].Title,
@@ -43,6 +44,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			LastUpdate:  items[0].DT,
 			Feeds:       len(s.Conf.Feeds[feedName].Sources),
 			Version:     s.Version,
+			RSSLink:     s.Conf.System.BaseURL + "/rss/" + feedName,
 		}
 
 		res := bytes.NewBuffer(nil)

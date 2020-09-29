@@ -90,4 +90,4 @@ system:
   max_per_feed: 5
   max_total: 50
   max_keep: 1000
-  base_url: https://feedmaster.umputun.com
+  base_url: http://feedmaster.umputun.com

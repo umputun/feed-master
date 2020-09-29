@@ -11,6 +11,8 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="/static/bootstrap.bundle.min.js"></script>
+
+    <link rel="alternate" type="application/rss+xml" title="{{.Name}}" href="{{.RSSLink}}" />
 </head>
 
 
@@ -34,11 +36,7 @@
 
 <main class="ump-feed-master">
     {{range .Items}}
-    {{if .Junk}}
-    <div class="ump-feed-master__data-row junk-row">
-    {{else}}
-    <div class="ump-feed-master__data-row">
-    {{end}}
+    <div class="ump-feed-master__data-row{{if .Junk}} junk-row{{end}}">
         <div class="ump-feed-master__data-row-player-cell">
             <a href="{{.Enclosure.URL}}" target="_blank">
                 <i class="fas fa-volume-up"></i>
