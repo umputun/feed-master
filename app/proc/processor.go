@@ -112,10 +112,7 @@ func (p *Processor) feed(name, url, telegramChannel string, max int, filter Filt
 			continue
 		}
 
-		skip, err := filter.skip(item)
-		if err != nil {
-			log.Printf("[WARN] failed to filter %s (%s) to %s, save as is, %v", item.GUID, item.PubDate, name, err)
-		}
+		skip := filter.skip(item)
 		if skip {
 			item.Junk = true
 			log.Printf("[INFO] Junked %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
@@ -159,16 +156,16 @@ func (p *Processor) setDefaults() {
 	}
 }
 
-func (filter *Filter) skip(item feed.Item) (bool, error) {
+func (filter *Filter) skip(item feed.Item) bool {
 	if filter.Title != "" {
 		matched, err := regexp.MatchString(filter.Title, item.Title)
 		if err != nil {
-			return matched, err
+			log.Printf("[WARN] failed to filter %s (%s), %v", item.GUID, item.PubDate, err)
 		}
 		if matched {
-			return true, err
+			return true
 		}
 	}
 
-	return false, nil
+	return false
 }

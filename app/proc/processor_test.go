@@ -1,7 +1,6 @@
 package proc
 
 import (
-	"regexp/syntax"
 	"strconv"
 	"testing"
 	"time"
@@ -35,25 +34,21 @@ func TestFilterAllCases(t *testing.T) {
 	tbl := []struct {
 		filter Filter
 		inp    feed.Item
-		err    error
 		out    bool
 	}{
 		{
 			Filter{Title: "(Part \\d+)"},
 			feed.Item{Title: "Title (Part 1)"},
-			nil,
 			true,
 		},
 		{
 			Filter{},
 			feed.Item{Title: "Title"},
-			nil,
 			false,
 		},
 		{
 			Filter{Title: "("},
 			feed.Item{Title: "Title"},
-			&syntax.Error{Code: "missing closing )", Expr: "("},
 			false,
 		},
 	}
@@ -61,9 +56,8 @@ func TestFilterAllCases(t *testing.T) {
 	for i, tb := range tbl {
 		tb := tb
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			result, err := tb.filter.skip(tb.inp)
+			result := tb.filter.skip(tb.inp)
 			assert.Equal(t, tb.out, result)
-			assert.Equal(t, tb.err, err)
 		})
 	}
 }
