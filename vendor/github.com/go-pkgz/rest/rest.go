@@ -13,7 +13,7 @@ import (
 type JSON map[string]interface{}
 
 // RenderJSON sends data as json
-func RenderJSON(w http.ResponseWriter, r *http.Request, data interface{}) {
+func RenderJSON(w http.ResponseWriter, data interface{}) {
 	buf := &bytes.Buffer{}
 	enc := json.NewEncoder(buf)
 	enc.SetEscapeHTML(true)
@@ -22,7 +22,7 @@ func RenderJSON(w http.ResponseWriter, r *http.Request, data interface{}) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Write(buf.Bytes()) // nolint: errcheck, gosec
+	_, _ = w.Write(buf.Bytes())
 }
 
 // RenderJSONFromBytes sends binary data as json
@@ -52,4 +52,18 @@ func RenderJSONWithHTML(w http.ResponseWriter, r *http.Request, v interface{}) e
 		return err
 	}
 	return RenderJSONFromBytes(w, r, data)
+}
+
+// renderJSONWithStatus sends data as json and enforces status code
+func renderJSONWithStatus(w http.ResponseWriter, data interface{}, code int) {
+	buf := &bytes.Buffer{}
+	enc := json.NewEncoder(buf)
+	enc.SetEscapeHTML(true)
+	if err := enc.Encode(data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(code)
+	_, _ = w.Write(buf.Bytes())
 }

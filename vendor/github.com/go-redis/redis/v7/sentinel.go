@@ -22,6 +22,7 @@ type FailoverOptions struct {
 	MasterName string
 	// A seed list of host:port addresses of sentinel nodes.
 	SentinelAddrs    []string
+	SentinelUsername string
 	SentinelPassword string
 
 	// Following options are copied from Options struct.
@@ -29,6 +30,7 @@ type FailoverOptions struct {
 	Dialer    func(ctx context.Context, network, addr string) (net.Conn, error)
 	OnConnect func(*Conn) error
 
+	Username string
 	Password string
 	DB       int
 
@@ -57,9 +59,12 @@ func (opt *FailoverOptions) options() *Options {
 		OnConnect: opt.OnConnect,
 
 		DB:       opt.DB,
+		Username: opt.Username,
 		Password: opt.Password,
 
-		MaxRetries: opt.MaxRetries,
+		MaxRetries:      opt.MaxRetries,
+		MinRetryBackoff: opt.MinRetryBackoff,
+		MaxRetryBackoff: opt.MaxRetryBackoff,
 
 		DialTimeout:  opt.DialTimeout,
 		ReadTimeout:  opt.ReadTimeout,
@@ -69,6 +74,8 @@ func (opt *FailoverOptions) options() *Options {
 		PoolTimeout:        opt.PoolTimeout,
 		IdleTimeout:        opt.IdleTimeout,
 		IdleCheckFrequency: opt.IdleCheckFrequency,
+		MinIdleConns:       opt.MinIdleConns,
+		MaxConnAge:         opt.MaxConnAge,
 
 		TLSConfig: opt.TLSConfig,
 	}
@@ -84,20 +91,18 @@ func NewFailoverClient(failoverOpt *FailoverOptions) *Client {
 	failover := &sentinelFailover{
 		masterName:    failoverOpt.MasterName,
 		sentinelAddrs: failoverOpt.SentinelAddrs,
+		username:      failoverOpt.SentinelUsername,
 		password:      failoverOpt.SentinelPassword,
 
 		opt: opt,
 	}
 
 	c := Client{
-		baseClient: baseClient{
-			opt:      opt,
-			connPool: failover.Pool(),
-			onClose:  failover.Close,
-		},
-		ctx: context.Background(),
+		baseClient: newBaseClient(opt, failover.Pool()),
+		ctx:        context.Background(),
 	}
 	c.cmdable = c.Process
+	c.onClose = failover.Close
 
 	return &c
 }
@@ -280,6 +285,7 @@ type sentinelFailover struct {
 	sentinelAddrs []string
 
 	opt      *Options
+	username string
 	password string
 
 	pool     *pool.ConnPool
@@ -299,6 +305,19 @@ func (c *sentinelFailover) Close() error {
 		return c.closeSentinel()
 	}
 	return nil
+}
+
+func (c *sentinelFailover) closeSentinel() error {
+	firstErr := c.pubsub.Close()
+	c.pubsub = nil
+
+	err := c.sentinel.Close()
+	if err != nil && firstErr == nil {
+		firstErr = err
+	}
+	c.sentinel = nil
+
+	return firstErr
 }
 
 func (c *sentinelFailover) Pool() *pool.ConnPool {
@@ -331,18 +350,34 @@ func (c *sentinelFailover) MasterAddr() (string, error) {
 }
 
 func (c *sentinelFailover) masterAddr() (string, error) {
-	addr := c.getMasterAddr()
-	if addr != "" {
-		return addr, nil
+	c.mu.RLock()
+	sentinel := c.sentinel
+	c.mu.RUnlock()
+
+	if sentinel != nil {
+		addr := c.getMasterAddr(sentinel)
+		if addr != "" {
+			return addr, nil
+		}
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if c.sentinel != nil {
+		addr := c.getMasterAddr(c.sentinel)
+		if addr != "" {
+			return addr, nil
+		}
+		_ = c.closeSentinel()
+	}
+
 	for i, sentinelAddr := range c.sentinelAddrs {
 		sentinel := NewSentinelClient(&Options{
-			Addr: sentinelAddr,
+			Addr:   sentinelAddr,
+			Dialer: c.opt.Dialer,
 
+			Username: c.username,
 			Password: c.password,
 
 			MaxRetries: c.opt.MaxRetries,
@@ -378,27 +413,13 @@ func (c *sentinelFailover) masterAddr() (string, error) {
 	return "", errors.New("redis: all sentinels are unreachable")
 }
 
-func (c *sentinelFailover) getMasterAddr() string {
-	c.mu.RLock()
-	sentinel := c.sentinel
-	c.mu.RUnlock()
-
-	if sentinel == nil {
-		return ""
-	}
-
+func (c *sentinelFailover) getMasterAddr(sentinel *SentinelClient) string {
 	addr, err := sentinel.GetMasterAddrByName(c.masterName).Result()
 	if err != nil {
 		internal.Logger.Printf("sentinel: GetMasterAddrByName name=%q failed: %s",
 			c.masterName, err)
-		c.mu.Lock()
-		if c.sentinel == sentinel {
-			_ = c.closeSentinel()
-		}
-		c.mu.Unlock()
 		return ""
 	}
-
 	return net.JoinHostPort(addr[0], addr[1])
 }
 
@@ -413,6 +434,10 @@ func (c *sentinelFailover) switchMaster(addr string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if c._masterAddr == addr {
+		return
+	}
+
 	internal.Logger.Printf("sentinel: new master=%q addr=%q",
 		c.masterName, addr)
 	_ = c.Pool().Filter(func(cn *pool.Conn) bool {
@@ -422,28 +447,18 @@ func (c *sentinelFailover) switchMaster(addr string) {
 }
 
 func (c *sentinelFailover) setSentinel(sentinel *SentinelClient) {
-	c.discoverSentinels(sentinel)
+	if c.sentinel != nil {
+		panic("not reached")
+	}
 	c.sentinel = sentinel
+	c.discoverSentinels()
 
 	c.pubsub = sentinel.Subscribe("+switch-master")
 	go c.listen(c.pubsub)
 }
 
-func (c *sentinelFailover) closeSentinel() error {
-	firstErr := c.pubsub.Close()
-	c.pubsub = nil
-
-	err := c.sentinel.Close()
-	if err != nil && firstErr == nil {
-		firstErr = err
-	}
-	c.sentinel = nil
-
-	return firstErr
-}
-
-func (c *sentinelFailover) discoverSentinels(sentinel *SentinelClient) {
-	sentinels, err := sentinel.Sentinels(c.masterName).Result()
+func (c *sentinelFailover) discoverSentinels() {
+	sentinels, err := c.sentinel.Sentinels(c.masterName).Result()
 	if err != nil {
 		internal.Logger.Printf("sentinel: Sentinels master=%q failed: %s", c.masterName, err)
 		return

@@ -17,9 +17,9 @@ Adds info to every response header:
 
 ### Ping-Pong middleware
 
-Responds with `pong` on `GET /ping`. Also responds to anything with `/ping` suffix, like `/v2/ping` 
+Responds with `pong` on `GET /ping`. Also, responds to anything with `/ping` suffix, like `/v2/ping`.
 
-example for both:
+Example for both:
 
 ```
 > http GET https://remark42.radio-t.com/ping
@@ -58,7 +58,7 @@ example: `019/03/05 17:26:12.976 [INFO] GET - /api/v1/find?site=remark - 8e228e9
 ### Recoverer middleware
 
 Recoverer is a middleware that recovers from panics, logs the panic (and a backtrace), 
-and returns a HTTP 500 (Internal Server Error) status if possible.
+and returns an HTTP 500 (Internal Server Error) status if possible.
 
 ### OnlyFrom middleware
 
@@ -67,7 +67,7 @@ Such IPs can be defined as complete ip (like 192.168.1.12), prefix (129.168.) or
 
 ### Metrics middleware
 
-Metrics middleware responds to GET /metrics with list of [expvar](https://golang.org/pkg/expvar/). Optionally allows to restrict list of source ips.
+Metrics middleware responds to GET /metrics with list of [expvar](https://golang.org/pkg/expvar/). Optionally allows restricting list of source ips.
 
 ### BlackWords middleware
 
@@ -82,12 +82,40 @@ SizeLimit middleware checks if body size is above the limit and returns `StatusR
 It looks for `X-Request-ID` header and makes it as a random id
  (if not found), then populates it to the result's header
     and to the request's context.
-    
+
+### Deprecation middleware
+
+Adds the HTTP Deprecation response header, see [draft-dalal-deprecation-header-00](https://tools.ietf.org/id/draft-dalal-deprecation-header-00.html
+) 
+
+### BasicAuth middleware
+
+BasicAuth middleware requires basic auth and matches user & passwd with client-provided checker. In case if no basic auth headers returns
+`StatusUnauthorized`, in case if checker failed - `StatusForbidden`
+
+## Rewrite middleware
+
+Rewrites requests with from->to rule. Supports regex (like nginx) and prevents multiple rewrites. For example `Rewrite("^/sites/(.*)/settings/$", "/sites/settings/$1")` will change request's URL from `/sites/id1/settings/` to `/sites/settings/id1`
+
+## NoCache middleware
+
+Sets a number of HTTP headers to prevent a router (handler's) response from being cached by an upstream proxy and/or client.
+
+## Headers middleware
+
+Sets headers (passed as key:value) to requests. I.e. `rest.Headers("Server:MyServer", "X-Blah:Foo")`
+
+## Gzip middleware
+
+Compresses response with gzip.
+
 ## Helpers
 
+- `rest.Wrap` - converts a list of middlewares to nested handlers calls (in reverse order)
 - `rest.JSON` - map alias, just for convenience `type JSON map[string]interface{}`
 - `rest.RenderJSON` -  renders json response from `interface{}`
 - `rest.RenderJSONFromBytes` - renders json response from `[]byte`
 - `rest.RenderJSONWithHTML` -  renders json response with html tags and forced `charset=utf-8`
-- `rest.SendErrorJSON` - makes `{error: blah, details: blah}` json body and responds with given error code. Also adds context to logged message
-- `rest.NewErrorLogger(l logger.Backend)` creates a struct providing shorter form of logger call
+- `rest.SendErrorJSON` - makes `{error: blah, details: blah}` json body and responds with given error code. Also, adds context to the logged message
+- `rest.NewErrorLogger` - creates a struct providing shorter form of logger call
+- `rest.FileServer` - creates a file server for static assets with directory listing disabled

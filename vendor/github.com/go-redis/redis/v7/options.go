@@ -21,8 +21,8 @@ type Limiter interface {
 	// If operation is allowed client must ReportResult of the operation
 	// whether it is a success or a failure.
 	Allow() error
-	// ReportResult reports the result of previously allowed operation.
-	// nil indicates a success, non-nil error indicates a failure.
+	// ReportResult reports the result of the previously allowed operation.
+	// nil indicates a success, non-nil error usually indicates a failure.
 	ReportResult(result error)
 }
 
@@ -40,8 +40,13 @@ type Options struct {
 	// Hook that is called when new connection is established.
 	OnConnect func(*Conn) error
 
+	// Use the specified Username to authenticate the current connection with one of the connections defined in the ACL
+	// list when connecting to a Redis 6.0 instance, or greater, that is using the Redis ACL system.
+	Username string
+
 	// Optional password. Must match the password specified in the
-	// requirepass server configuration option.
+	// requirepass server configuration option (if connecting to a Redis 5.0 instance, or lower),
+	// or the User Password when connecting to a Redis 6.0 instance, or greater, that is using the Redis ACL system.
 	Password string
 	// Database to be selected after connecting to the server.
 	DB int
@@ -96,14 +101,21 @@ type Options struct {
 
 	// TLS Config to use. When set TLS will be negotiated.
 	TLSConfig *tls.Config
+
+	// Limiter interface used to implemented circuit breaker or rate limiter.
+	Limiter Limiter
 }
 
 func (opt *Options) init() {
-	if opt.Network == "" {
-		opt.Network = "tcp"
-	}
 	if opt.Addr == "" {
 		opt.Addr = "localhost:6379"
+	}
+	if opt.Network == "" {
+		if strings.HasPrefix(opt.Addr, "/") {
+			opt.Network = "unix"
+		} else {
+			opt.Network = "tcp"
+		}
 	}
 	if opt.Dialer == nil {
 		opt.Dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -145,6 +157,9 @@ func (opt *Options) init() {
 		opt.IdleCheckFrequency = time.Minute
 	}
 
+	if opt.MaxRetries == -1 {
+		opt.MaxRetries = 0
+	}
 	switch opt.MinRetryBackoff {
 	case -1:
 		opt.MinRetryBackoff = 0
@@ -157,6 +172,11 @@ func (opt *Options) init() {
 	case 0:
 		opt.MaxRetryBackoff = 512 * time.Millisecond
 	}
+}
+
+func (opt *Options) clone() *Options {
+	clone := *opt
+	return &clone
 }
 
 // ParseURL parses an URL into Options that can be used to connect to Redis.
@@ -172,6 +192,7 @@ func ParseURL(redisURL string) (*Options, error) {
 	}
 
 	if u.User != nil {
+		o.Username = u.User.Username()
 		if p, ok := u.User.Password(); ok {
 			o.Password = p
 		}

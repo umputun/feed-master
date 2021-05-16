@@ -7,9 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-pkgz/lcw"
-
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-pkgz/rest"
 
@@ -22,7 +20,7 @@ var templates = template.Must(template.ParseGlob("webapp/templates/*"))
 func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
 
-	data, err := s.cache.Get(feedName, func() (lcw.Value, error) {
+	data, err := s.cache.Get(feedName, func() (interface{}, error) {
 		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, false)
 		if err != nil {
 			return nil, err

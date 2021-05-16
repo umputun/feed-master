@@ -118,7 +118,7 @@ func (p *Processor) feed(name, url, telegramChannel string, max int, filter Filt
 		}
 		if skip {
 			item.Junk = true
-			log.Printf("[INFO] Junked %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
+			log.Printf("[INFO] filtered %s (%s), %s %s", item.GUID, item.PubDate, name, item.Title)
 		}
 
 		created, err := p.Store.Save(name, item)

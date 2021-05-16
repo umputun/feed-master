@@ -108,14 +108,14 @@ func TestTagLinkOnlySupport(t *testing.T) {
 func TestGetMessageHTML(t *testing.T) {
 	item := feed.Item{
 		Title:       "\tPodcast\n\t",
-		Description: "<p>News <a href='#'>Podcast Link</a></p>\n",
+		Description: "<p>News <a href='/test'>Podcast Link</a></p>\n",
 		Enclosure: feed.Enclosure{
 			URL: "https://example.com",
 		},
 		Link: "https://example.com/xyz",
 	}
 
-	expected := "<a href=\"https://example.com/xyz\">Podcast</a>\n\nNews <a href=\"#\">Podcast Link</a>\n\nhttps://example.com"
+	expected := "<a href=\"https://example.com/xyz\">Podcast</a>\n\nNews <a href=\"/test\">Podcast Link</a>\n\nhttps://example.com"
 
 	client := TelegramClient{}
 	msg := client.getMessageHTML(item, true)

@@ -7,7 +7,7 @@ import (
 )
 
 // Scache wraps LoadingCache with partitions (sub-system), and scopes.
-// Simplified interface with just 3 funcs - Get, Flush and Stats
+// Simplified interface with just 4 funcs - Get, Flush, Stats and Close
 type Scache struct {
 	lc LoadingCache
 }
@@ -17,9 +17,10 @@ func NewScache(lc LoadingCache) *Scache {
 	return &Scache{lc: lc}
 }
 
+// Get retrieves a key from underlying backend
 func (m *Scache) Get(key Key, fn func() ([]byte, error)) (data []byte, err error) {
 	keyStr := key.String()
-	val, err := m.lc.Get(keyStr, func() (value Value, e error) {
+	val, err := m.lc.Get(keyStr, func() (value interface{}, e error) {
 		return fn()
 	})
 	return val.([]byte), err
@@ -30,9 +31,13 @@ func (m *Scache) Stat() CacheStat {
 	return m.lc.Stat()
 }
 
+// Close calls Close function of the underlying cache
+func (m *Scache) Close() error {
+	return m.lc.Close()
+}
+
 // Flush clears cache and calls postFlushFn async
 func (m *Scache) Flush(req FlusherRequest) {
-
 	if len(req.scopes) == 0 {
 		m.lc.Purge()
 		return
@@ -93,11 +98,11 @@ func (k Key) Scopes(scopes ...string) Key {
 // key string made as <partition>@@<id>@@<scope1>$$<scope2>....
 func (k Key) String() string {
 	bld := strings.Builder{}
-	bld.WriteString(k.partition)
-	bld.WriteString("@@")
-	bld.WriteString(k.id)
-	bld.WriteString("@@")
-	bld.WriteString(strings.Join(k.scopes, "$$"))
+	_, _ = bld.WriteString(k.partition)
+	_, _ = bld.WriteString("@@")
+	_, _ = bld.WriteString(k.id)
+	_, _ = bld.WriteString("@@")
+	_, _ = bld.WriteString(strings.Join(k.scopes, "$$"))
 	return bld.String()
 }
 
