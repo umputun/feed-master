@@ -118,11 +118,11 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 // GET /image/{name}
 func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
 	fm := chi.URLParam(r, "name")
-	fm = strings.TrimRight(fm, ".png")
+	fm = strings.TrimSuffix(fm, ".png")
 	feedConf, found := s.Conf.Feeds[fm]
 	if !found {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest,
-			errors.New("image "+chi.URLParam(r, "name")+" not found"), "failed to load image")
+			fmt.Errorf("image %s not found", fm), "failed to load image")
 		return
 	}
 
@@ -141,7 +141,7 @@ func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
 // HEAD /image/{name}
 func (s *Server) getImageHeadCtrl(w http.ResponseWriter, r *http.Request) {
 	fm := chi.URLParam(r, "name")
-	fm = strings.TrimRight(fm, ".png")
+	fm = strings.TrimSuffix(fm, ".png")
 	feedConf, found := s.Conf.Feeds[fm]
 	if !found {
 		w.WriteHeader(http.StatusNotFound)
