@@ -83,7 +83,6 @@ func (s *Server) Run(port int) {
 		log.Printf("[WARN] can't start static file server, %v", err)
 	}
 
-	// s.addFileServer(router, "/static", http.Dir(filepath.Join("webapp", "static")))
 	err = s.httpServer.ListenAndServe()
 	log.Printf("[WARN] http server terminated, %s", err)
 }

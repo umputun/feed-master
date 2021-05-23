@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"html/template"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -69,24 +68,4 @@ func (s *Server) renderErrorPage(w http.ResponseWriter, r *http.Request, err err
 		render.JSON(w, r, rest.JSON{"error": err.Error()})
 		return
 	}
-}
-
-// serves static files from /web
-func (s *Server) addFileServer(r chi.Router, path string, root http.FileSystem) {
-	fs := http.StripPrefix(path, http.FileServer(root))
-
-	if path != "/" && path[len(path)-1] != '/' {
-		r.Get(path, http.RedirectHandler(path+"/", http.StatusMovedPermanently).ServeHTTP)
-		path += "/"
-	}
-	path += "*"
-
-	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
-		// don't show dirs, just serve files
-		if strings.HasSuffix(r.URL.Path, "/") {
-			http.NotFound(w, r)
-			return
-		}
-		fs.ServeHTTP(w, r)
-	})
 }
