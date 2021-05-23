@@ -57,6 +57,7 @@ type Feed struct {
 		Name string `yaml:"name"`
 		URL  string `yaml:"url"`
 	} `yaml:"sources"`
+	ExtendDateTitle string `yaml:"ext_date"`
 }
 
 // Filter defines feed section for a feed filter~

@@ -19,6 +19,7 @@ feeds:
     link: http://echo.msk.ru
     language: "ru-ru"
     image: images/echomsk.png
+    ext_date: yyyyddmm
     sources:
       - name: Владимир Кара-Мурза
         url: http://www.echo.msk.ru/programs/graniweek/rss-audio.xml

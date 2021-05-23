@@ -76,7 +76,14 @@ func (s *Server) Run(port int) {
 		rrss.Get("/feed/{name}", s.getFeedPageCtrl)
 	})
 
-	s.addFileServer(router, "/static", http.Dir(filepath.Join("webapp", "static")))
+	fs, err := rest.FileServer("/static", filepath.Join("webapp", "static"))
+	if err == nil {
+		router.Mount("/static", fs)
+	} else {
+		log.Printf("[WARN] can't start static file server, %v", err)
+	}
+
+	// s.addFileServer(router, "/static", http.Dir(filepath.Join("webapp", "static")))
 	err = s.httpServer.ListenAndServe()
 	log.Printf("[WARN] http server terminated, %s", err)
 }
@@ -88,6 +95,16 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest, err, "failed to get feed")
 		return
+	}
+
+	for i, itm := range items {
+		// add ts suffix to titles
+		switch s.Conf.Feeds[feedName].ExtendDateTitle {
+		case "yyyyddmm":
+			items[i].Title = fmt.Sprintf("%s (%s)", itm.Title, itm.DT.Format("2006-02-01"))
+		case "yyyymmdd":
+			items[i].Title = fmt.Sprintf("%s (%s)", itm.Title, itm.DT.Format("2006-01-02"))
+		}
 	}
 
 	rss := feed.Rss2{

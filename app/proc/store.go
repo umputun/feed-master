@@ -83,7 +83,7 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
 
 // Load from bold for given feed, up to max
 func (b BoltDB) Load(fmFeed string, max int, skipJunk bool) ([]feed.Item, error) {
-	result := []feed.Item{}
+	var result []feed.Item
 
 	err := b.DB.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(fmFeed))
