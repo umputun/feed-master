@@ -67,3 +67,12 @@ func TestFilterAllCases(t *testing.T) {
 		})
 	}
 }
+
+func TestReverse(t *testing.T) {
+	p := Processor{
+		Conf: &Conf{},
+	}
+	items := []feed.Item{{Title: "1"}, {Title: "2"}}
+	p.reverse(items)
+	assert.Equal(t, items, []feed.Item{{Title: "2"}, {Title: "1"}})
+}

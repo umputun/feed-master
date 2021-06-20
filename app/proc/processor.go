@@ -94,6 +94,14 @@ func (p *Processor) Do() {
 	}
 }
 
+// reverse slice of items in-place, necessary to post oldest entries first
+func (p *Processor) reverse(items []feed.Item) {
+	last := len(items) - 1
+	for i := 0; i < len(items)/2; i++ {
+		items[i], items[last-i] = items[last-i], items[i]
+	}
+}
+
 func (p *Processor) feed(name, url, telegramChannel string, max int, filter Filter) {
 	rss, err := feed.Parse(url)
 	if err != nil {
@@ -107,6 +115,8 @@ func (p *Processor) feed(name, url, telegramChannel string, max int, filter Filt
 		upto = len(rss.ItemList)
 	}
 
+	// reverse last entries to upload oldest first
+	p.reverse(rss.ItemList[:upto])
 	for _, item := range rss.ItemList[:upto] {
 		// skip 1y and older
 		if item.DT.Before(time.Now().AddDate(-1, 0, 0)) {
