@@ -11,6 +11,7 @@ import (
 	log "github.com/go-pkgz/lgr"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/pkg/errors"
+	"golang.org/x/net/html"
 	tb "gopkg.in/tucnak/telebot.v2"
 
 	"github.com/umputun/feed-master/app/feed"
@@ -147,21 +148,37 @@ func (client TelegramClient) downloadAudio(url string) (io.ReadCloser, error) {
 }
 
 // https://core.telegram.org/bots/api#html-style
-func (client TelegramClient) tagLinkOnlySupport(html string) string {
+func (client TelegramClient) tagLinkOnlySupport(htmlText string) string {
 	p := bluemonday.NewPolicy()
 	p.AllowAttrs("href").OnElements("a")
-	return p.Sanitize(html)
+	return html.UnescapeString(p.Sanitize(htmlText))
 }
 
+// getMessageHTML generates HTML message from provided feed.Item
 func (client TelegramClient) getMessageHTML(item feed.Item, withMp3Link bool) string {
-	title := strings.TrimSpace(item.Title)
+	description := string(item.Description)
 
-	description := client.tagLinkOnlySupport(string(item.Description))
+	description = strings.TrimPrefix(description, "<![CDATA[")
+	description = strings.TrimSuffix(description, "]]>")
+
+	// apparently bluemonday doesn't remove escaped HTML tags
+	description = client.tagLinkOnlySupport(html.UnescapeString(description))
 	description = strings.TrimSpace(description)
 
-	messageHTML := fmt.Sprintf("<a href=\"%s\">%s</a>\n\n%s", item.Link, title, description)
+	messageHTML := description
+
+	title := strings.TrimSpace(item.Title)
+	if title != "" {
+		switch {
+		case item.Link == "":
+			messageHTML = fmt.Sprintf("%s\n\n", title) + messageHTML
+		case item.Link != "":
+			messageHTML = fmt.Sprintf("<a href=\"%s\">%s</a>\n\n", item.Link, title) + messageHTML
+		}
+	}
+
 	if withMp3Link {
-		messageHTML = fmt.Sprintf("<a href=\"%s\">%s</a>\n\n%s\n\n%s", item.Link, title, description, item.Enclosure.URL)
+		messageHTML += fmt.Sprintf("\n\n%s", item.Enclosure.URL)
 	}
 
 	return messageHTML
