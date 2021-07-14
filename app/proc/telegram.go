@@ -3,16 +3,15 @@ package proc
 import (
 	"bytes"
 	"fmt"
-	"github.com/tcolgate/mp3"
 	"io"
 	"net/http"
-	"path"
 	"strings"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/pkg/errors"
+	"github.com/tcolgate/mp3"
 	"golang.org/x/net/html"
 	tb "gopkg.in/tucnak/telebot.v2"
 
@@ -85,7 +84,7 @@ func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Mes
 }
 
 func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Message, error) {
-	httpBody, err := client.downloadAudio(item.Enclosure.URL)
+	httpBody, err := item.DownloadAudio(client.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +95,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 
 	audio := tb.Audio{
 		File:     tb.FromReader(&httpBodyCopy),
-		FileName: client.getFilenameByURL(item.Enclosure.URL),
+		FileName: item.GetFilename(),
 		MIME:     "audio/mpeg",
 		Caption:  client.getMessageHTML(item, false),
 		Title:    item.Title,
@@ -112,19 +111,6 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 	)
 
 	return message, err
-}
-
-func (client TelegramClient) downloadAudio(url string) (io.ReadCloser, error) {
-	clientHTTP := &http.Client{Timeout: client.Timeout * time.Second}
-
-	resp, err := clientHTTP.Get(url)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("[DEBUG] start download audio: %s", url)
-
-	return resp.Body, err
 }
 
 // https://core.telegram.org/bots/api#html-style
@@ -162,11 +148,6 @@ func (client TelegramClient) getMessageHTML(item feed.Item, withMp3Link bool) st
 	}
 
 	return messageHTML
-}
-
-func (client TelegramClient) getFilenameByURL(url string) string {
-	_, filename := path.Split(url)
-	return filename
 }
 
 // duration scans MP3 file from provided io.Reader and returns it's duration in seconds, ignoring possible errors
