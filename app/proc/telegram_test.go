@@ -2,9 +2,6 @@ package proc
 
 import (
 	"bytes"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"strconv"
 	"testing"
 	"testing/iotest"
@@ -162,58 +159,6 @@ func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
 			assert.Equal(t, expected, got.Recipient())
 		})
 	}
-}
-
-func TestGetFilenameByURL(t *testing.T) {
-	tbl := []struct {
-		url, expected string
-	}{
-		{"https://example.com/100500/song.mp3", "song.mp3"},
-		{"https://example.com//song.mp3", "song.mp3"},
-		{"https://example.com/song.mp3", "song.mp3"},
-		{"https://example.com/song.mp3/", ""},
-		{"https://example.com/", ""},
-	}
-
-	for i, tt := range tbl {
-		i := i
-		tt := tt
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			client := TelegramClient{}
-			fname := client.getFilenameByURL(tt.url)
-			assert.Equal(t, tt.expected, fname)
-		})
-	}
-}
-
-func TestDownloadAudioIfRequestError(t *testing.T) {
-	var ts *httptest.Server
-	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ts.CloseClientConnections()
-	}))
-
-	defer ts.Close()
-
-	client := TelegramClient{}
-	got, err := client.downloadAudio(ts.URL)
-
-	assert.Nil(t, got)
-	assert.EqualError(t, err, fmt.Sprintf("Get %q: EOF", ts.URL))
-}
-
-func TestDownloadAudio(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Length", "4")
-		fmt.Fprint(w, "abcd")
-	}))
-	defer ts.Close()
-
-	client := TelegramClient{}
-	got, err := client.downloadAudio(ts.URL)
-
-	assert.NotNil(t, got)
-	assert.NoError(t, err)
 }
 
 func TestDurationBadReader(t *testing.T) {

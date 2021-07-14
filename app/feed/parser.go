@@ -32,24 +32,6 @@ type Rss2 struct {
 	ItemList []Item `xml:"channel>item"`
 }
 
-// Item for rss
-type Item struct {
-	// Required
-	Title       string        `xml:"title"`
-	Link        string        `xml:"link"`
-	Description template.HTML `xml:"description"`
-	// Optional
-	Content   template.HTML `xml:"encoded"`
-	PubDate   string        `xml:"pubDate"`
-	Comments  string        `xml:"comments"`
-	Enclosure Enclosure     `xml:"enclosure"`
-	GUID      string        `xml:"guid"`
-
-	// Internal
-	DT   time.Time `xml:"-"`
-	Junk bool      `xml:"-"`
-}
-
 // Enclosure element from item
 type Enclosure struct {
 	URL    string `xml:"url,attr"`
