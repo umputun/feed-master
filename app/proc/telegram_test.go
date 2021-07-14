@@ -68,12 +68,7 @@ func TestSendIfContentLengthZero(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	err := client.Send("100500", feed.Item{
-		Enclosure: feed.Enclosure{
-			URL:    ts.URL,
-			Length: 0,
-		},
-	})
+	err := client.Send("100500", feed.Item{Enclosure: feed.Enclosure{URL: ts.URL}})
 
 	assert.Error(t, err)
 	assert.EqualError(t, err, fmt.Sprintf("can't get length for %s: non-200 status, 500", ts.URL))
