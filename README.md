@@ -6,7 +6,7 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 
 - Copy `docker-compose.yml` and adjust exposed port if needed
 - Create `etc/fm.yml` (sample provided in `_example`)
-- Start container with `docker-compose up -d`
+- Start container with `docker-compose up -d feed-master`
 
 ### Application parameters
 
@@ -17,6 +17,7 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 | feed             | FM_FEED           |                 | single feed, overrides config             |
 | update-interval  | UPDATE_INTERVAL   | `1m`            | update interval, overrides config         |
 | telegram_chan    | TELEGRAM_CHAN     |                 | single telegram channel, overrides config |
+| telegram_server  | TELEGRAM_SERVER   | `https://api.telegram.org` | telegram bot api server        |
 | telegram_token   | TELEGRAM_TOKEN    |                 | telegram token           |
 | telegram_timeout | TELEGRAM_TIMEOUT  | `1m`            | telegram timeout         |
 | consumer-key     | TWI_CONSUMER_KEY  |                 | twitter consumer key     |
@@ -34,3 +35,11 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 ## Web UI
 
 Web UI shows a list of items from generated RSS. It is available on `/feed/{name}`
+
+## Telegram notifications
+
+By default, (with only `TELEGRAM_TOKEN` provided) Telegram notifications will be sent using standard Bot API which has a limit of [50Mb](https://core.telegram.org/bots/api#sending-files) for audio file upload.
+
+You can provide `TELEGRAM_API_ID` and `TELEGRAM_API_HASH` (from [here](https://my.telegram.org/apps)) to `telegram-bot-api` service in docker-compose.yml and uncomment `TELEGRAM_SERVER` for `feed-master`, then it would use the local bot api server to raise audio file upload limit from 50Mb [to 2000Mb](https://core.telegram.org/bots/api#using-a-local-bot-api-server).
+
+To use local telegram bot api server, use `docker-compose up -d` command instead of `docker-compose up -d feed-master`.

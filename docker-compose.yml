@@ -1,12 +1,16 @@
 version: "2"
 
+volumes:
+    server-data:
+        driver: local
+
 services:
     feed-master:
         build:
             context: .
             dockerfile: Dockerfile
             args:
-            - SKIP_TEST
+                - SKIP_TEST
         image: umputun/feed-master:master
         container_name: feed-master
         hostname: feed-master
@@ -24,9 +28,34 @@ services:
             - FM_DB=/srv/var/feed-master.bdb
             - FM_CONF=/srv/etc/fm.yml
             - TELEGRAM_TOKEN
+        # Uncomment the line below if you want to enable Telegram
+        # with file upload limit raised from default 50Mb to 2000Mb
+        #   - TELEGRAM_SERVER=http://telegram-bot-api:8081
         volumes:
             - ./var:/srv/var # mapped location to save status
             - ./_example/etc:/srv/etc # mapped location for config
             - ./_example/images:/srv/images # mapped location for images
         ports:
             - "8097:8080" # exposed on port 8097
+
+    # This service is optional.
+    # It could be accessed by port 8081 as local Telegram Bot API server.
+    telegram-bot-api:
+        image: ghcr.io/bots-house/docker-telegram-bot-api:latest
+        container_name: telegram-bot-api
+        hostname: telegram-bot-api
+        command: "--dir=/var/lib/telegram-bot-api"
+        volumes:
+            - server-data:/var/lib/telegram-bot-api
+        restart: unless-stopped
+
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "5"
+
+        environment:
+            # get these values from https://core.telegram.org/api/obtaining_api_id
+            - TELEGRAM_API_ID
+            - TELEGRAM_API_HASH
