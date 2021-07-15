@@ -16,7 +16,7 @@ import (
 )
 
 func TestNewTelegramClientIfTokenEmpty(t *testing.T) {
-	client, err := NewTelegramClient("", 0)
+	client, err := NewTelegramClient("", "", 0)
 	assert.NoError(t, err)
 	assert.Nil(t, client.Bot)
 }
@@ -34,7 +34,7 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 		i := i
 		tt := tt
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			client, err := NewTelegramClient("", tt.timeout)
+			client, err := NewTelegramClient("", "", tt.timeout)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected, client.Timeout)
 		})
@@ -42,7 +42,7 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 }
 
 func TestSendIfBotIsNil(t *testing.T) {
-	client, err := NewTelegramClient("", 0)
+	client, err := NewTelegramClient("", "", 0)
 	require.NoError(t, err)
 	err = client.Send("@channel", feed.Item{})
 	assert.NoError(t, err)
@@ -55,23 +55,6 @@ func TestSendIfChannelIDEmpty(t *testing.T) {
 
 	err := client.Send("", feed.Item{})
 	assert.NoError(t, err)
-}
-
-func TestSendIfContentLengthZero(t *testing.T) {
-	client := TelegramClient{
-		Bot: &tb.Bot{},
-	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Length", "0")
-	}))
-	defer ts.Close()
-
-	err := client.Send("100500", feed.Item{Enclosure: feed.Enclosure{URL: ts.URL}})
-
-	assert.Error(t, err)
-	assert.EqualError(t, err, fmt.Sprintf("can't get length for %s: non-200 status, 500", ts.URL))
 }
 
 func TestTagLinkOnlySupport(t *testing.T) {
@@ -199,56 +182,6 @@ func TestGetFilenameByURL(t *testing.T) {
 			assert.Equal(t, tt.expected, fname)
 		})
 	}
-}
-
-func TestGetContentLengthNotFound(t *testing.T) {
-	cases := []struct {
-		statusCode     int
-		contentLength  int
-		expectedLength int
-		expectedError  string
-	}{
-		{http.StatusInternalServerError, 100500, 0, "non-200 status, 500"},
-		{http.StatusMethodNotAllowed, 100500, 0, "non-200 status, 405"},
-		{http.StatusOK, 4, 4, ""},
-	}
-
-	for i, tc := range cases {
-		i := i
-		tc := tc
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(tc.statusCode)
-				w.Header().Set("Content-Length", strconv.Itoa(tc.contentLength))
-				if tc.contentLength > 0 {
-					fmt.Fprint(w, "abcd")
-				}
-			}))
-
-			defer ts.Close()
-
-			length, err := getContentLength(ts.URL)
-
-			assert.Equal(t, tc.expectedLength, length)
-			if err != nil {
-				assert.EqualError(t, err, tc.expectedError)
-			}
-		})
-	}
-}
-
-func TestGetContentLengthIfErrorConnect(t *testing.T) {
-	var ts *httptest.Server
-	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ts.CloseClientConnections()
-	}))
-
-	defer ts.Close()
-
-	length, err := getContentLength(ts.URL)
-
-	assert.Equal(t, length, 0)
-	assert.EqualError(t, err, fmt.Sprintf("can't HEAD %s: Head %q: EOF", ts.URL, ts.URL))
 }
 
 func TestDownloadAudioIfRequestError(t *testing.T) {

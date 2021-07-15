@@ -17,8 +17,6 @@ import (
 	"github.com/umputun/feed-master/app/feed"
 )
 
-const maxTelegramFileSize = 50_000_000
-
 // TelegramClient client
 type TelegramClient struct {
 	Bot     *tb.Bot
@@ -26,7 +24,7 @@ type TelegramClient struct {
 }
 
 // NewTelegramClient init telegram client
-func NewTelegramClient(token string, timeout time.Duration) (*TelegramClient, error) {
+func NewTelegramClient(token, apiURL string, timeout time.Duration) (*TelegramClient, error) {
 	if timeout == 0 {
 		timeout = time.Second * 60
 	}
@@ -39,6 +37,7 @@ func NewTelegramClient(token string, timeout time.Duration) (*TelegramClient, er
 	}
 
 	bot, err := tb.NewBot(tb.Settings{
+		URL:    apiURL,
 		Token:  token,
 		Client: &http.Client{Timeout: timeout * time.Second},
 	})
@@ -59,16 +58,8 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 		return nil
 	}
 
-	var contentLength int
-	if contentLength, err = getContentLength(item.Enclosure.URL); err != nil {
-		return errors.Wrapf(err, "can't get length for %s", item.Enclosure.URL)
-	}
-
-	var message *tb.Message
-
-	if contentLength < maxTelegramFileSize {
-		message, err = client.sendAudio(channelID, item)
-	} else {
+	message, err := client.sendAudio(channelID, item)
+	if err != nil && strings.HasSuffix(err.Error(), "Request Entity Too Large") {
 		message, err = client.sendText(channelID, item)
 	}
 
@@ -78,23 +69,6 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 
 	log.Printf("[DEBUG] telegram message sent: \n%s", message.Text)
 	return nil
-}
-
-// getContentLength uses HEAD request to retrieve length of the provided URL
-func getContentLength(url string) (int, error) {
-	resp, err := http.Head(url) // nolint:gosec // URL considered safe
-	if err != nil {
-		return 0, errors.Wrapf(err, "can't HEAD %s", url)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return 0, errors.Errorf("non-200 status, %d", resp.StatusCode)
-	}
-
-	log.Printf("[DEBUG] Content-Length: %d, url: %s", resp.ContentLength, url)
-	return int(resp.ContentLength), err
 }
 
 func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Message, error) {
