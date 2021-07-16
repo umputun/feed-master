@@ -213,7 +213,7 @@ func TestDownloadAudio(t *testing.T) {
 	got, err := client.downloadAudio(ts.URL)
 
 	assert.NotNil(t, got)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestDurationBadReader(t *testing.T) {

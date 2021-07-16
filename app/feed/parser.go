@@ -111,8 +111,8 @@ func Parse(uri string) (result Rss2, err error) {
 		return result, err
 	}
 
-	result, e := parseFeedContent(b.Bytes())
-	if e != nil {
+	result, err = parseFeedContent(b.Bytes())
+	if err != nil {
 		return Rss2{}, errors.Wrap(err, "parsing error")
 	}
 

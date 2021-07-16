@@ -20,7 +20,7 @@ func TestNewBoltDB(t *testing.T) {
 
 	boltDB, err := NewBoltDB(tmpfile.Name())
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, boltDB.DB.Path(), tmpfile.Name())
 }
 
@@ -60,7 +60,7 @@ func TestSave(t *testing.T) {
 	created, err := boltDB.Save("radio-t", item)
 
 	assert.True(t, created)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestSaveIfItemIsExists(t *testing.T) {
@@ -78,7 +78,7 @@ func TestSaveIfItemIsExists(t *testing.T) {
 	created, err := boltDB.Save("radio-t", item)
 
 	assert.False(t, created)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestLoadIfNotBucket(t *testing.T) {
@@ -102,7 +102,7 @@ func TestLoad(t *testing.T) {
 
 	items, err := boltDB.Load("radio-t", 5, false)
 
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, len(items))
 	assert.Equal(t, items[0].PubDate, pubDate)
 }
@@ -136,7 +136,7 @@ func TestLoadChackMax(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			items, err := boltDB.Load("radio-t", tc.max, false)
 
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tc.count, len(items))
 		})
 	}
@@ -148,14 +148,14 @@ func TestBuckets(t *testing.T) {
 	boltDB, _ := NewBoltDB(tmpfile.Name())
 
 	got, err := boltDB.Buckets()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 0, len(got))
 
 	_, err = boltDB.Save("radio-t", feed.Item{PubDate: pubDate})
 	require.NoError(t, err)
 
 	got, err = boltDB.Buckets()
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 1, len(got))
 }
 
@@ -195,7 +195,7 @@ func TestRemoveOld(t *testing.T) {
 
 			count, err := boltDB.removeOld("radio-t", tc.keep)
 
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 			assert.Equal(t, tc.countDelete, count)
 		})
 	}
