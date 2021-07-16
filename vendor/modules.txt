@@ -97,10 +97,15 @@ github.com/pmezard/go-difflib/difflib
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
+## explicit
+github.com/tcolgate/mp3
+github.com/tcolgate/mp3/internal/data
 # go.etcd.io/bbolt v1.3.5
 ## explicit
 go.etcd.io/bbolt
 # golang.org/x/net v0.0.0-20210421230115-4e50805a0758
+## explicit
 golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/html/atom
