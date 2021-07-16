@@ -43,7 +43,7 @@ update: 600
 	assert.Nil(t, ioutil.WriteFile("/tmp/fm.yml", data, 0777), "failed write yml") // nolint
 
 	r, err := loadConfig("/tmp/fm.yml")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, 3, len(r.Feeds), "3 sets")
 	assert.Equal(t, 2, len(r.Feeds["first"].Sources), "2 feeds in first")
 	assert.Equal(t, 1, len(r.Feeds["second"].Sources), "1 feed in second")
