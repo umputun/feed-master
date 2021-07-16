@@ -1,7 +1,9 @@
 package proc
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/tcolgate/mp3"
 	"io"
 	"net/http"
 	"path"
@@ -40,7 +42,7 @@ func NewTelegramClient(token string, timeout time.Duration) (*TelegramClient, er
 
 	bot, err := tb.NewBot(tb.Settings{
 		Token:  token,
-		Client: &http.Client{Timeout: timeout * time.Second},
+		Client: &http.Client{Timeout: timeout},
 	})
 	if err != nil {
 		return nil, err
@@ -115,12 +117,16 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 	}
 	defer httpBody.Close()
 
+	var httpBodyCopy bytes.Buffer
+	tee := io.TeeReader(httpBody, &httpBodyCopy)
+
 	audio := tb.Audio{
-		File:     tb.FromReader(httpBody),
+		File:     tb.FromReader(&httpBodyCopy),
 		FileName: client.getFilenameByURL(item.Enclosure.URL),
 		MIME:     "audio/mpeg",
 		Caption:  client.getMessageHTML(item, false),
 		Title:    item.Title,
+		Duration: client.duration(tee),
 	}
 
 	message, err := audio.Send(
@@ -187,6 +193,23 @@ func (client TelegramClient) getMessageHTML(item feed.Item, withMp3Link bool) st
 func (client TelegramClient) getFilenameByURL(url string) string {
 	_, filename := path.Split(url)
 	return filename
+}
+
+// duration scans MP3 file from provided io.Reader and returns it's duration in seconds, ignoring possible errors
+func (client TelegramClient) duration(r io.Reader) int {
+	d := mp3.NewDecoder(r)
+	var f mp3.Frame
+	var skipped int
+	var duration float64
+	var err error
+
+	for err == nil {
+		if err = d.Decode(&f, &skipped); err != nil && err != io.EOF {
+			return 0
+		}
+		duration += f.Duration().Seconds()
+	}
+	return int(duration)
 }
 
 type recipient struct {
