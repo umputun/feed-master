@@ -1,4 +1,0 @@
-language: go
-
-env:
-    - TELEBOT_SECRET=107177593:AAHBJfF3nv3pZXVjXpoowVhv_KSGw56s8zo

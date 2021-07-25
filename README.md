@@ -17,9 +17,13 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 | feed             | FM_FEED           |                 | single feed, overrides config             |
 | update-interval  | UPDATE_INTERVAL   | `1m`            | update interval, overrides config         |
 | telegram_chan    | TELEGRAM_CHAN     |                 | single telegram channel, overrides config |
-| telegram_server  | TELEGRAM_SERVER   | `https://api.telegram.org` | telegram bot api server        |
+| telegram_server  | TELEGRAM_SERVER   | `149.154.167.50:443` | telegram API server from https://my.telegram.org/apps |
 | telegram_token   | TELEGRAM_TOKEN    |                 | telegram token           |
-| telegram_timeout | TELEGRAM_TIMEOUT  | `1m`            | telegram timeout         |
+| telegram_public_keys | TELEGRAM_PUBLIC_KEYS  | `/srv/etc/tg_public_keys.pem` | telegram public keys file location |
+| telegram_session_file | TELEGRAM_SESSION_FILE | `/srv/var/session.json` | telegram sessions file location |
+| telegram_app_id  | TELEGRAM_APP_ID   |                 | telegram app ID from https://my.telegram.org/apps |
+| telegram_app_hash | TELEGRAM_APP_HASH |                | telegram hash from https://my.telegram.org/apps |
+| telegram_only_message| TELEGRAM_ONLY_MESSAGE |         | don't send audio files to telegram, only text |
 | consumer-key     | TWI_CONSUMER_KEY  |                 | twitter consumer key     |
 | consumer-secret  | TWI_CONSUMER_SECRET |               | twitter consumer secret  |
 | access-token     | TWI_ACCESS_TOKEN  |                 | twitter access token     |
@@ -35,11 +39,3 @@ Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly so
 ## Web UI
 
 Web UI shows a list of items from generated RSS. It is available on `/feed/{name}`
-
-## Telegram notifications
-
-By default, (with only `TELEGRAM_TOKEN` provided) Telegram notifications will be sent using standard Bot API which has a limit of [50Mb](https://core.telegram.org/bots/api#sending-files) for audio file upload.
-
-You can provide `TELEGRAM_API_ID` and `TELEGRAM_API_HASH` (from [here](https://my.telegram.org/apps)) to `telegram-bot-api` service in docker-compose.yml and uncomment `TELEGRAM_SERVER` for `feed-master`, then it would use the local bot api server to raise audio file upload limit from 50Mb [to 2000Mb](https://core.telegram.org/bots/api#using-a-local-bot-api-server).
-
-To use local telegram bot api server, use `docker-compose up -d` command instead of `docker-compose up -d feed-master`.

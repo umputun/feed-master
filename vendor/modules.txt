@@ -11,7 +11,6 @@ github.com/aymerick/douceur/parser
 ## explicit
 github.com/azr/backoff
 # github.com/davecgh/go-spew v1.1.1
-## explicit
 github.com/davecgh/go-spew/spew
 # github.com/denisbrodbeck/striphtmltags v6.6.6+incompatible
 ## explicit
@@ -32,6 +31,8 @@ github.com/dustin/go-jsonpointer
 # github.com/dustin/gojson v0.0.0-20160307161227-2e71ec9dd5ad
 ## explicit
 github.com/dustin/gojson
+# github.com/fatih/structtag v1.2.0
+github.com/fatih/structtag
 # github.com/garyburd/go-oauth v0.0.0-20180319155456-bca2e7f09a17
 ## explicit
 github.com/garyburd/go-oauth/oauth
@@ -82,6 +83,12 @@ github.com/hashicorp/golang-lru/simplelru
 # github.com/jessevdk/go-flags v1.4.0
 ## explicit
 github.com/jessevdk/go-flags
+# github.com/k0kubun/pp v3.0.1+incompatible
+github.com/k0kubun/pp
+# github.com/mattn/go-colorable v0.1.8
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.12
+github.com/mattn/go-isatty
 # github.com/microcosm-cc/bluemonday v1.0.9
 ## explicit
 github.com/microcosm-cc/bluemonday
@@ -101,25 +108,46 @@ github.com/stretchr/testify/require
 ## explicit
 github.com/tcolgate/mp3
 github.com/tcolgate/mp3/internal/data
+# github.com/xelaj/errs v0.0.0-20200831133608-d1c11863e019
+github.com/xelaj/errs
+# github.com/xelaj/go-dry v0.0.0-20210621215431-21c77821487c
+github.com/xelaj/go-dry
+github.com/xelaj/go-dry/ioutil
+github.com/xelaj/go-dry/slices
+github.com/xelaj/go-dry/timeutil
+# github.com/xelaj/mtproto v1.0.0 => github.com/paskal/mtproto v1.0.1-bugfix
+## explicit
+github.com/xelaj/mtproto
+github.com/xelaj/mtproto/internal/aes_ige
+github.com/xelaj/mtproto/internal/encoding/tl
+github.com/xelaj/mtproto/internal/keys
+github.com/xelaj/mtproto/internal/mtproto/messages
+github.com/xelaj/mtproto/internal/mtproto/objects
+github.com/xelaj/mtproto/internal/utils
+github.com/xelaj/mtproto/telegram
+github.com/xelaj/mtproto/telegram/internal/calls
+github.com/xelaj/mtproto/telegram/internal/srp
 # go.etcd.io/bbolt v1.3.5
 ## explicit
 go.etcd.io/bbolt
-# golang.org/x/net v0.0.0-20210421230115-4e50805a0758
+# golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+golang.org/x/crypto/pbkdf2
+golang.org/x/crypto/sha3
+# golang.org/x/net v0.0.0-20210610132358-84b48f89b13b
 ## explicit
 golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.0.0-20210420072515-93ed5bcd2bfe
+# golang.org/x/sys v0.0.0-20210423082822-04245dca01da
+golang.org/x/sys/cpu
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 ## explicit
 golang.org/x/time/rate
-# gopkg.in/tucnak/telebot.v2 v2.0.0-20200329125927-3458aeb2e7be
-## explicit
-gopkg.in/tucnak/telebot.v2
 # gopkg.in/yaml.v2 v2.2.8
 ## explicit
 gopkg.in/yaml.v2
-# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+# gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 gopkg.in/yaml.v3
+# github.com/xelaj/mtproto => github.com/paskal/mtproto v1.0.1-bugfix

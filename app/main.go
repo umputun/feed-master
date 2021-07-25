@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -27,14 +28,18 @@ type options struct {
 	TelegramChannel string        `long:"telegram_chan" env:"TELEGRAM_CHAN" description:"single telegram channel, overrides config"`
 	UpdateInterval  time.Duration `long:"update-interval" env:"UPDATE_INTERVAL" default:"1m" description:"update interval, overrides config"`
 
-	TelegramServer        string        `long:"telegram_server" env:"TELEGRAM_SERVER" default:"https://api.telegram.org" description:"telegram bot api server"`
-	TelegramToken         string        `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"telegram token"`
-	TelegramTimeout       time.Duration `long:"telegram_timeout" env:"TELEGRAM_TIMEOUT" default:"1m" description:"telegram timeout"`
-	TwitterConsumerKey    string        `long:"consumer-key" env:"TWI_CONSUMER_KEY" description:"twitter consumer key"`
-	TwitterConsumerSecret string        `long:"consumer-secret" env:"TWI_CONSUMER_SECRET" description:"twitter consumer secret"`
-	TwitterAccessToken    string        `long:"access-token" env:"TWI_ACCESS_TOKEN" description:"twitter access token"`
-	TwitterAccessSecret   string        `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
-	TwitterTemplate       string        `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
+	TelegramServer        string `long:"telegram_server" env:"TELEGRAM_SERVER" default:"149.154.167.50:443" description:"telegram API server from https://my.telegram.org/apps"`
+	TelegramToken         string `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"telegram token"`
+	TelegramPublicKeys    string `long:"telegram_public_keys" env:"TELEGRAM_PUBLIC_KEYS" default:"/srv/etc/tg_public_keys.pem" description:"telegram public keys file location"`
+	TelegramSessionFile   string `long:"telegram_session_file" env:"TELEGRAM_SESSION_FILE" default:"/srv/var/session.json" description:"telegram sessions file location"`
+	TelegramAppID         int    `long:"telegram_app_id" env:"TELEGRAM_APP_ID" description:"telegram app ID from https://my.telegram.org/apps"`
+	TelegramAppHash       string `long:"telegram_app_hash" env:"TELEGRAM_APP_HASH" description:"telegram hash from https://my.telegram.org/apps"`
+	TelegramOnlyMessage   bool   `long:"telegram_only_message" env:"TELEGRAM_ONLY_MESSAGE" description:"don't send audio files to telegram, only text"`
+	TwitterConsumerKey    string `long:"consumer-key" env:"TWI_CONSUMER_KEY" description:"twitter consumer key"`
+	TwitterConsumerSecret string `long:"consumer-secret" env:"TWI_CONSUMER_SECRET" description:"twitter consumer secret"`
+	TwitterAccessToken    string `long:"access-token" env:"TWI_ACCESS_TOKEN" description:"twitter access token"`
+	TwitterAccessSecret   string `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
+	TwitterTemplate       string `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
 
 	Dbg bool `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
@@ -67,12 +72,12 @@ func main() {
 		log.Fatalf("[ERROR] can't open db %s, %v", opts.DB, err)
 	}
 
-	telegramNotif, err := proc.NewTelegramClient(opts.TelegramToken, opts.TelegramServer, opts.TelegramTimeout)
-	if err != nil {
-		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
+	p := &proc.Processor{
+		Conf:          conf,
+		Store:         db,
+		TwitterNotif:  makeTwitter(opts),
+		TelegramNotif: makeTelegram(opts),
 	}
-
-	p := &proc.Processor{Conf: conf, Store: db, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter(opts)}
 	go p.Do()
 
 	server := api.Server{
@@ -97,6 +102,20 @@ func singleFeedConf(feedURL, channel string, updateInterval time.Duration) *proc
 	conf.Feeds = map[string]proc.Feed{"auto": f}
 	conf.System.UpdateInterval = updateInterval
 	return &conf
+}
+
+func makeTelegram(opts options) proc.TelegramNotif {
+	return &proc.TelegramClient{
+		Token:          opts.TelegramToken,
+		Server:         opts.TelegramServer,
+		PublicKeysFile: opts.TelegramPublicKeys,
+		SessionFile:    opts.TelegramSessionFile,
+		AppID:          opts.TelegramAppID,
+		AppHash:        opts.TelegramAppHash,
+		OnlyMessage:    opts.TelegramOnlyMessage,
+		Lock:           &sync.Mutex{},
+		Version:        revision,
+	}
 }
 
 func makeTwitter(opts options) *proc.TwitterClient {

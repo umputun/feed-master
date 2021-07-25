@@ -1,0 +1,32 @@
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# any tests
+*.test
+
+# eitri things (build, precompiled files, tool outs etc)
+.eitri/
+*.out
+
+# Dependencies if it has to exist (but why?)
+vendor/
+
+# playgorund
+playground/
+
+# specific for this project: examples creates session.json file which is too sensitive info and must not add
+# in repository in any way. so, ignoring it
+session.json

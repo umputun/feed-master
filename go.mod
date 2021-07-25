@@ -6,7 +6,6 @@ require (
 	github.com/ChimeraCoder/anaconda v2.0.0+incompatible
 	github.com/ChimeraCoder/tokenbucket v0.0.0-20131201223612-c5a927568de7 // indirect
 	github.com/azr/backoff v0.0.0-20160115115103-53511d3c7330 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denisbrodbeck/striphtmltags v6.6.6+incompatible
 	github.com/didip/tollbooth v4.0.2+incompatible
 	github.com/didip/tollbooth_chi v0.0.0-20170928041846-6ab5f3083f3d
@@ -28,9 +27,13 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
+	github.com/xelaj/mtproto v1.0.0
 	go.etcd.io/bbolt v1.3.5
-	golang.org/x/net v0.0.0-20210421230115-4e50805a0758
+	golang.org/x/net v0.0.0-20210610132358-84b48f89b13b
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
-	gopkg.in/tucnak/telebot.v2 v2.0.0-20200329125927-3458aeb2e7be
 	gopkg.in/yaml.v2 v2.2.8
 )
+
+// mtproto v1.0.1 is not released and master is not working properly,
+// so we're using the fork with goroutines leak fixed
+replace github.com/xelaj/mtproto => github.com/paskal/mtproto v1.0.1-bugfix

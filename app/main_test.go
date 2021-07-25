@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/umputun/feed-master/app/proc"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -108,4 +110,28 @@ func TestMakeTwitter(t *testing.T) {
 	assert.Equal(t, client.ConsumerSecret, "b")
 	assert.Equal(t, client.AccessToken, "c")
 	assert.Equal(t, client.AccessSecret, "d")
+}
+
+func TestMakeTelegram(t *testing.T) {
+	opts := options{
+		TelegramToken:       "a",
+		TelegramServer:      "b",
+		TelegramPublicKeys:  "c",
+		TelegramSessionFile: "d",
+		TelegramAppID:       42,
+		TelegramAppHash:     "e",
+		TelegramOnlyMessage: true,
+	}
+
+	client := makeTelegram(opts)
+	telegramClient := client.(*proc.TelegramClient)
+	assert.Equal(t, telegramClient.Token, "a")
+	assert.Equal(t, telegramClient.Server, "b")
+	assert.Equal(t, telegramClient.PublicKeysFile, "c")
+	assert.Equal(t, telegramClient.SessionFile, "d")
+	assert.Equal(t, telegramClient.AppID, 42)
+	assert.Equal(t, telegramClient.AppHash, "e")
+	assert.True(t, telegramClient.OnlyMessage)
+	assert.NotNil(t, telegramClient.Lock)
+	assert.NotEmpty(t, telegramClient.Version)
 }
