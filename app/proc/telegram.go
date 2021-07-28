@@ -94,12 +94,13 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 	tee := io.TeeReader(httpBody, &httpBodyCopy)
 
 	audio := tb.Audio{
-		File:     tb.FromReader(&httpBodyCopy),
-		FileName: item.GetFilename(),
-		MIME:     "audio/mpeg",
-		Caption:  client.getMessageHTML(item, false),
-		Title:    item.Title,
-		Duration: client.duration(tee),
+		File:      tb.FromReader(&httpBodyCopy),
+		FileName:  item.GetFilename(),
+		MIME:      "audio/mpeg",
+		Caption:   client.getMessageHTML(item, false),
+		Title:     item.Title,
+		Performer: item.Author,
+		Duration:  client.duration(tee),
 	}
 
 	message, err := audio.Send(

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFeedParse(t *testing.T) {
@@ -27,7 +28,8 @@ func TestFeedParse(t *testing.T) {
     <itunes:explicit>no</itunes:explicit>
     <itunes:image href="https://radio-t.com/images/cover.jpg" />
     <itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords>
-    <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="self" type="application/rss+xml" href="http://feeds.rucast.net/radio-t" /><feedburner:info xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0" uri="radio-t" /><atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="hub" href="http://pubsubhubbub.appspot.com/" /><media:copyright>Creative Commons - Attribution, Noncommercial, No Derivative Works 3.0 License.</media:copyright><media:thumbnail url="https://radio-t.com/images/cover.jpg" /><media:keywords>hitech,russian,radiot,tech,news,радио</media:keywords><media:category scheme="http://www.itunes.com/dtds/podcast-1.0.dtd">Technology/Tech News</media:category><media:category scheme="http://www.itunes.com/dtds/podcast-1.0.dtd">Technology/Gadgets</media:category><itunes:owner><itunes:email>podcast@radio-t.com</itunes:email><itunes:name>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:name></itunes:owner><itunes:summary>Еженедельные импровизации на хай–тек темы</itunes:summary><itunes:category text="Technology"><itunes:category text="Tech News" /></itunes:category><itunes:category text="Technology"><itunes:category text="Gadgets" /></itunes:category><item>
+    <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="self" type="application/rss+xml" href="http://feeds.rucast.net/radio-t" /><feedburner:info xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0" uri="radio-t" /><atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="hub" href="http://pubsubhubbub.appspot.com/" /><media:copyright>Creative Commons - Attribution, Noncommercial, No Derivative Works 3.0 License.</media:copyright><media:thumbnail url="https://radio-t.com/images/cover.jpg" /><media:keywords>hitech,russian,radiot,tech,news,радио</media:keywords><media:category scheme="http://www.itunes.com/dtds/podcast-1.0.dtd">Technology/Tech News</media:category><media:category scheme="http://www.itunes.com/dtds/podcast-1.0.dtd">Technology/Gadgets</media:category><itunes:owner><itunes:email>podcast@radio-t.com</itunes:email><itunes:name>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:name></itunes:owner><itunes:summary>Еженедельные импровизации на хай–тек темы</itunes:summary><itunes:category text="Technology"><itunes:category text="Tech News" /></itunes:category><itunes:category text="Technology"><itunes:category text="Gadgets" /></itunes:category>
+    <item>
       <title>Радио-Т 762</title>
       <description><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt762.jpg" alt=""></p>
 <p><em>Темы</em><ul>
@@ -64,7 +66,8 @@ func TestFeedParse(t *testing.T) {
 <audio src="https://cdn.radio-t.com/rt_podcast762.mp3" preload="none"></audio>]]></itunes:summary>
       <itunes:image href="https://radio-t.com/images/radio-t/rt762.jpg" />
       <enclosure url="http://cdn.radio-t.com/rt_podcast762.mp3" type="audio/mp3" length="166608723" />
-    <author>podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)</author><media:content url="http://cdn.radio-t.com/rt_podcast762.mp3" fileSize="166608723" type="audio/mp3" /><itunes:explicit>no</itunes:explicit><itunes:subtitle>Подкаст выходного дня - импровизации на темы высоких технологий</itunes:subtitle><itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords></item>
+    <author>podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)</author><media:content url="http://cdn.radio-t.com/rt_podcast762.mp3" fileSize="166608723" type="audio/mp3" /><itunes:explicit>no</itunes:explicit><itunes:subtitle>Подкаст выходного дня - импровизации на темы высоких технологий</itunes:subtitle><itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords>
+  </item>
   <media:credit role="author">Umputun, Bobuk, Gray, Ksenks, Alek.sys</media:credit><media:rating>nonadult</media:rating><media:description type="plain">Еженедельные импровизации на хай–тек темы</media:description></channel>
 </rss>
 `
@@ -76,7 +79,8 @@ func TestFeedParse(t *testing.T) {
 	r, err := Parse(ts.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, "Еженедельные импровизации на хай–тек темы", r.Description)
-	assert.Equal(t, 1, len(r.ItemList))
+	require.Equal(t, 1, len(r.ItemList))
+	assert.Equal(t, "podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)", r.ItemList[0].Author)
 }
 
 func TestFeedParseBadBody(t *testing.T) {
