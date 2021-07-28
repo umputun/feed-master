@@ -20,6 +20,7 @@ type Item struct {
 	Comments  string        `xml:"comments"`
 	Enclosure Enclosure     `xml:"enclosure"`
 	GUID      string        `xml:"guid"`
+	Author    string        `xml:"author,omitempty"`
 
 	// Internal
 	DT   time.Time `xml:"-"`
