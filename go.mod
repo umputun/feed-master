@@ -23,13 +23,13 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jessevdk/go-flags v1.4.0
-	github.com/microcosm-cc/bluemonday v1.0.9
+	github.com/microcosm-cc/bluemonday v1.0.16
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	go.etcd.io/bbolt v1.3.5
-	golang.org/x/net v0.0.0-20210421230115-4e50805a0758
+	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	gopkg.in/tucnak/telebot.v2 v2.0.0-20200329125927-3458aeb2e7be
 	gopkg.in/yaml.v2 v2.2.8
