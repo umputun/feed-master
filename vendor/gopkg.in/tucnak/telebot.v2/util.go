@@ -1,20 +1,20 @@
 package telebot
 
 import (
+	"bytes"
 	"encoding/json"
-	"log"
-	"strconv"
-
+	"fmt"
 	"github.com/pkg/errors"
+	"log"
+	"net/http"
+	"strconv"
 )
 
 func (b *Bot) debug(err error) {
-	err = errors.WithStack(err)
-
 	if b.reporter != nil {
 		b.reporter(err)
 	} else {
-		log.Printf("%+v\n", err)
+		log.Println(err)
 	}
 }
 
@@ -28,104 +28,109 @@ func (b *Bot) deferDebug() {
 	}
 }
 
-func (b *Bot) sendText(to Recipient, text string, opt *SendOptions) (*Message, error) {
-	params := map[string]string{
-		"chat_id": to.Recipient(),
-		"text":    text,
+func (b *Bot) runHandler(handler func()) {
+	f := func() {
+		defer b.deferDebug()
+		handler()
 	}
-	embedSendOptions(params, opt)
+	if b.synchronous {
+		f()
+	} else {
+		go f()
+	}
+}
 
-	respJSON, err := b.Raw("sendMessage", params)
+// wrapError returns new wrapped telebot-related error.
+func wrapError(err error) error {
+	return errors.Wrap(err, "telebot")
+}
+
+// extractOk checks given result for error. If result is ok returns nil.
+// In other cases it extracts API error. If error is not presented
+// in errors.go, it will be prefixed with `unknown` keyword.
+func extractOk(data []byte) error {
+	// Parse the error message as JSON
+	var tgramApiError struct {
+		Ok          bool                   `json:"ok"`
+		ErrorCode   int                    `json:"error_code"`
+		Description string                 `json:"description"`
+		Parameters  map[string]interface{} `json:"parameters"`
+	}
+	jdecoder := json.NewDecoder(bytes.NewReader(data))
+	jdecoder.UseNumber()
+
+	err := jdecoder.Decode(&tgramApiError)
 	if err != nil {
-		return nil, err
+		//return errors.Wrap(err, "can't parse JSON reply, the Telegram server is mibehaving")
+		// FIXME / TODO: in this case the error might be at HTTP level, or the content is not JSON (eg. image?)
+		return nil
 	}
 
-	return extractMsgResponse(respJSON)
-}
+	if tgramApiError.Ok {
+		// No error
+		return nil
+	}
 
-func wrapSystem(err error) error {
-	return errors.Wrap(err, "system error")
-}
+	err = ErrByDescription(tgramApiError.Description)
+	if err != nil {
+		apierr, _ := err.(*APIError)
+		// Formally this is wrong, as the error is not created on the fly
+		// However, given the current way of handling errors, this a working
+		// workaround which doesn't break the API
+		apierr.Parameters = tgramApiError.Parameters
+		return apierr
+	}
 
-func isUserInList(user *User, list []User) bool {
-	for _, user2 := range list {
-		if user.ID == user2.ID {
-			return true
+	switch tgramApiError.ErrorCode {
+	case http.StatusTooManyRequests:
+		retryAfter, ok := tgramApiError.Parameters["retry_after"]
+		if !ok {
+			return NewAPIError(429, tgramApiError.Description)
 		}
+		retryAfterInt, _ := strconv.Atoi(fmt.Sprint(retryAfter))
+
+		err = FloodError{
+			APIError:   NewAPIError(429, tgramApiError.Description),
+			RetryAfter: retryAfterInt,
+		}
+	default:
+		err = fmt.Errorf("telegram unknown: %s (%d)", tgramApiError.Description, tgramApiError.ErrorCode)
 	}
 
-	return false
+	return err
 }
 
-func extractMsgResponse(respJSON []byte) (*Message, error) {
+// extractMessage extracts common Message result from given data.
+// Should be called after extractOk or b.Raw() to handle possible errors.
+func extractMessage(data []byte) (*Message, error) {
 	var resp struct {
-		Ok          bool
-		Result      *Message
-		Description string
+		Result *Message
 	}
-
-	err := json.Unmarshal(respJSON, &resp)
-	if err != nil {
+	if err := json.Unmarshal(data, &resp); err != nil {
 		var resp struct {
-			Ok          bool
-			Result      bool
-			Description string
+			Result bool
 		}
-
-		err := json.Unmarshal(respJSON, &resp)
-		if err != nil {
-			return nil, errors.Wrap(err, "bad response json")
+		if err := json.Unmarshal(data, &resp); err != nil {
+			return nil, wrapError(err)
 		}
-
-		if !resp.Ok {
-			return nil, errors.Errorf("api error: %s", resp.Description)
+		if resp.Result {
+			return nil, ErrTrueResult
 		}
+		return nil, wrapError(err)
 	}
-
-	if !resp.Ok {
-		return nil, errors.Errorf("api error: %s", resp.Description)
-	}
-
 	return resp.Result, nil
 }
 
-func extractOkResponse(respJSON []byte) error {
-	var resp struct {
-		Ok          bool
-		Description string
-	}
-
-	err := json.Unmarshal(respJSON, &resp)
-	if err != nil {
-		return errors.Wrap(err, "bad response json")
-	}
-
-	if !resp.Ok {
-		return errors.Errorf("api error: %s", resp.Description)
-	}
-
-	return nil
-}
-
 func extractOptions(how []interface{}) *SendOptions {
-	var opts *SendOptions
+	opts := &SendOptions{}
 
 	for _, prop := range how {
 		switch opt := prop.(type) {
 		case *SendOptions:
 			opts = opt.copy()
-
 		case *ReplyMarkup:
-			if opts == nil {
-				opts = &SendOptions{}
-			}
 			opts.ReplyMarkup = opt.copy()
-
 		case Option:
-			if opts == nil {
-				opts = &SendOptions{}
-			}
-
 			switch opt {
 			case NoPreview:
 				opts.DisableWebPagePreview = true
@@ -144,13 +149,8 @@ func extractOptions(how []interface{}) *SendOptions {
 			default:
 				panic("telebot: unsupported flag-option")
 			}
-
 		case ParseMode:
-			if opts == nil {
-				opts = &SendOptions{}
-			}
 			opts.ParseMode = opt
-
 		default:
 			panic("telebot: unsupported send-option")
 		}
@@ -159,7 +159,11 @@ func extractOptions(how []interface{}) *SendOptions {
 	return opts
 }
 
-func embedSendOptions(params map[string]string, opt *SendOptions) {
+func (b *Bot) embedSendOptions(params map[string]string, opt *SendOptions) {
+	if b.parseMode != ModeDefault {
+		params["parse_mode"] = b.parseMode
+	}
+
 	if opt == nil {
 		return
 	}
@@ -177,7 +181,15 @@ func embedSendOptions(params map[string]string, opt *SendOptions) {
 	}
 
 	if opt.ParseMode != ModeDefault {
-		params["parse_mode"] = string(opt.ParseMode)
+		params["parse_mode"] = opt.ParseMode
+	}
+
+	if opt.DisableContentDetection {
+		params["disable_content_type_detection"] = "true"
+	}
+
+	if opt.AllowWithoutReply {
+		params["allow_sending_without_reply"] = "true"
 	}
 
 	if opt.ReplyMarkup != nil {
@@ -208,9 +220,9 @@ func processButtons(keys [][]InlineButton) {
 	}
 }
 
-func embedRights(p map[string]string, prv Rights) {
-	jsonRepr, _ := json.Marshal(prv)
-	_ = json.Unmarshal(jsonRepr, &p)
+func embedRights(p map[string]interface{}, rights Rights) {
+	data, _ := json.Marshal(rights)
+	_ = json.Unmarshal(data, &p)
 }
 
 func thumbnailToFilemap(thumb *Photo) map[string]File {
@@ -218,4 +230,20 @@ func thumbnailToFilemap(thumb *Photo) map[string]File {
 		return map[string]File{"thumb": thumb.File}
 	}
 	return nil
+}
+
+func isUserInList(user *User, list []User) bool {
+	for _, user2 := range list {
+		if user.ID == user2.ID {
+			return true
+		}
+	}
+	return false
+}
+
+func intsToStrs(ns []int) (s []string) {
+	for _, n := range ns {
+		s = append(s, strconv.Itoa(n))
+	}
+	return
 }

@@ -4,88 +4,172 @@ import (
 	"encoding/json"
 	"strconv"
 	"time"
-
-	"github.com/pkg/errors"
 )
+
+// ChatInviteLink object represents an invite for a chat.
+type ChatInviteLink struct {
+	// The invite link.
+	InviteLink string `json:"invite_link"`
+
+	// The creator of the link.
+	Creator *User `json:"creator"`
+
+	// If the link is primary.
+	IsPrimary bool `json:"is_primary"`
+
+	// If the link is revoked.
+	IsRevoked bool `json:"is_revoked"`
+
+	// (Optional) Point in time when the link will expire, use
+	// ChatInviteLink.ExpireDate() to get time.Time
+	ExpireUnixtime int64 `json:"expire_date,omitempty"`
+
+	// (Optional) Maximum number of users that can be members of
+	// the chat simultaneously.
+	MemberLimit int `json:"member_limit,omitempty"`
+}
+
+// ExpireDate returns the moment of the link expiration in local time.
+func (c *ChatInviteLink) ExpireDate() time.Time {
+	return time.Unix(c.ExpireUnixtime, 0)
+}
+
+// ChatMemberUpdated object represents changes in the status of a chat member.
+type ChatMemberUpdated struct {
+	// Chat where the user belongs to.
+	Chat Chat `json:"chat"`
+
+	// From which user the action was triggered.
+	From User `json:"from"`
+
+	// Unixtime, use ChatMemberUpdated.Time() to get time.Time
+	Unixtime int64 `json:"date"`
+
+	// Previous information about the chat member.
+	OldChatMember *ChatMember `json:"old_chat_member"`
+
+	// New information about the chat member.
+	NewChatMember *ChatMember `json:"new_chat_member"`
+
+	// (Optional) InviteLink which was used by the user to
+	// join the chat; for joining by invite link events only.
+	InviteLink *ChatInviteLink `json:"invite_link"`
+}
+
+// Time returns the moment of the change in local time.
+func (c *ChatMemberUpdated) Time() time.Time {
+	return time.Unix(c.Unixtime, 0)
+}
 
 // Rights is a list of privileges available to chat members.
 type Rights struct {
-	CanBeEdited        bool `json:"can_be_edited,omitempty"`             // 1
-	CanChangeInfo      bool `json:"can_change_info,omitempty"`           // 2
-	CanPostMessages    bool `json:"can_post_messages,omitempty"`         // 3
-	CanEditMessages    bool `json:"can_edit_messages,omitempty"`         // 4
-	CanDeleteMessages  bool `json:"can_delete_messages,omitempty"`       // 5
-	CanInviteUsers     bool `json:"can_invite_users,omitempty"`          // 6
-	CanRestrictMembers bool `json:"can_restrict_members,omitempty"`      // 7
-	CanPinMessages     bool `json:"can_pin_messages,omitempty"`          // 8
-	CanPromoteMembers  bool `json:"can_promote_members,omitempty"`       // 9
-	CanSendMessages    bool `json:"can_send_messages,omitempty"`         // 10
-	CanSendMedia       bool `json:"can_send_media_messages,omitempty"`   // 11
-	CanSendOther       bool `json:"can_send_other_messages,omitempty"`   // 12
-	CanAddPreviews     bool `json:"can_add_web_page_previews,omitempty"` // 13
+	CanBeEdited         bool `json:"can_be_edited"`
+	CanChangeInfo       bool `json:"can_change_info"`
+	CanPostMessages     bool `json:"can_post_messages"`
+	CanEditMessages     bool `json:"can_edit_messages"`
+	CanDeleteMessages   bool `json:"can_delete_messages"`
+	CanInviteUsers      bool `json:"can_invite_users"`
+	CanRestrictMembers  bool `json:"can_restrict_members"`
+	CanPinMessages      bool `json:"can_pin_messages"`
+	CanPromoteMembers   bool `json:"can_promote_members"`
+	CanSendMessages     bool `json:"can_send_messages"`
+	CanSendMedia        bool `json:"can_send_media_messages"`
+	CanSendPolls        bool `json:"can_send_polls"`
+	CanSendOther        bool `json:"can_send_other_messages"`
+	CanAddPreviews      bool `json:"can_add_web_page_previews"`
+	CanManageVoiceChats bool `json:"can_manage_voice_chats"`
+	CanManageChat       bool `json:"can_manage_chat"`
 }
 
-// NoRights is the default Rights{}
+// NoRights is the default Rights{}.
 func NoRights() Rights { return Rights{} }
 
 // NoRestrictions should be used when un-restricting or
 // un-promoting user.
 //
-//	   member.Rights = NoRestrictions()
+//	   member.Rights = tb.NoRestrictions()
 //     bot.Restrict(chat, member)
 //
 func NoRestrictions() Rights {
 	return Rights{
-		true, false, false, false, false, // 1-5
-		false, false, false, false, true, // 6-10
-		true, true, true}
+		CanBeEdited:         true,
+		CanChangeInfo:       false,
+		CanPostMessages:     false,
+		CanEditMessages:     false,
+		CanDeleteMessages:   false,
+		CanInviteUsers:      false,
+		CanRestrictMembers:  false,
+		CanPinMessages:      false,
+		CanPromoteMembers:   false,
+		CanSendMessages:     true,
+		CanSendMedia:        true,
+		CanSendPolls:        true,
+		CanSendOther:        true,
+		CanAddPreviews:      true,
+		CanManageVoiceChats: false,
+		CanManageChat:       false,
+	}
 }
 
 // AdminRights could be used to promote user to admin.
 func AdminRights() Rights {
 	return Rights{
-		true, true, true, true, true, // 1-5
-		true, true, true, true, true, // 6-10
-		true, true, true} // 11-13
+		CanBeEdited:         true,
+		CanChangeInfo:       true,
+		CanPostMessages:     true,
+		CanEditMessages:     true,
+		CanDeleteMessages:   true,
+		CanInviteUsers:      true,
+		CanRestrictMembers:  true,
+		CanPinMessages:      true,
+		CanPromoteMembers:   true,
+		CanSendMessages:     true,
+		CanSendMedia:        true,
+		CanSendPolls:        true,
+		CanSendOther:        true,
+		CanAddPreviews:      true,
+		CanManageVoiceChats: true,
+		CanManageChat:       true,
+	}
 }
 
-// Forever is a Unixtime of "forever" banning.
+// Forever is a ExpireUnixtime of "forever" banning.
 func Forever() int64 {
 	return time.Now().Add(367 * 24 * time.Hour).Unix()
 }
 
 // Ban will ban user from chat until `member.RestrictedUntil`.
-func (b *Bot) Ban(chat *Chat, member *ChatMember) error {
+func (b *Bot) Ban(chat *Chat, member *ChatMember, revokeMessages ...bool) error {
 	params := map[string]string{
 		"chat_id":    chat.Recipient(),
 		"user_id":    member.User.Recipient(),
 		"until_date": strconv.FormatInt(member.RestrictedUntil, 10),
 	}
-
-	respJSON, err := b.Raw("kickChatMember", params)
-	if err != nil {
-		return err
+	if len(revokeMessages) > 0 {
+		params["revoke_messages"] = strconv.FormatBool(revokeMessages[0])
 	}
 
-	return extractOkResponse(respJSON)
+	_, err := b.Raw("kickChatMember", params)
+	return err
 }
 
 // Unban will unban user from chat, who would have thought eh?
-func (b *Bot) Unban(chat *Chat, user *User) error {
+// forBanned does nothing if the user is not banned.
+func (b *Bot) Unban(chat *Chat, user *User, forBanned ...bool) error {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
 		"user_id": user.Recipient(),
 	}
 
-	respJSON, err := b.Raw("unbanChatMember", params)
-	if err != nil {
-		return err
+	if len(forBanned) > 0 {
+		params["only_if_banned"] = strconv.FormatBool(forBanned[0])
 	}
 
-	return extractOkResponse(respJSON)
+	_, err := b.Raw("unbanChatMember", params)
+	return err
 }
 
-// Restrict let's you restrict a subset of member's rights until
+// Restrict lets you restrict a subset of member's rights until
 // member.RestrictedUntil, such as:
 //
 //     * can send messages
@@ -96,20 +180,15 @@ func (b *Bot) Unban(chat *Chat, user *User) error {
 func (b *Bot) Restrict(chat *Chat, member *ChatMember) error {
 	prv, until := member.Rights, member.RestrictedUntil
 
-	params := map[string]string{
+	params := map[string]interface{}{
 		"chat_id":    chat.Recipient(),
 		"user_id":    member.User.Recipient(),
 		"until_date": strconv.FormatInt(until, 10),
 	}
-
 	embedRights(params, prv)
 
-	respJSON, err := b.Raw("restrictChatMember", params)
-	if err != nil {
-		return err
-	}
-
-	return extractOkResponse(respJSON)
+	_, err := b.Raw("restrictChatMember", params)
+	return err
 }
 
 // Promote lets you update member's admin rights, such as:
@@ -126,22 +205,18 @@ func (b *Bot) Restrict(chat *Chat, member *ChatMember) error {
 func (b *Bot) Promote(chat *Chat, member *ChatMember) error {
 	prv := member.Rights
 
-	params := map[string]string{
-		"chat_id": chat.Recipient(),
-		"user_id": member.User.Recipient(),
+	params := map[string]interface{}{
+		"chat_id":      chat.Recipient(),
+		"user_id":      member.User.Recipient(),
+		"is_anonymous": member.Anonymous,
 	}
-
 	embedRights(params, prv)
 
-	respJSON, err := b.Raw("promoteChatMember", params)
-	if err != nil {
-		return err
-	}
-
-	return extractOkResponse(respJSON)
+	_, err := b.Raw("promoteChatMember", params)
+	return err
 }
 
-// AdminsOf return a member list of chat admins.
+// AdminsOf returns a member list of chat admins.
 //
 // On success, returns an Array of ChatMember objects that
 // contains information about all chat administrators except other bots.
@@ -152,54 +227,49 @@ func (b *Bot) AdminsOf(chat *Chat) ([]ChatMember, error) {
 		"chat_id": chat.Recipient(),
 	}
 
-	respJSON, err := b.Raw("getChatAdministrators", params)
+	data, err := b.Raw("getChatAdministrators", params)
 	if err != nil {
 		return nil, err
 	}
 
 	var resp struct {
-		Ok          bool
-		Result      []ChatMember
-		Description string `json:"description"`
+		Result []ChatMember
 	}
-
-	err = json.Unmarshal(respJSON, &resp)
-	if err != nil {
-		return nil, errors.Wrap(err, "bad response json")
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, wrapError(err)
 	}
-
-	if !resp.Ok {
-		return nil, errors.Errorf("api error: %s", resp.Description)
-	}
-
 	return resp.Result, nil
 }
 
-// Len return the number of members in a chat.
+// Len returns the number of members in a chat.
 func (b *Bot) Len(chat *Chat) (int, error) {
 	params := map[string]string{
 		"chat_id": chat.Recipient(),
 	}
 
-	respJSON, err := b.Raw("getChatMembersCount", params)
+	data, err := b.Raw("getChatMembersCount", params)
 	if err != nil {
 		return 0, err
 	}
 
 	var resp struct {
-		Ok          bool
-		Result      int
-		Description string `json:"description"`
+		Result int
 	}
-
-	err = json.Unmarshal(respJSON, &resp)
-	if err != nil {
-		return 0, errors.Wrap(err, "bad response json")
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return 0, wrapError(err)
 	}
-
-	if !resp.Ok {
-		return 0, errors.Errorf("api error: %s", resp.Description)
-	}
-
 	return resp.Result, nil
+}
+
+// SetAdminTitle sets a custom title for an administrator.
+// A title should be 0-16 characters length, emoji are not allowed.
+func (b *Bot) SetAdminTitle(chat *Chat, user *User, title string) error {
+	params := map[string]string{
+		"chat_id":      chat.Recipient(),
+		"user_id":      user.Recipient(),
+		"custom_title": title,
+	}
+
+	_, err := b.Raw("setChatAdministratorCustomTitle", params)
+	return err
 }

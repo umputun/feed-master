@@ -8,6 +8,7 @@ import (
 // File object represents any sort of file.
 type File struct {
 	FileID   string `json:"file_id"`
+	UniqueID string `json:"file_unique_id"`
 	FileSize int    `json:"file_size"`
 
 	// file on telegram server https://core.telegram.org/bots/api#file
@@ -21,6 +22,8 @@ type File struct {
 
 	// file backed with io.Reader
 	FileReader io.Reader `json:"-"`
+
+	fileName string
 }
 
 // FromDisk constructs a new local (on-disk) file object.
@@ -79,9 +82,6 @@ func (f *File) InCloud() bool {
 
 // OnDisk will return true if file is present on disk.
 func (f *File) OnDisk() bool {
-	if _, err := os.Stat(f.FileLocal); err != nil {
-		return false
-	}
-
-	return true
+	_, err := os.Stat(f.FileLocal)
+	return err == nil
 }

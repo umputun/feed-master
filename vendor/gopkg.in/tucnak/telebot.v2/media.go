@@ -5,7 +5,7 @@ import (
 )
 
 // Album lets you group multiple media (so-called InputMedia)
-// into a single messsage.
+// into a single message.
 //
 // On older clients albums look like N regular messages.
 type Album []InputMedia
@@ -22,12 +22,9 @@ type InputMedia interface {
 type Photo struct {
 	File
 
-	Width  int `json:"width"`
-	Height int `json:"height"`
-
-	// (Optional)
-	Caption   string    `json:"caption,omitempty"`
-	ParseMode ParseMode `json:"parse_mode,omitempty"`
+	Width   int    `json:"width"`
+	Height  int    `json:"height"`
+	Caption string `json:"caption,omitempty"`
 }
 
 type photoSize struct {
@@ -57,7 +54,6 @@ func (p *Photo) UnmarshalJSON(jsonStr []byte) error {
 		}
 	} else {
 		var sizes []photoSize
-
 		if err := json.Unmarshal(jsonStr, &sizes); err != nil {
 			return err
 		}
@@ -90,6 +86,7 @@ type Audio struct {
 
 // MediaFile returns &Audio.File
 func (a *Audio) MediaFile() *File {
+	a.fileName = a.FileName
 	return &a.File
 }
 
@@ -107,6 +104,7 @@ type Document struct {
 
 // MediaFile returns &Document.File
 func (d *Document) MediaFile() *File {
+	d.fileName = d.FileName
 	return &d.File
 }
 
@@ -129,6 +127,7 @@ type Video struct {
 
 // MediaFile returns &Video.File
 func (v *Video) MediaFile() *File {
+	v.fileName = v.FileName
 	return &v.File
 }
 
@@ -136,9 +135,8 @@ func (v *Video) MediaFile() *File {
 type Animation struct {
 	File
 
-	Width  int `json:"width"`
-	Height int `json:"height"`
-
+	Width    int `json:"width"`
+	Height   int `json:"height"`
 	Duration int `json:"duration,omitempty"`
 
 	// (Optional)
@@ -149,8 +147,9 @@ type Animation struct {
 }
 
 // MediaFile returns &Animation.File
-func (v *Animation) MediaFile() *File {
-	return &v.File
+func (a *Animation) MediaFile() *File {
+	a.fileName = a.FileName
+	return &a.File
 }
 
 // Voice object represents a voice note.
@@ -161,7 +160,8 @@ type Voice struct {
 	Duration int `json:"duration"`
 
 	// (Optional)
-	MIME string `json:"mime_type,omitempty"`
+	Caption string `json:"caption,omitempty"`
+	MIME    string `json:"mime_type,omitempty"`
 }
 
 // VideoNote represents a video message (available in Telegram apps
@@ -184,7 +184,7 @@ type Contact struct {
 
 	// (Optional)
 	LastName string `json:"last_name"`
-	UserID   int    `json:"user_id,omitempty"`
+	UserID   int64  `json:"user_id,omitempty"`
 }
 
 // Location object represents geographic position.
@@ -194,9 +194,24 @@ type Location struct {
 	// Longitude
 	Lng float32 `json:"longitude"`
 
+	// Horizontal Accuracy
+	HorizontalAccuracy *float32 `json:"horizontal_accuracy,omitempty"`
+
 	// Period in seconds for which the location will be updated
 	// (see Live Locations, should be between 60 and 86400.)
 	LivePeriod int `json:"live_period,omitempty"`
+
+	Heading int `json:"heading,omitempty"`
+
+	ProximityAlertRadius int `json:"proximity_alert_radius,omitempty"`
+}
+
+// ProximityAlertTriggered sent whenever
+// a user in the chat triggers a proximity alert set by another user.
+type ProximityAlertTriggered struct {
+	Traveler *User `json:"traveler,omitempty"`
+	Watcher  *User `json:"watcher,omitempty"`
+	Distance int   `json:"distance"`
 }
 
 // Venue object represents a venue location with name, address and
@@ -207,6 +222,15 @@ type Venue struct {
 	Address  string   `json:"address"`
 
 	// (Optional)
-	FoursquareID   string `json:"foursquare_id,omitempty"`
-	FoursquareType string `json:"foursquare_type,omitempty"`
+	FoursquareID    string `json:"foursquare_id,omitempty"`
+	FoursquareType  string `json:"foursquare_type,omitempty"`
+	GooglePlaceID   string `json:"google_place_id,omitempty"`
+	GooglePlaceType string `json:"google_place_type,omitempty"`
+}
+
+// Dice object represents a dice with a random value
+// from 1 to 6 for currently supported base emoji.
+type Dice struct {
+	Type  DiceType `json:"emoji"`
+	Value int      `json:"value"`
 }

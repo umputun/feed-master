@@ -5,15 +5,15 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/didip/tollbooth"
+	"github.com/didip/tollbooth/v6"
 	"github.com/didip/tollbooth_chi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -22,6 +22,7 @@ import (
 	log "github.com/go-pkgz/lgr"
 	"github.com/go-pkgz/rest"
 	"github.com/go-pkgz/rest/logger"
+	"github.com/umputun/feed-master/app/youtube"
 
 	"github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/proc"
@@ -29,12 +30,17 @@ import (
 
 // Server provides HTTP API
 type Server struct {
-	Version string
-	Conf    proc.Conf
-	Store   *proc.BoltDB
-
+	Version    string
+	Conf       proc.Conf
+	Store      *proc.BoltDB
+	YoutubeSvc YoutubeSvc
 	httpServer *http.Server
 	cache      lcw.LoadingCache
+}
+
+// YoutubeSvc provides access to youtube's audio rss
+type YoutubeSvc interface {
+	RSSFeed(cinfo youtube.ChannelInfo) (string, error)
 }
 
 // Run starts http server for API with all routes
@@ -76,7 +82,26 @@ func (s *Server) Run(port int) {
 		rrss.Get("/feed/{name}", s.getFeedPageCtrl)
 	})
 
-	fs, err := rest.FileServer("/static", filepath.Join("webapp", "static"))
+	router.Route("/yt", func(r chi.Router) {
+		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"))
+		r.Use(l.Handler)
+		r.Get("/rss/{channel}", s.getYoutubeFeedCtrl)
+	})
+
+	if s.Conf.YouTube.BaseURL != "" {
+		baseYtURL, parseErr := url.Parse(s.Conf.YouTube.BaseURL)
+		if parseErr != nil {
+			log.Printf("[ERROR] failed to parse base url %s, %v", s.Conf.YouTube.BaseURL, parseErr)
+		}
+		ytfs, fsErr := rest.NewFileServer(baseYtURL.Path, s.Conf.YouTube.FilesLocation)
+		if fsErr == nil {
+			router.Mount(baseYtURL.Path, ytfs)
+		} else {
+			log.Printf("[WARN] can't start static file server for yt, %v", fsErr)
+		}
+	}
+
+	fs, err := rest.NewFileServer("/static", filepath.Join("webapp", "static"))
 	if err == nil {
 		router.Mount("/static", fs)
 	} else {
@@ -142,7 +167,7 @@ func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := ioutil.ReadFile(feedConf.Image)
+	b, err := os.ReadFile(feedConf.Image)
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest,
 			errors.New("can't read  "+chi.URLParam(r, "name")), "failed to read image")
@@ -182,4 +207,18 @@ func (s *Server) getListCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	render.JSON(w, r, buckets)
+}
+
+// GET /yt/rss/{channel} - returns rss for given youtube channel
+func (s *Server) getYoutubeFeedCtrl(w http.ResponseWriter, r *http.Request) {
+	channel := chi.URLParam(r, "channel")
+
+	res, err := s.YoutubeSvc.RSSFeed(youtube.ChannelInfo{ID: channel})
+	if err != nil {
+		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to read yt list")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
+	_, _ = fmt.Fprintf(w, "%s", res)
 }

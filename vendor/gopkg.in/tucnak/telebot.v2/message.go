@@ -20,12 +20,26 @@ type Message struct {
 	// Conversation the message belongs to.
 	Chat *Chat `json:"chat"`
 
+	// Sender of the message, sent on behalf of a chat.
+	SenderChat *Chat `json:"sender_chat"`
+
 	// For forwarded messages, sender of the original message.
 	OriginalSender *User `json:"forward_from"`
 
 	// For forwarded messages, chat of the original message when
 	// forwarded from a channel.
 	OriginalChat *Chat `json:"forward_from_chat"`
+
+	// For forwarded messages, identifier of the original message
+	// when forwarded from a channel.
+	OriginalMessageID int `json:"forward_from_message_id"`
+
+	// For forwarded messages, signature of the post author.
+	OriginalSignature string `json:"forward_signature"`
+
+	// For forwarded messages, sender's name from users who
+	// disallow adding a link to their account.
+	OriginalSenderName string `json:"forward_sender_name"`
 
 	// For forwarded messages, unixtime of the original message.
 	OriginalUnixtime int `json:"forward_date"`
@@ -36,6 +50,9 @@ type Message struct {
 	// contain further ReplyTo fields even if it
 	// itself is a reply.
 	ReplyTo *Message `json:"reply_to_message"`
+
+	// Shows through which bot the message was sent.
+	Via *User `json:"via_bot"`
 
 	// (Optional) Time of last edit in Unix
 	LastEdit int64 `json:"edit_date"`
@@ -69,12 +86,15 @@ type Message struct {
 	// For an audio recording, information about it.
 	Audio *Audio `json:"audio"`
 
-	// For a gneral file, information about it.
+	// For a general file, information about it.
 	Document *Document `json:"document"`
 
 	// For a photo, all available sizes (thumbnails).
 	Photo *Photo `json:"photo"`
-
+	
+	// For a game, information about it.
+	Game *Game `json:"game"`
+	
 	// For a sticker, information about it.
 	Sticker *Sticker `json:"sticker"`
 
@@ -98,6 +118,12 @@ type Message struct {
 
 	// For a venue, information about it.
 	Venue *Venue `json:"venue"`
+
+	// For a poll, information the native poll.
+	Poll *Poll `json:"poll"`
+
+	// For a dice, information about it.
+	Dice *Dice `json:"dice"`
 
 	// For a service message, represents a user,
 	// that just got added to chat, this message came from.
@@ -147,7 +173,7 @@ type Message struct {
 	// Sender would lead to creator of the chat.
 	GroupCreated bool `json:"group_chat_created"`
 
-	// For a service message, true if super group has been created.
+	// For a service message, true if supergroup has been created.
 	//
 	// You would receive such a message if you are one of
 	// initial group chat members.
@@ -163,11 +189,11 @@ type Message struct {
 	// Sender would lead to creator of the chat.
 	ChannelCreated bool `json:"channel_chat_created"`
 
-	// For a service message, the destination (super group) you
+	// For a service message, the destination (supergroup) you
 	// migrated to.
 	//
 	// You would receive such a message when your chat has migrated
-	// to a super group.
+	// to a supergroup.
 	//
 	// Sender would lead to creator of the migration.
 	MigrateTo int64 `json:"migrate_to_chat_id"`
@@ -176,7 +202,7 @@ type Message struct {
 	// from.
 	//
 	// You would receive such a message when your chat has migrated
-	// to a super group.
+	// to a supergroup.
 	//
 	// Sender would lead to creator of the migration.
 	MigrateFrom int64 `json:"migrate_from_chat_id"`
@@ -186,8 +212,40 @@ type Message struct {
 	// if it is itself a reply.
 	PinnedMessage *Message `json:"pinned_message"`
 
+	// Message is an invoice for a payment.
+	Invoice *Invoice `json:"invoice"`
+
+	// Message is a service message about a successful payment.
+	Payment *Payment `json:"successful_payment"`
+
+	// The domain name of the website on which the user has logged in.
+	ConnectedWebsite string `json:"connected_website,omitempty"`
+
 	// Inline keyboard attached to the message.
 	ReplyMarkup InlineKeyboardMarkup `json:"reply_markup"`
+
+	VoiceChatSchedule *VoiceChatScheduled `json:"voice_chat_scheduled,omitempty"`
+
+	// For a service message, a voice chat started in the chat.
+	VoiceChatStarted *VoiceChatStarted `json:"voice_chat_started,omitempty"`
+
+	// For a service message, a voice chat ended in the chat.
+	VoiceChatEnded *VoiceChatEnded `json:"voice_chat_ended,omitempty"`
+
+	// For a service message, some users were invited in the voice chat.
+	VoiceChatParticipantsInvited *VoiceChatParticipantsInvited `json:"voice_chat_participants_invited,omitempty"`
+
+	// For a service message, represents the content of a service message,
+	// sent whenever a user in the chat triggers a proximity alert set by another user.
+	ProximityAlert *ProximityAlertTriggered `json:"proximity_alert_triggered,omitempty"`
+
+	// For a service message, represents about a change in auto-delete timer settings.
+	AutoDeleteTimer *MessageAutoDeleteTimerChanged `json:"message_auto_delete_timer_changed,omitempty"`
+}
+
+// MessageAutoDeleteTimerChanged represents a service message about a change in auto-delete timer settings.
+type MessageAutoDeleteTimerChanged struct {
+	DeleteTime int `json:"message_auto_delete_time"`
 }
 
 // MessageEntity object represents "special" parts of text messages,
@@ -209,6 +267,9 @@ type MessageEntity struct {
 
 	// (Optional) For EntityTMention entity type only.
 	User *User `json:"user,omitempty"`
+
+	// (Optional) For EntityCodeBlock entity type only.
+	Language string `json:"language,omitempty"`
 }
 
 // MessageSig satisfies Editable interface (see Editable.)
@@ -245,8 +306,7 @@ func (m *Message) Private() bool {
 	return m.Chat.Type == ChatPrivate
 }
 
-// FromGroup returns true, if message came from a group OR
-// a super group.
+// FromGroup returns true, if message came from a group OR a supergroup.
 func (m *Message) FromGroup() bool {
 	return m.Chat.Type == ChatGroup || m.Chat.Type == ChatSuperGroup
 }

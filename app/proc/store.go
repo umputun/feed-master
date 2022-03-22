@@ -4,8 +4,6 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
@@ -17,21 +15,6 @@ import (
 // BoltDB store
 type BoltDB struct {
 	DB *bolt.DB
-}
-
-// NewBoltDB makes persistent boltdb based store
-func NewBoltDB(dbFile string) (*BoltDB, error) {
-	log.Printf("[INFO] bolt (persistent) store, %s", dbFile)
-	if err := os.MkdirAll(path.Dir(dbFile), 0700); err != nil {
-		return nil, err
-	}
-	result := BoltDB{}
-	db, err := bolt.Open(dbFile, 0600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
-	if err != nil {
-		return nil, err
-	}
-	result.DB = db
-	return &result, err
 }
 
 // Save to bolt, skip if found

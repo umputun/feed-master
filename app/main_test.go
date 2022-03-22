@@ -7,37 +7,46 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/umputun/feed-master/app/youtube"
 )
 
 func TestLoadConfig(t *testing.T) {
 	data := []byte(`
-feeds:
-  first:
-    title: "blah 1"
-    sources:
-      - name: nnn1
-        url: http://aa.com/u1
-      - name: nnn2
-        url: http://aa.com/u2
-
-  second:
-    title: "blah 2"
-    description: "some 2"
-    sources:
-      - name: mmm1
-        url: https://bbb.com/u1
-
-  filtered:
-    title: "filtered 1"
-    description: "filtered"
-    sources:
-      - name: mmm1
-        url: https://filtered.feed
-    filter:
+feeds: 
+  filtered: 
+    description: filtered
+    filter: 
       title: ^filterme*
+    sources: 
+      - 
+        name: mmm1
+        url: "https://filtered.feed"
+    title: "filtered 1"
+  first: 
+    sources: 
+      - 
+        name: nnn1
+        url: "http://aa.com/u1"
+      - 
+        name: nnn2
+        url: "http://aa.com/u2"
+    title: "blah 1"
+  second: 
+    description: "some 2"
+    sources: 
+      - 
+        name: mmm1
+        url: "https://bbb.com/u1"
+    title: "blah 2"
+system: 
+  update: 600s
 
-update: 600
-
+youtube: 
+  dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}.tmp
+  base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id="
+  channels:
+  - {id: id1, name: name1}
+  - {id: id2, name: name2}
 `)
 
 	assert.Nil(t, ioutil.WriteFile("/tmp/fm.yml", data, 0777), "failed write yml") // nolint
@@ -49,6 +58,11 @@ update: 600
 	assert.Equal(t, 1, len(r.Feeds["second"].Sources), "1 feed in second")
 	assert.Equal(t, "https://bbb.com/u1", r.Feeds["second"].Sources[0].URL)
 	assert.Equal(t, "^filterme*", r.Feeds["filtered"].Filter.Title)
+	assert.Equal(t, time.Second*600, r.System.UpdateInterval)
+	assert.Equal(t, []youtube.ChannelInfo{{Name: "name1", ID: "id1"}, {Name: "name2", ID: "id2"}},
+		r.YouTube.Channels, "2 yt")
+	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.Filename}}.tmp", r.YouTube.DlTemplate)
+	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?channel_id=", r.YouTube.BaseChanURL)
 }
 
 func TestLoadConfigNotFoundFile(t *testing.T) {

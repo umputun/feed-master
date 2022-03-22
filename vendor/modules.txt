@@ -5,6 +5,7 @@ github.com/ChimeraCoder/anaconda
 ## explicit
 github.com/ChimeraCoder/tokenbucket
 # github.com/aymerick/douceur v0.2.0
+## explicit
 github.com/aymerick/douceur/css
 github.com/aymerick/douceur/parser
 # github.com/azr/backoff v0.0.0-20160115115103-53511d3c7330
@@ -17,14 +18,14 @@ github.com/davecgh/go-spew/spew
 ## explicit
 github.com/denisbrodbeck/striphtmltags
 github.com/denisbrodbeck/striphtmltags/html/template
-# github.com/didip/tollbooth v4.0.2+incompatible
-## explicit
-github.com/didip/tollbooth
-github.com/didip/tollbooth/errors
-github.com/didip/tollbooth/libstring
-github.com/didip/tollbooth/limiter
-# github.com/didip/tollbooth_chi v0.0.0-20170928041846-6ab5f3083f3d
-## explicit
+# github.com/didip/tollbooth/v6 v6.1.2
+## explicit; go 1.12
+github.com/didip/tollbooth/v6
+github.com/didip/tollbooth/v6/errors
+github.com/didip/tollbooth/v6/libstring
+github.com/didip/tollbooth/v6/limiter
+# github.com/didip/tollbooth_chi v0.0.0-20200828173446-a7173453ea21
+## explicit; go 1.14
 github.com/didip/tollbooth_chi
 # github.com/dustin/go-jsonpointer v0.0.0-20160814072949-ba0abeacc3dc
 ## explicit
@@ -35,29 +36,34 @@ github.com/dustin/gojson
 # github.com/garyburd/go-oauth v0.0.0-20180319155456-bca2e7f09a17
 ## explicit
 github.com/garyburd/go-oauth/oauth
-# github.com/go-chi/chi/v5 v5.0.3
-## explicit
+# github.com/go-chi/chi/v5 v5.0.7
+## explicit; go 1.14
 github.com/go-chi/chi/v5
 github.com/go-chi/chi/v5/middleware
 # github.com/go-chi/render v1.0.1
 ## explicit
 github.com/go-chi/render
+# github.com/go-pkgz/expirable-cache v0.0.3
+## explicit; go 1.14
+github.com/go-pkgz/expirable-cache
 # github.com/go-pkgz/lcw v0.8.1
-## explicit
+## explicit; go 1.15
 github.com/go-pkgz/lcw
 github.com/go-pkgz/lcw/eventbus
 github.com/go-pkgz/lcw/internal/cache
 # github.com/go-pkgz/lgr v0.10.4
-## explicit
+## explicit; go 1.15
 github.com/go-pkgz/lgr
-# github.com/go-pkgz/rest v1.9.2
-## explicit
+# github.com/go-pkgz/rest v1.13.0
+## explicit; go 1.16
 github.com/go-pkgz/rest
 github.com/go-pkgz/rest/logger
-# github.com/go-pkgz/syncs v1.1.1
-## explicit
+github.com/go-pkgz/rest/realip
+# github.com/go-pkgz/syncs v1.2.0
+## explicit; go 1.16
 github.com/go-pkgz/syncs
-# github.com/go-redis/redis/v7 v7.4.0
+# github.com/go-redis/redis/v7 v7.4.1
+## explicit; go 1.11
 github.com/go-redis/redis/v7
 github.com/go-redis/redis/v7/internal
 github.com/go-redis/redis/v7/internal/consistenthash
@@ -65,61 +71,64 @@ github.com/go-redis/redis/v7/internal/hashtag
 github.com/go-redis/redis/v7/internal/pool
 github.com/go-redis/redis/v7/internal/proto
 github.com/go-redis/redis/v7/internal/util
-# github.com/google/uuid v1.2.0
+# github.com/google/uuid v1.3.0
 ## explicit
 github.com/google/uuid
 # github.com/gorilla/css v1.0.0
+## explicit
 github.com/gorilla/css/scanner
 # github.com/hashicorp/errwrap v1.1.0
 ## explicit
 github.com/hashicorp/errwrap
 # github.com/hashicorp/go-multierror v1.1.1
-## explicit
+## explicit; go 1.13
 github.com/hashicorp/go-multierror
 # github.com/hashicorp/golang-lru v0.5.4
+## explicit; go 1.12
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
-# github.com/jessevdk/go-flags v1.4.0
-## explicit
+# github.com/jessevdk/go-flags v1.5.0
+## explicit; go 1.15
 github.com/jessevdk/go-flags
-# github.com/microcosm-cc/bluemonday v1.0.9
-## explicit
+# github.com/microcosm-cc/bluemonday v1.0.18
+## explicit; go 1.16
 github.com/microcosm-cc/bluemonday
-# github.com/patrickmn/go-cache v2.1.0+incompatible
-## explicit
-github.com/patrickmn/go-cache
+github.com/microcosm-cc/bluemonday/css
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
+## explicit
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.7.0
-## explicit
+## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 ## explicit
 github.com/tcolgate/mp3
 github.com/tcolgate/mp3/internal/data
-# go.etcd.io/bbolt v1.3.5
-## explicit
+# go.etcd.io/bbolt v1.3.6
+## explicit; go 1.12
 go.etcd.io/bbolt
-# golang.org/x/net v0.0.0-20210421230115-4e50805a0758
-## explicit
+# golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.0.0-20210420072515-93ed5bcd2bfe
+# golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8
+## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-# golang.org/x/time v0.0.0-20191024005414-555d28b269f0
+# golang.org/x/time v0.0.0-20220224211638-0e9765cccd65
 ## explicit
 golang.org/x/time/rate
-# gopkg.in/tucnak/telebot.v2 v2.0.0-20200329125927-3458aeb2e7be
-## explicit
+# gopkg.in/tucnak/telebot.v2 v2.5.0
+## explicit; go 1.13
 gopkg.in/tucnak/telebot.v2
-# gopkg.in/yaml.v2 v2.2.8
-## explicit
+# gopkg.in/yaml.v2 v2.4.0
+## explicit; go 1.15
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+## explicit
 gopkg.in/yaml.v3
