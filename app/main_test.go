@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/umputun/feed-master/app/proc"
+	"github.com/umputun/feed-master/app/youtube"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -59,7 +59,8 @@ youtube:
 	assert.Equal(t, "https://bbb.com/u1", r.Feeds["second"].Sources[0].URL)
 	assert.Equal(t, "^filterme*", r.Feeds["filtered"].Filter.Title)
 	assert.Equal(t, time.Second*600, r.System.UpdateInterval)
-	assert.Equal(t, []proc.YTChannel{{ID: "id1", Name: "name1"}, {ID: "id2", Name: "name2"}}, r.YouTube.Channels, "2 yt")
+	assert.Equal(t, []youtube.ChannelInfo{{Name: "name1", ID: "id1"}, {Name: "name2", ID: "id2"}},
+		r.YouTube.Channels, "2 yt")
 	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.Filename}}.tmp", r.YouTube.DlTemplate)
 	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?channel_id=", r.YouTube.BaseChanURL)
 }

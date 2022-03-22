@@ -5,8 +5,10 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/umputun/feed-master/app/feed"
+	bolt "go.etcd.io/bbolt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,35 +16,18 @@ import (
 
 const pubDate = "Mon, 02 Jan 2006 15:04:05 -0700"
 
-func TestNewBoltDB(t *testing.T) {
-	tmpfile, _ := ioutil.TempFile("", "")
-	defer os.Remove(tmpfile.Name())
-
-	boltDB, err := NewBoltDB(tmpfile.Name())
-
-	assert.NoError(t, err)
-	assert.Equal(t, boltDB.DB.Path(), tmpfile.Name())
-}
-
-func TestNewBoltDBFileNotExists(t *testing.T) {
-	boltDB, err := NewBoltDB("")
-
-	assert.EqualError(t, err, "open : no such file or directory")
-	assert.Nil(t, boltDB)
-}
-
 func TestSaveIfInvalidPubDate(t *testing.T) {
 	tmpfile, _ := ioutil.TempFile("", "")
 	defer os.Remove(tmpfile.Name())
 
-	boltDB, _ := NewBoltDB(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	bdb := &BoltDB{DB: db}
 
 	item := feed.Item{
 		PubDate: "100500",
 	}
-
-	created, err := boltDB.Save("radio-t", item)
-
+	created, err := bdb.Save("radio-t", item)
 	assert.False(t, created)
 	assert.EqualError(t, err, "parsing time \"100500\" as \"Mon, 02 Jan 2006 15:04:05 -0700\": cannot parse \"100500\" as \"Mon\"")
 }
@@ -50,14 +35,15 @@ func TestSaveIfInvalidPubDate(t *testing.T) {
 func TestSave(t *testing.T) {
 	tmpfile, _ := ioutil.TempFile("", "")
 	defer os.Remove(tmpfile.Name())
-
-	boltDB, _ := NewBoltDB(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	bdb := &BoltDB{DB: db}
 
 	item := feed.Item{
 		PubDate: pubDate,
 	}
 
-	created, err := boltDB.Save("radio-t", item)
+	created, err := bdb.Save("radio-t", item)
 
 	assert.True(t, created)
 	assert.NoError(t, err)
@@ -66,16 +52,17 @@ func TestSave(t *testing.T) {
 func TestSaveIfItemIsExists(t *testing.T) {
 	tmpfile, _ := ioutil.TempFile("", "")
 	defer os.Remove(tmpfile.Name())
-
-	boltDB, _ := NewBoltDB(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	bdb := &BoltDB{DB: db}
 
 	item := feed.Item{
 		PubDate: pubDate,
 	}
-	_, err := boltDB.Save("radio-t", item)
+	_, err = bdb.Save("radio-t", item)
 	require.NoError(t, err)
 
-	created, err := boltDB.Save("radio-t", item)
+	created, err := bdb.Save("radio-t", item)
 
 	assert.False(t, created)
 	assert.NoError(t, err)
@@ -84,9 +71,11 @@ func TestSaveIfItemIsExists(t *testing.T) {
 func TestLoadIfNotBucket(t *testing.T) {
 	tmpfile, _ := ioutil.TempFile("", "")
 	defer os.Remove(tmpfile.Name())
-	boltDB, _ := NewBoltDB(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	bdb := &BoltDB{DB: db}
 
-	feedItems, err := boltDB.Load("100500", 5, false)
+	feedItems, err := bdb.Load("100500", 5, false)
 
 	assert.Equal(t, len(feedItems), 0)
 	assert.EqualError(t, err, "no bucket for 100500")
@@ -95,12 +84,14 @@ func TestLoadIfNotBucket(t *testing.T) {
 func TestLoad(t *testing.T) {
 	tmpfile, _ := ioutil.TempFile("", "")
 	defer os.Remove(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	bdb := &BoltDB{DB: db}
 
-	boltDB, _ := NewBoltDB(tmpfile.Name())
-	_, err := boltDB.Save("radio-t", feed.Item{PubDate: pubDate})
+	_, err = bdb.Save("radio-t", feed.Item{PubDate: pubDate})
 	require.NoError(t, err)
 
-	items, err := boltDB.Load("radio-t", 5, false)
+	items, err := bdb.Load("radio-t", 5, false)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(items))
@@ -110,14 +101,14 @@ func TestLoad(t *testing.T) {
 func TestLoadChackMax(t *testing.T) {
 	tmpfile, _ := ioutil.TempFile("", "")
 	defer os.Remove(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	bdb := &BoltDB{DB: db}
 
-	boltDB, err := NewBoltDB(tmpfile.Name())
+	_, err = bdb.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"})
 	require.NoError(t, err)
 
-	_, err = boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"})
-	require.NoError(t, err)
-
-	_, err = boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"})
+	_, err = bdb.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"})
 	require.NoError(t, err)
 
 	cases := []struct {
@@ -134,7 +125,7 @@ func TestLoadChackMax(t *testing.T) {
 		i := i
 		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			items, err := boltDB.Load("radio-t", tc.max, false)
+			items, err := bdb.Load("radio-t", tc.max, false)
 
 			assert.NoError(t, err)
 			assert.Equal(t, tc.count, len(items))
@@ -145,16 +136,18 @@ func TestLoadChackMax(t *testing.T) {
 func TestBuckets(t *testing.T) {
 	tmpfile, _ := ioutil.TempFile("", "")
 	defer os.Remove(tmpfile.Name())
-	boltDB, _ := NewBoltDB(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	bdb := &BoltDB{DB: db}
 
-	got, err := boltDB.Buckets()
+	got, err := bdb.Buckets()
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(got))
 
-	_, err = boltDB.Save("radio-t", feed.Item{PubDate: pubDate})
+	_, err = bdb.Save("radio-t", feed.Item{PubDate: pubDate})
 	require.NoError(t, err)
 
-	got, err = boltDB.Buckets()
+	got, err = bdb.Buckets()
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(got))
 }
@@ -162,9 +155,11 @@ func TestBuckets(t *testing.T) {
 func TestRemoveOldIfNotExistsBucket(t *testing.T) {
 	tmpfile, _ := ioutil.TempFile("", "")
 	defer os.Remove(tmpfile.Name())
-	boltDB, _ := NewBoltDB(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	bdb := &BoltDB{DB: db}
 
-	count, err := boltDB.removeOld("radio-t", 5)
+	count, err := bdb.removeOld("radio-t", 5)
 
 	assert.EqualError(t, err, "no bucket for radio-t")
 	assert.Equal(t, 0, count)
@@ -186,14 +181,16 @@ func TestRemoveOld(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			tmpfile, _ := ioutil.TempFile("", "")
 			defer os.Remove(tmpfile.Name())
-			boltDB, _ := NewBoltDB(tmpfile.Name())
-			_, err := boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"})
+			db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+			require.NoError(t, err)
+			bdb := &BoltDB{DB: db}
+			_, err = bdb.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"})
 			require.NoError(t, err)
 
-			_, err = boltDB.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"})
+			_, err = bdb.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "2"})
 			require.NoError(t, err)
 
-			count, err := boltDB.removeOld("radio-t", tc.keep)
+			count, err := bdb.removeOld("radio-t", tc.keep)
 
 			assert.NoError(t, err)
 			assert.Equal(t, tc.countDelete, count)

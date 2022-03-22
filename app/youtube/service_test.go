@@ -50,6 +50,7 @@ func TestService_Do(t *testing.T) {
 		ChannelService: chans,
 		Store:          store,
 		CheckDuration:  time.Millisecond * 500,
+		KeepPerChannel: 10,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*900)
@@ -92,17 +93,18 @@ func TestService_RSSFeed(t *testing.T) {
 	}
 
 	svc := Service{
-		Channels: []ChannelInfo{{ID: "channel1", Name: "name1"}, {ID: "channel2", Name: "name2"}},
-		Store:    store,
-		RootURL:  "http://localhost:8080/yt",
+		Channels:       []ChannelInfo{{ID: "channel1", Name: "name1"}, {ID: "channel2", Name: "name2"}},
+		Store:          store,
+		RootURL:        "http://localhost:8080/yt",
+		KeepPerChannel: 10,
 	}
 
 	res, err := svc.RSSFeed(ChannelInfo{ID: "channel1", Name: "name1"})
 	require.NoError(t, err)
 	t.Logf("%v", res)
 
-	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/channel1/file1.mp3"`)
-	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/channel1/file1.mp3"`)
+	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/file1.mp3"`)
+	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/file1.mp3"`)
 	assert.Contains(t, res, `<guid>channel1::vid1</guid>`)
 	assert.Contains(t, res, `<guid>channel1::vid2</guid>`)
 }
