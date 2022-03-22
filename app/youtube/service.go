@@ -94,8 +94,8 @@ func (s *Service) RSSFeed(cinfo ChannelInfo) (string, error) {
 		fileURL := s.RootURL + "/" + path.Base(entry.File)
 
 		var fileSize int
-		if fileInfo, err := os.Stat(entry.File); err != nil {
-			log.Printf("[WARN] failed to get file size for %s: %v", entry.File, err)
+		if fileInfo, fiErr := os.Stat(entry.File); fiErr != nil {
+			log.Printf("[WARN] failed to get file size for %s: %v", entry.File, fiErr)
 		} else {
 			fileSize = int(fileInfo.Size())
 		}
@@ -146,24 +146,24 @@ func (s *Service) procChannels(ctx context.Context) error {
 			if i >= s.KeepPerChannel {
 				break
 			}
-			exists, err := s.Store.Exist(entry)
+			exists, exErr := s.Store.Exist(entry)
 			if err != nil {
-				return errors.Wrapf(err, "failed to check if entry %s exists", entry.VideoID)
+				return errors.Wrapf(exErr, "failed to check if entry %s exists", entry.VideoID)
 			}
 			if exists {
 				continue
 			}
 			log.Printf("[INFO] new entry %s, %s, %s", entry.VideoID, entry.Title, chanInfo.Name)
-			file, err := s.Downloader.Get(ctx, entry.VideoID, uuid.New().String())
-			if err != nil {
-				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, err)
+			file, downErr := s.Downloader.Get(ctx, entry.VideoID, uuid.New().String())
+			if downErr != nil {
+				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, downErr)
 				continue
 			}
 			log.Printf("[DEBUG] downloaded %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, chanInfo)
 			entry.File = file
-			ok, err := s.Store.Save(entry)
-			if err != nil {
-				return errors.Wrapf(err, "failed to save entry %+v", entry)
+			ok, saveErr := s.Store.Save(entry)
+			if saveErr != nil {
+				return errors.Wrapf(saveErr, "failed to save entry %+v", entry)
 			}
 			if !ok {
 				log.Printf("[WARN] attempt to save dup entry %+v", entry)
@@ -172,13 +172,13 @@ func (s *Service) procChannels(ctx context.Context) error {
 		}
 
 		// remove old entries and files
-		files, err := s.Store.RemoveOld(chanInfo.ID, s.KeepPerChannel)
-		if err != nil {
-			return errors.Wrapf(err, "failed to remove old meta data for %s", chanInfo.ID)
+		files, rmErr := s.Store.RemoveOld(chanInfo.ID, s.KeepPerChannel)
+		if rmErr != nil {
+			return errors.Wrapf(rmErr, "failed to remove old meta data for %s", chanInfo.ID)
 		}
 		for _, f := range files {
-			if err := os.Remove(f); err != nil {
-				log.Printf("[WARN] failed to remove file %s: %s", f, err)
+			if e := os.Remove(f); e != nil {
+				log.Printf("[WARN] failed to remove file %s: %s", f, e)
 				continue
 			}
 			log.Printf("[INFO] removed %s for %s (%s)", f, chanInfo.ID, chanInfo.Name)

@@ -136,14 +136,13 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 	deleted := 0
 	var res []string
 
-	err := s.DB.Update(func(tx *bolt.Tx) error {
+	err := s.DB.Update(func(tx *bolt.Tx) (e error) {
 		bucket := tx.Bucket([]byte(channelID))
 		if bucket == nil {
 			return fmt.Errorf("no bucket for %s", channelID)
 		}
 		recs := 0
 		c := bucket.Cursor()
-		var err error
 		for k, v := c.Last(); k != nil; k, v = c.Prev() {
 			recs++
 			if recs > keep {
@@ -154,13 +153,11 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 				}
 				res = append(res, item.File)
 
-				if e := bucket.Delete(k); e != nil {
-					err = e
-				}
+				e = bucket.Delete(k)
 				deleted++
 			}
 		}
-		return err
+		return e
 	})
 	return res, err
 }
