@@ -48,7 +48,7 @@ linters:
     - stylecheck
     - gochecknoinits
     - exportloopref
-    - gocritic
+#    - gocritic
     - nakedret
     - gosimple
     - prealloc
