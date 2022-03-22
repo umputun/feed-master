@@ -88,15 +88,17 @@ func (s *Server) Run(port int) {
 		r.Get("/rss/{channel}", s.getYoutubeFeedCtrl)
 	})
 
-	baseYtURL, err := url.Parse(s.Conf.YouTube.BaseURL)
-	if err != nil {
-		log.Printf("[ERROR] failed to parse base url %s, %v", s.Conf.YouTube.BaseURL, err)
-	}
-	ytfs, err := rest.FileServer(baseYtURL.Path, s.Conf.YouTube.FilesLocation)
-	if err == nil {
-		router.Mount(baseYtURL.Path, ytfs)
-	} else {
-		log.Printf("[WARN] can't start static file server for yt, %v", err)
+	if s.Conf.YouTube.BaseURL != "" {
+		baseYtURL, err := url.Parse(s.Conf.YouTube.BaseURL)
+		if err != nil {
+			log.Printf("[ERROR] failed to parse base url %s, %v", s.Conf.YouTube.BaseURL, err)
+		}
+		ytfs, err := rest.FileServer(baseYtURL.Path, s.Conf.YouTube.FilesLocation)
+		if err == nil {
+			router.Mount(baseYtURL.Path, ytfs)
+		} else {
+			log.Printf("[WARN] can't start static file server for yt, %v", err)
+		}
 	}
 
 	fs, err := rest.FileServer("/static", filepath.Join("webapp", "static"))
