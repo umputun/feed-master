@@ -80,3 +80,29 @@ func TestService_Do(t *testing.T) {
 	require.True(t, strings.HasPrefix(store.SaveCalls()[0].Entry.File, "/tmp/"))
 	require.True(t, strings.HasSuffix(store.SaveCalls()[0].Entry.File, ".mp3"))
 }
+
+func TestService_RSSFeed(t *testing.T) {
+	store := &mocks.StoreServiceMock{
+		LoadFunc: func(channelID string, max int) ([]channel.Entry, error) {
+			return []channel.Entry{
+				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: "/tmp/file1.mp3"},
+				{ChannelID: "channel1", VideoID: "vid2", Title: "title2", File: "/tmp/file2.mp3"},
+			}, nil
+		},
+	}
+
+	svc := Service{
+		Channels: []ChannelInfo{{ID: "channel1", Name: "name1"}, {ID: "channel2", Name: "name2"}},
+		Store:    store,
+		RootURL:  "http://localhost:8080/yt",
+	}
+
+	res, err := svc.RSSFeed(ChannelInfo{ID: "channel1", Name: "name1"})
+	require.NoError(t, err)
+	t.Logf("%v", res)
+
+	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/channel1/file1.mp3"`)
+	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/channel1/file1.mp3"`)
+	assert.Contains(t, res, `<guid>channel1::vid1</guid>`)
+	assert.Contains(t, res, `<guid>channel1::vid2</guid>`)
+}

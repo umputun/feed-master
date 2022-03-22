@@ -1,7 +1,10 @@
 // Package channel provides youtube's feed parser and downloader.
 package channel
 
-import "time"
+import (
+	"html/template"
+	"time"
+)
 
 // Entry represents a YouTube channel entry.
 type Entry struct {
@@ -14,7 +17,7 @@ type Entry struct {
 	Published time.Time `xml:"published"`
 
 	Media struct {
-		Description string `xml:"description"`
+		Description template.HTML `xml:"description"`
 		Thumbnail   struct {
 			URL string `xml:"url,attr"`
 		} `xml:"thumbnail"`

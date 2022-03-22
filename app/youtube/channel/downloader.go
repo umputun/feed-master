@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"text/template"
+
+	"github.com/pkg/errors"
 )
 
 // Downloader executes an external command to download a video and extract its audio.
@@ -32,6 +34,10 @@ func NewDownloader(tmpl string, logWriter io.Writer, destination string) *Downlo
 // Get downloads a video from youtube and extracts audio.
 // yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}.tmp
 func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, err error) {
+
+	if err := os.MkdirAll(d.destination, 0o755); err != nil {
+		return "", errors.Wrapf(err, "failed to create directory %s", d.destination)
+	}
 
 	tmplParams := struct {
 		ID       string
