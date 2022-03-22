@@ -9,8 +9,8 @@ import (
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/go-pkgz/syncs"
-
 	"github.com/umputun/feed-master/app/feed"
+	"github.com/umputun/feed-master/app/youtube"
 )
 
 // TelegramNotif is interface to send messages to telegram
@@ -42,6 +42,16 @@ type Conf struct {
 		Concurrent     int           `yaml:"concurrent"`
 		BaseURL        string        `yaml:"base_url"`
 	} `yaml:"system"`
+
+	YouTube struct {
+		DlTemplate     string                `yaml:"dl_template"`
+		BaseChanURL    string                `yaml:"base_chan_url"`
+		Channels       []youtube.ChannelInfo `yaml:"channels"`
+		BaseURL        string                `yaml:"base_url"`
+		UpdateInterval time.Duration         `yaml:"update"`
+		MaxItems       int                   `yaml:"max_per_channel"`
+		FilesLocation  string                `yaml:"files_location"`
+	} `yaml:"youtube"`
 }
 
 // Feed defines config section for a feed~
@@ -63,6 +73,12 @@ type Feed struct {
 // Filter defines feed section for a feed filter~
 type Filter struct {
 	Title string `yaml:"title"`
+}
+
+// YTChannel defines youtube channel config
+type YTChannel struct {
+	ID   string
+	Name string
 }
 
 // Do activates loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent

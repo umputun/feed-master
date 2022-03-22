@@ -4,15 +4,15 @@ package youtube
 import (
 	"context"
 	"encoding/xml"
-	"log"
 	"os"
 	"path"
 	"time"
 
+	log "github.com/go-pkgz/lgr"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/umputun/feed-master/app/feed"
 
+	"github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/youtube/channel"
 )
 
@@ -57,7 +57,7 @@ type StoreService interface {
 
 // Do is a blocking function that downloads audio from youtube channels and updates metadata
 func (s *Service) Do(ctx context.Context) error {
-
+	log.Printf("[INFO] Starting youtube service")
 	tick := time.NewTicker(s.CheckDuration)
 	defer tick.Stop()
 
@@ -91,7 +91,7 @@ func (s *Service) RSSFeed(cinfo ChannelInfo) (string, error) {
 	items := []feed.Item{}
 	for _, entry := range entries {
 
-		fileURL := s.RootURL + "/" + entry.ChannelID + "/" + path.Base(entry.File)
+		fileURL := s.RootURL + "/" + path.Base(entry.File)
 
 		var fileSize int
 		if fileInfo, err := os.Stat(entry.File); err != nil {
@@ -141,8 +141,11 @@ func (s *Service) procChannels(ctx context.Context) error {
 			log.Printf("[WARN] failed to get channel entries for %s: %s", chanInfo.ID, err)
 			continue
 		}
-
-		for _, entry := range entries {
+		log.Printf("[INFO] got %d entries for %s, limit to %d", len(entries), chanInfo.Name, s.KeepPerChannel)
+		for i, entry := range entries {
+			if i >= s.KeepPerChannel {
+				break
+			}
 			exists, err := s.Store.Exist(entry)
 			if err != nil {
 				return errors.Wrapf(err, "failed to check if entry %s exists", entry.VideoID)
@@ -181,5 +184,6 @@ func (s *Service) procChannels(ctx context.Context) error {
 			log.Printf("[INFO] removed %s for %s (%s)", f, chanInfo.ID, chanInfo.Name)
 		}
 	}
+	log.Printf("[DEBUG] processed channels completed, total %d", len(s.Channels))
 	return nil
 }

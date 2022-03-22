@@ -5,21 +5,21 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"log"
 
+	log "github.com/go-pkgz/lgr"
 	"github.com/pkg/errors"
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/umputun/feed-master/app/youtube/channel"
 )
 
-// BoldDB store for metadata related to downloaded YouTube audio.
-type BoldDB struct {
+// BoltDB store for metadata related to downloaded YouTube audio.
+type BoltDB struct {
 	*bolt.DB
 }
 
 // Save to bolt, skip if found
-func (s *BoldDB) Save(entry channel.Entry) (bool, error) {
+func (s *BoltDB) Save(entry channel.Entry) (bool, error) {
 	var created bool
 
 	key, keyErr := func() ([]byte, error) {
@@ -62,7 +62,7 @@ func (s *BoldDB) Save(entry channel.Entry) (bool, error) {
 }
 
 // Exist checks if entry exists
-func (s *BoldDB) Exist(entry channel.Entry) (bool, error) {
+func (s *BoltDB) Exist(entry channel.Entry) (bool, error) {
 	var found bool
 
 	key, keyErr := func() ([]byte, error) {
@@ -94,7 +94,7 @@ func (s *BoldDB) Exist(entry channel.Entry) (bool, error) {
 }
 
 // Load entries from bolt for a given channel, up to max in reverse order (from newest to oldest)
-func (s *BoldDB) Load(channelID string, max int) ([]channel.Entry, error) {
+func (s *BoltDB) Load(channelID string, max int) ([]channel.Entry, error) {
 	var result []channel.Entry
 
 	err := s.View(func(tx *bolt.Tx) error {
@@ -120,7 +120,7 @@ func (s *BoldDB) Load(channelID string, max int) ([]channel.Entry, error) {
 }
 
 // Channels returns list of channels (buckets)
-func (s *BoldDB) Channels() (result []string, err error) {
+func (s *BoltDB) Channels() (result []string, err error) {
 	err = s.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error { // nolint
 			result = append(result, string(name))
@@ -132,7 +132,7 @@ func (s *BoldDB) Channels() (result []string, err error) {
 
 // RemoveOld removes old entries from bolt and returns the list of removed entry.File
 // the caller should delete the files
-func (s *BoldDB) RemoveOld(channelID string, keep int) ([]string, error) {
+func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 	deleted := 0
 	var res []string
 

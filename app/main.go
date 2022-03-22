@@ -2,15 +2,22 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
+	"path"
 	"strings"
 	"text/template"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/jessevdk/go-flags"
+	"github.com/umputun/feed-master/app/youtube"
+	"github.com/umputun/feed-master/app/youtube/channel"
+	"github.com/umputun/feed-master/app/youtube/store"
+	bolt "go.etcd.io/bbolt"
 	"gopkg.in/yaml.v2"
 
 	"github.com/umputun/feed-master/app/api"
@@ -35,6 +42,8 @@ type options struct {
 	TwitterAccessToken    string        `long:"access-token" env:"TWI_ACCESS_TOKEN" description:"twitter access token"`
 	TwitterAccessSecret   string        `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
 	TwitterTemplate       string        `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
+
+	YtLocation string `long:"yt-location" env:"YT_LOCATION" default:"var/yt" description:"path to youtube download location"`
 
 	Dbg bool `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
@@ -62,23 +71,46 @@ func main() {
 		}
 	}
 
-	db, err := proc.NewBoltDB(opts.DB)
+	db, err := makeBoltDB(opts.DB)
 	if err != nil {
 		log.Fatalf("[ERROR] can't open db %s, %v", opts.DB, err)
 	}
+	procStore := &proc.BoltDB{DB: db}
 
 	telegramNotif, err := proc.NewTelegramClient(opts.TelegramToken, opts.TelegramServer, opts.TelegramTimeout)
 	if err != nil {
 		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
 	}
 
-	p := &proc.Processor{Conf: conf, Store: db, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter(opts)}
+	p := &proc.Processor{Conf: conf, Store: procStore, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter(opts)}
 	go p.Do()
 
+	var ytSvc youtube.Service
+	if len(conf.YouTube.Channels) > 0 {
+		log.Printf("[INFO] starting youtube processor for %d channels", len(conf.YouTube.Channels))
+		dwnl := channel.NewDownloader(conf.YouTube.DlTemplate, log.ToWriter(log.Default(), "DEBUG"), opts.YtLocation)
+		fd := channel.Feed{Client: &http.Client{Timeout: 10 * time.Second}, BaseURL: conf.YouTube.BaseChanURL}
+		ytSvc = youtube.Service{
+			Channels:       conf.YouTube.Channels,
+			Downloader:     dwnl,
+			ChannelService: &fd,
+			Store:          &store.BoltDB{DB: db},
+			CheckDuration:  conf.YouTube.UpdateInterval,
+			KeepPerChannel: conf.YouTube.MaxItems,
+			RootURL:        conf.YouTube.BaseURL,
+		}
+		go func() {
+			if err := ytSvc.Do(context.TODO()); err != nil {
+				log.Printf("[ERROR] youtube processor failed: %v", err)
+			}
+		}()
+	}
+
 	server := api.Server{
-		Version: revision,
-		Conf:    *conf,
-		Store:   db,
+		Version:    revision,
+		Conf:       *conf,
+		Store:      procStore,
+		YoutubeSvc: &ytSvc,
 	}
 	server.Run(8080)
 }
@@ -97,6 +129,22 @@ func singleFeedConf(feedURL, channel string, updateInterval time.Duration) *proc
 	conf.Feeds = map[string]proc.Feed{"auto": f}
 	conf.System.UpdateInterval = updateInterval
 	return &conf
+}
+
+func makeBoltDB(dbFile string) (*bolt.DB, error) {
+	log.Printf("[INFO] bolt (persistent) store, %s", dbFile)
+	if dbFile == "" {
+		return nil, fmt.Errorf("empty db")
+	}
+	if err := os.MkdirAll(path.Dir(dbFile), 0o700); err != nil {
+		return nil, err
+	}
+	db, err := bolt.Open(dbFile, 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	if err != nil {
+		return nil, err
+	}
+
+	return db, err
 }
 
 func makeTwitter(opts options) *proc.TwitterClient {

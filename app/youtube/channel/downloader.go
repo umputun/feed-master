@@ -5,11 +5,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"text/template"
+
+	log "github.com/go-pkgz/lgr"
 
 	"github.com/pkg/errors"
 )
@@ -35,7 +36,7 @@ func NewDownloader(tmpl string, logWriter io.Writer, destination string) *Downlo
 // yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}.tmp
 func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, err error) {
 
-	if err := os.MkdirAll(d.destination, 0o755); err != nil {
+	if err := os.MkdirAll(d.destination, 0o750); err != nil {
 		return "", errors.Wrapf(err, "failed to create directory %s", d.destination)
 	}
 
@@ -55,6 +56,7 @@ func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, er
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = d.logWriter
 	cmd.Stderr = d.logWriter
+	cmd.Dir = d.destination
 	log.Printf("[DEBUG] executing command: %s", b1.String())
 	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("failed to execute command: %v", err)

@@ -20,7 +20,7 @@ func TestStore_SaveAndLoad(t *testing.T) {
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 
-	s := BoldDB{DB: db}
+	s := BoltDB{DB: db}
 
 	entry := channel.Entry{
 		ChannelID: "chan1",
@@ -65,7 +65,7 @@ func TestStore_Channels(t *testing.T) {
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 
-	s := BoldDB{DB: db}
+	s := BoltDB{DB: db}
 	{
 		entry := channel.Entry{
 			ChannelID: "chan1",
@@ -101,7 +101,7 @@ func TestStore_Exist(t *testing.T) {
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 
-	s := BoldDB{DB: db}
+	s := BoltDB{DB: db}
 
 	entry := channel.Entry{
 		ChannelID: "chan1",
@@ -131,7 +131,7 @@ func TestBoldDB_RemoveOld(t *testing.T) {
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 
-	s := BoldDB{DB: db}
+	s := BoltDB{DB: db}
 	{
 		entry := channel.Entry{
 			ChannelID: "chan1",

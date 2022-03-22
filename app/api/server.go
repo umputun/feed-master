@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 	log "github.com/go-pkgz/lgr"
 	"github.com/go-pkgz/rest"
 	"github.com/go-pkgz/rest/logger"
+	"github.com/umputun/feed-master/app/youtube"
 
 	"github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/proc"
@@ -28,12 +30,17 @@ import (
 
 // Server provides HTTP API
 type Server struct {
-	Version string
-	Conf    proc.Conf
-	Store   *proc.BoltDB
-
+	Version    string
+	Conf       proc.Conf
+	Store      *proc.BoltDB
+	YoutubeSvc YoutubeSvc
 	httpServer *http.Server
 	cache      lcw.LoadingCache
+}
+
+// YoutubeSvc provides access to youtube's audio rss
+type YoutubeSvc interface {
+	RSSFeed(cinfo youtube.ChannelInfo) (string, error)
 }
 
 // Run starts http server for API with all routes
@@ -74,6 +81,23 @@ func (s *Server) Run(port int) {
 		rrss.Get("/list", s.getListCtrl)
 		rrss.Get("/feed/{name}", s.getFeedPageCtrl)
 	})
+
+	router.Route("/yt", func(r chi.Router) {
+		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"))
+		r.Use(l.Handler)
+		r.Get("/rss/{channel}", s.getYoutubeFeedCtrl)
+	})
+
+	baseYtURL, err := url.Parse(s.Conf.YouTube.BaseURL)
+	if err != nil {
+		log.Printf("[ERROR] failed to parse base url %s, %v", s.Conf.YouTube.BaseURL, err)
+	}
+	ytfs, err := rest.FileServer(baseYtURL.Path, s.Conf.YouTube.FilesLocation)
+	if err == nil {
+		router.Mount(baseYtURL.Path, ytfs)
+	} else {
+		log.Printf("[WARN] can't start static file server for yt, %v", err)
+	}
 
 	fs, err := rest.FileServer("/static", filepath.Join("webapp", "static"))
 	if err == nil {
@@ -181,4 +205,18 @@ func (s *Server) getListCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	render.JSON(w, r, buckets)
+}
+
+// GET /yt/rss/{channel} - returns rss for given youtube channel
+func (s *Server) getYoutubeFeedCtrl(w http.ResponseWriter, r *http.Request) {
+	channel := chi.URLParam(r, "channel")
+
+	res, err := s.YoutubeSvc.RSSFeed(youtube.ChannelInfo{ID: channel})
+	if err != nil {
+		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to read yt list")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
+	_, _ = fmt.Fprintf(w, "%s", res)
 }
