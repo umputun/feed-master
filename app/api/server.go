@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/didip/tollbooth"
+	"github.com/didip/tollbooth/v6"
 	"github.com/didip/tollbooth_chi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -93,7 +93,7 @@ func (s *Server) Run(port int) {
 		if parseErr != nil {
 			log.Printf("[ERROR] failed to parse base url %s, %v", s.Conf.YouTube.BaseURL, parseErr)
 		}
-		ytfs, fsErr := rest.FileServer(baseYtURL.Path, s.Conf.YouTube.FilesLocation)
+		ytfs, fsErr := rest.NewFileServer(baseYtURL.Path, s.Conf.YouTube.FilesLocation)
 		if fsErr == nil {
 			router.Mount(baseYtURL.Path, ytfs)
 		} else {
@@ -101,7 +101,7 @@ func (s *Server) Run(port int) {
 		}
 	}
 
-	fs, err := rest.FileServer("/static", filepath.Join("webapp", "static"))
+	fs, err := rest.NewFileServer("/static", filepath.Join("webapp", "static"))
 	if err == nil {
 		router.Mount("/static", fs)
 	} else {

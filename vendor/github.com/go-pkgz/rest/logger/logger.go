@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -15,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-pkgz/rest/realip"
 )
 
 // Middleware is a logger for rest requests.
@@ -104,7 +105,10 @@ func (l *Middleware) Handler(next http.Handler) http.Handler {
 				rawurl = unescURL
 			}
 
-			remoteIP := l.remoteIP(r)
+			remoteIP, err := realip.Get(r)
+			if err != nil {
+				remoteIP = "unknown ip"
+			}
 			if l.ipFn != nil { // mask ip with ipFn
 				remoteIP = l.ipFn(remoteIP)
 			}
@@ -170,7 +174,7 @@ func (l *Middleware) formatDefault(r *http.Request, p *logParts) string {
 }
 
 // 127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"
-//nolint gosec
+// nolint gosec
 func (l *Middleware) formatApacheCombined(r *http.Request, p *logParts) string {
 	username := "-"
 	if p.user != "" {
@@ -220,7 +224,7 @@ func (l *Middleware) getBody(r *http.Request) string {
 	// Note that below assignment is not approved by the docs:
 	// "Except for reading the body, handlers should not modify the provided Request."
 	// https://golang.org/pkg/net/http/#Handler
-	r.Body = ioutil.NopCloser(reader)
+	r.Body = io.NopCloser(reader)
 
 	if len(body) > 0 {
 		body = strings.Replace(body, "\n", " ", -1)
@@ -290,19 +294,6 @@ func (l *Middleware) sanitizeQuery(rawQuery string) string {
 	}
 
 	return query.Encode()
-}
-
-// remoteIP gets address from X-Forwarded-For and than from request's remote address
-func (l *Middleware) remoteIP(r *http.Request) (remoteIP string) {
-
-	if remoteIP = r.Header.Get("X-Forwarded-For"); remoteIP == "" {
-		remoteIP = r.RemoteAddr
-	}
-	remoteIP = strings.Split(remoteIP, ":")[0]
-	if strings.HasPrefix(remoteIP, "[") {
-		remoteIP = strings.Split(remoteIP, "]:")[0] + "]"
-	}
-	return remoteIP
 }
 
 // customResponseWriter is an HTTP response logger that keeps HTTP status code and

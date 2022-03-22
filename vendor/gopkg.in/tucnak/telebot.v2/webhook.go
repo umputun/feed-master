@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 // A WebhookTLS specifies the path to a key and a cert so the poller can open
@@ -16,9 +17,9 @@ type WebhookTLS struct {
 
 // A WebhookEndpoint describes the endpoint to which telegram will send its requests.
 // This must be a public URL and can be a loadbalancer or something similar. If the
-// endpoint uses TLS and the certificate is selfsigned you have to add the certificate
+// endpoint uses TLS and the certificate is self-signed you have to add the certificate
 // path of this certificate so telegram will trust it. This field can be ignored if you
-// have a trusted certifcate (letsencrypt, ...).
+// have a trusted certificate (letsencrypt, ...).
 type WebhookEndpoint struct {
 	PublicURL string
 	Cert      string
@@ -27,25 +28,35 @@ type WebhookEndpoint struct {
 // A Webhook configures the poller for webhooks. It opens a port on the given
 // listen address. If TLS is filled, the listener will use the key and cert to open
 // a secure port. Otherwise it will use plain HTTP.
+//
 // If you have a loadbalancer ore other infrastructure in front of your service, you
 // must fill the Endpoint structure so this poller will send this data to telegram. If
 // you leave these values empty, your local address will be sent to telegram which is mostly
 // not what you want (at least while developing). If you have a single instance of your
 // bot you should consider to use the LongPoller instead of a WebHook.
+//
 // You can also leave the Listen field empty. In this case it is up to the caller to
 // add the Webhook to a http-mux.
+//
 type Webhook struct {
-	Listen   string
+	Listen         string   `json:"url"`
+	MaxConnections int      `json:"max_connections"`
+	AllowedUpdates []string `json:"allowed_updates"`
+
+	// (WebhookInfo)
+	HasCustomCert  bool   `json:"has_custom_certificate"`
+	PendingUpdates int    `json:"pending_update_count"`
+	ErrorUnixtime  int64  `json:"last_error_date"`
+	ErrorMessage   string `json:"last_error_message"`
+
+	IP          string `json:"ip_address"`
+	DropUpdates bool   `json:"drop_pending_updates"`
+
 	TLS      *WebhookTLS
 	Endpoint *WebhookEndpoint
-	dest     chan<- Update
-	bot      *Bot
-}
 
-type registerResult struct {
-	Ok          bool   `json:"ok"`
-	ErrorCode   int    `json:"error_code"`
-	Description string `json:"description"`
+	dest chan<- Update
+	bot  *Bot
 }
 
 func (h *Webhook) getFiles() map[string]File {
@@ -71,41 +82,44 @@ func (h *Webhook) getFiles() map[string]File {
 }
 
 func (h *Webhook) getParams() map[string]string {
-	param := make(map[string]string)
+	params := make(map[string]string)
+
+	if h.MaxConnections != 0 {
+		params["max_connections"] = strconv.Itoa(h.MaxConnections)
+	}
+	if len(h.AllowedUpdates) > 0 {
+		data, _ := json.Marshal(h.AllowedUpdates)
+		params["allowed_updates"] = string(data)
+	}
+	if h.IP != "" {
+		params["ip_address"] = h.IP
+	}
+	if h.DropUpdates {
+		params["drop_pending_updates"] = strconv.FormatBool(h.DropUpdates)
+	}
+
 	if h.TLS != nil {
-		param["url"] = "https://" + h.Listen
+		params["url"] = "https://" + h.Listen
 	} else {
 		// this will not work with telegram, they want TLS
 		// but i allow this because telegram will send an error
 		// when you register this hook. in their docs they write
 		// that port 80/http is allowed ...
-		param["url"] = "http://" + h.Listen
+		params["url"] = "http://" + h.Listen
 	}
 	if h.Endpoint != nil {
-		param["url"] = h.Endpoint.PublicURL
+		params["url"] = h.Endpoint.PublicURL
 	}
-	return param
+	return params
 }
 
 func (h *Webhook) Poll(b *Bot, dest chan Update, stop chan struct{}) {
-	res, err := b.sendFiles("setWebhook", h.getFiles(), h.getParams())
-	if err != nil {
-		b.debug(fmt.Errorf("setWebhook failed %q: %v", string(res), err))
+	if err := b.SetWebhook(h); err != nil {
+		b.debug(err)
 		close(stop)
 		return
 	}
-	var result registerResult
-	err = json.Unmarshal(res, &result)
-	if err != nil {
-		b.debug(fmt.Errorf("bad json data %q: %v", string(res), err))
-		close(stop)
-		return
-	}
-	if !result.Ok {
-		b.debug(fmt.Errorf("cannot register webhook: %s", result.Description))
-		close(stop)
-		return
-	}
+
 	// store the variables so the HTTP-handler can use 'em
 	h.dest = dest
 	h.bot = b
@@ -133,8 +147,10 @@ func (h *Webhook) Poll(b *Bot, dest chan Update, stop chan struct{}) {
 }
 
 func (h *Webhook) waitForStop(stop chan struct{}) {
-	<-stop
-	close(stop)
+	_, ok := <-stop
+	if ok {
+		close(stop)
+	}
 }
 
 // The handler simply reads the update from the body of the requests
@@ -147,4 +163,39 @@ func (h *Webhook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.dest <- update
+}
+
+// GetWebhook returns current webhook status.
+func (b *Bot) GetWebhook() (*Webhook, error) {
+	data, err := b.Raw("getWebhookInfo", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Result Webhook
+	}
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, err
+	}
+	return &resp.Result, nil
+}
+
+// SetWebhook configures a bot to receive incoming
+// updates via an outgoing webhook.
+func (b *Bot) SetWebhook(w *Webhook) error {
+	_, err := b.sendFiles("setWebhook", w.getFiles(), w.getParams())
+	return err
+}
+
+// RemoveWebhook removes webhook integration.
+func (b *Bot) RemoveWebhook(dropPending ...bool) error {
+	drop := false
+	if len(dropPending) > 0 {
+		drop = dropPending[0]
+	}
+	_, err := b.Raw("deleteWebhook", map[string]bool{
+		"drop_pending_updates": drop,
+	})
+	return err
 }
