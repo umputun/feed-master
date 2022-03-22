@@ -30,6 +30,6 @@ func TestDownloader_GetFailed(t *testing.T) {
 	_, err := d.Get(context.Background(), "id1", "file123")
 	require.Error(t, err)
 	l := lw.String()
-	assert.Contains(t, l, "command not found")
+	assert.Contains(t, l, "not found")
 	t.Log(l)
 }
