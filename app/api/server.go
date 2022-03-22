@@ -89,15 +89,15 @@ func (s *Server) Run(port int) {
 	})
 
 	if s.Conf.YouTube.BaseURL != "" {
-		baseYtURL, err := url.Parse(s.Conf.YouTube.BaseURL)
-		if err != nil {
-			log.Printf("[ERROR] failed to parse base url %s, %v", s.Conf.YouTube.BaseURL, err)
+		baseYtURL, parseErr := url.Parse(s.Conf.YouTube.BaseURL)
+		if parseErr != nil {
+			log.Printf("[ERROR] failed to parse base url %s, %v", s.Conf.YouTube.BaseURL, parseErr)
 		}
-		ytfs, err := rest.FileServer(baseYtURL.Path, s.Conf.YouTube.FilesLocation)
-		if err == nil {
+		ytfs, fsErr := rest.FileServer(baseYtURL.Path, s.Conf.YouTube.FilesLocation)
+		if fsErr == nil {
 			router.Mount(baseYtURL.Path, ytfs)
 		} else {
-			log.Printf("[WARN] can't start static file server for yt, %v", err)
+			log.Printf("[WARN] can't start static file server for yt, %v", fsErr)
 		}
 	}
 
