@@ -4,6 +4,7 @@ package youtube
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,6 +24,7 @@ type Service struct {
 	ChannelService ChannelService
 	Store          StoreService
 	CheckDuration  time.Duration
+	KeepPerChannel int
 }
 
 // ChannelInfo is a pait of channel ID and name
@@ -46,6 +48,7 @@ type StoreService interface {
 	Save(entry channel.Entry) (bool, error)
 	Load(channelID string, max int) ([]channel.Entry, error)
 	Exist(entry channel.Entry) (bool, error)
+	RemoveOld(channelID string, keep int) ([]string, error)
 }
 
 // Do is a blocking function that downloads audio from youtube channels and updates metadata
@@ -86,6 +89,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 			if exists {
 				continue
 			}
+			log.Printf("[INFO] new entry %s, %s, %s", entry.VideoID, entry.Title, chanInfo.Name)
 			file, err := s.Downloader.Get(ctx, entry.VideoID, uuid.New().String())
 			if err != nil {
 				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, err)
@@ -101,6 +105,19 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] attempt to save dup entry %+v", entry)
 			}
 			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, chanInfo)
+		}
+
+		// removed old entries and files
+		files, err := s.Store.RemoveOld(chanInfo.ID, s.KeepPerChannel)
+		if err != nil {
+			return errors.Wrapf(err, "failed to remove old meta data for %s", chanInfo.ID)
+		}
+		for _, f := range files {
+			if err := os.Remove(f); err != nil {
+				log.Printf("[WARN] failed to remove file %s: %s", f, err)
+				continue
+			}
+			log.Printf("[INFO] removed %s for %s (%s)", f, chanInfo.ID, chanInfo.Name)
 		}
 	}
 	return nil

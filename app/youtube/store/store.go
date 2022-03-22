@@ -129,3 +129,38 @@ func (s *BoldDB) Channels() (result []string, err error) {
 	})
 	return result, err
 }
+
+// RemoveOld removes old entries from bolt and returns the list of removed entry.File
+// the caller should delete the files
+func (s *BoldDB) RemoveOld(channelID string, keep int) ([]string, error) {
+	deleted := 0
+	var res []string
+
+	err := s.DB.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(channelID))
+		if bucket == nil {
+			return fmt.Errorf("no bucket for %s", channelID)
+		}
+		recs := 0
+		c := bucket.Cursor()
+		var err error
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
+			recs++
+			if recs > keep {
+				var item channel.Entry
+				if err := json.Unmarshal(v, &item); err != nil {
+					log.Printf("[WARN] failed to unmarshal, %v", err)
+					continue
+				}
+				res = append(res, item.File)
+
+				if e := bucket.Delete(k); e != nil {
+					err = e
+				}
+				deleted++
+			}
+		}
+		return err
+	})
+	return res, err
+}

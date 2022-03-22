@@ -38,6 +38,10 @@ func TestService_Do(t *testing.T) {
 		SaveFunc: func(entry channel.Entry) (bool, error) {
 			return true, nil
 		},
+
+		RemoveOldFunc: func(channelID string, keep int) ([]string, error) {
+			return []string{"/tmp/blah.mp3"}, nil
+		},
 	}
 
 	svc := Service{

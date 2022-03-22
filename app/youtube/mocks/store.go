@@ -21,6 +21,9 @@ import (
 // 			LoadFunc: func(channelID string, max int) ([]channel.Entry, error) {
 // 				panic("mock out the Load method")
 // 			},
+// 			RemoveOldFunc: func(channelID string, keep int) ([]string, error) {
+// 				panic("mock out the RemoveOld method")
+// 			},
 // 			SaveFunc: func(entry channel.Entry) (bool, error) {
 // 				panic("mock out the Save method")
 // 			},
@@ -36,6 +39,9 @@ type StoreServiceMock struct {
 
 	// LoadFunc mocks the Load method.
 	LoadFunc func(channelID string, max int) ([]channel.Entry, error)
+
+	// RemoveOldFunc mocks the RemoveOld method.
+	RemoveOldFunc func(channelID string, keep int) ([]string, error)
 
 	// SaveFunc mocks the Save method.
 	SaveFunc func(entry channel.Entry) (bool, error)
@@ -54,15 +60,23 @@ type StoreServiceMock struct {
 			// Max is the max argument value.
 			Max int
 		}
+		// RemoveOld holds details about calls to the RemoveOld method.
+		RemoveOld []struct {
+			// ChannelID is the channelID argument value.
+			ChannelID string
+			// Keep is the keep argument value.
+			Keep int
+		}
 		// Save holds details about calls to the Save method.
 		Save []struct {
 			// Entry is the entry argument value.
 			Entry channel.Entry
 		}
 	}
-	lockExist sync.RWMutex
-	lockLoad  sync.RWMutex
-	lockSave  sync.RWMutex
+	lockExist     sync.RWMutex
+	lockLoad      sync.RWMutex
+	lockRemoveOld sync.RWMutex
+	lockSave      sync.RWMutex
 }
 
 // Exist calls ExistFunc.
@@ -128,6 +142,41 @@ func (mock *StoreServiceMock) LoadCalls() []struct {
 	mock.lockLoad.RLock()
 	calls = mock.calls.Load
 	mock.lockLoad.RUnlock()
+	return calls
+}
+
+// RemoveOld calls RemoveOldFunc.
+func (mock *StoreServiceMock) RemoveOld(channelID string, keep int) ([]string, error) {
+	if mock.RemoveOldFunc == nil {
+		panic("StoreServiceMock.RemoveOldFunc: method is nil but StoreService.RemoveOld was just called")
+	}
+	callInfo := struct {
+		ChannelID string
+		Keep      int
+	}{
+		ChannelID: channelID,
+		Keep:      keep,
+	}
+	mock.lockRemoveOld.Lock()
+	mock.calls.RemoveOld = append(mock.calls.RemoveOld, callInfo)
+	mock.lockRemoveOld.Unlock()
+	return mock.RemoveOldFunc(channelID, keep)
+}
+
+// RemoveOldCalls gets all the calls that were made to RemoveOld.
+// Check the length with:
+//     len(mockedStoreService.RemoveOldCalls())
+func (mock *StoreServiceMock) RemoveOldCalls() []struct {
+	ChannelID string
+	Keep      int
+} {
+	var calls []struct {
+		ChannelID string
+		Keep      int
+	}
+	mock.lockRemoveOld.RLock()
+	calls = mock.calls.RemoveOld
+	mock.lockRemoveOld.RUnlock()
 	return calls
 }
 
