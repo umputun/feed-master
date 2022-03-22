@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -142,7 +141,7 @@ func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := ioutil.ReadFile(feedConf.Image)
+	b, err := os.ReadFile(feedConf.Image)
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest,
 			errors.New("can't read  "+chi.URLParam(r, "name")), "failed to read image")

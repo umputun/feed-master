@@ -140,7 +140,7 @@ func (client TelegramClient) getMessageHTML(item feed.Item, withMp3Link bool) st
 		case item.Link == "":
 			messageHTML = fmt.Sprintf("%s\n\n", title) + messageHTML
 		case item.Link != "":
-			messageHTML = fmt.Sprintf("<a href=\"%s\">%s</a>\n\n", item.Link, title) + messageHTML
+			messageHTML = fmt.Sprintf("<a href=%q>%s</a>\n\n", item.Link, title) + messageHTML
 		}
 	}
 
