@@ -145,10 +145,10 @@ func (p *Processor) feed(name, url, telegramChannel string, max int, filter Filt
 			log.Printf("[WARN] failed to save %s (%s) to %s, %v", item.GUID, item.PubDate, name, err)
 		}
 
-		// don't attempt to send anything if it was impossible to save the entry
+		// don't attempt to send anything if the entry was already saved
 		// or in case it was filtered out
 		if !created || item.Junk {
-			return
+			continue
 		}
 
 		if err := p.TelegramNotif.Send(telegramChannel, item); err != nil {
