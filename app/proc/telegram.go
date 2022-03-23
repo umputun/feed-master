@@ -132,6 +132,9 @@ func (client TelegramClient) getMessageHTML(item feed.Item, withMp3Link bool) st
 	description = client.tagLinkOnlySupport(html.UnescapeString(description))
 	description = strings.TrimSpace(description)
 
+	if len(description) > 1000 {
+		description = description[:1000] + "..."
+	}
 	messageHTML := description
 
 	title := strings.TrimSpace(item.Title)
