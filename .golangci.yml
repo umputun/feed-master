@@ -36,7 +36,6 @@ linters:
     - megacheck
     - structcheck
     - gas
-    - gocyclo
     - dupl
     - misspell
     - unparam
