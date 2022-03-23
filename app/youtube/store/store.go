@@ -48,7 +48,9 @@ func (s *BoltDB) Save(entry channel.Entry) (bool, error) {
 			return errors.Wrapf(jerr, "marshal entry %s", entry.VideoID)
 		}
 
-		log.Printf("[INFO] save %+v - %s", string(key), entry)
+		log.Printf("[INFO] save %s - {ChannelID:%s, VideoID:%s, Title:%s, File:%s, Author:%s, Published:%s}",
+			string(key), entry.ChannelID, entry.VideoID, entry.Title, entry.File, entry.Author.Name, entry.Published)
+
 		e = bucket.Put(key, jdata)
 		if e != nil {
 			return errors.Wrapf(e, "save entry %s", entry.VideoID)

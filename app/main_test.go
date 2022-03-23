@@ -44,6 +44,7 @@ system:
 youtube: 
   dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}.tmp
   base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id="
+  rss_location: ./var/rss
   channels:
   - {id: id1, name: name1}
   - {id: id2, name: name2}
@@ -63,6 +64,7 @@ youtube:
 		r.YouTube.Channels, "2 yt")
 	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.Filename}}.tmp", r.YouTube.DlTemplate)
 	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?channel_id=", r.YouTube.BaseChanURL)
+	assert.Equal(t, "./var/rss", r.YouTube.RSSLocation)
 }
 
 func TestLoadConfigNotFoundFile(t *testing.T) {
