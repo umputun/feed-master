@@ -27,6 +27,7 @@ type Service struct {
 	ChannelService ChannelService
 	Store          StoreService
 	CheckDuration  time.Duration
+	RSSFileStore   RSSFileStore
 	KeepPerChannel int
 	RootURL        string
 }
@@ -142,6 +143,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 			continue
 		}
 		log.Printf("[INFO] got %d entries for %s, limit to %d", len(entries), chanInfo.Name, s.KeepPerChannel)
+		changed := false
 		for i, entry := range entries {
 			if i >= s.KeepPerChannel {
 				break
@@ -168,7 +170,19 @@ func (s *Service) procChannels(ctx context.Context) error {
 			if !ok {
 				log.Printf("[WARN] attempt to save dup entry %+v", entry)
 			}
+			changed = true
 			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, chanInfo)
+		}
+
+		if changed { // save rss feed to fs if there are new entries
+			rss, rssErr := s.RSSFeed(chanInfo)
+			if rssErr != nil {
+				log.Printf("[WARN] failed to generate rss for %s: %s", chanInfo.Name, rssErr)
+			} else {
+				if err := s.RSSFileStore.Save(chanInfo.ID, rss); err != nil {
+					log.Printf("[WARN] failed to save rss for %s: %s", chanInfo.Name, err)
+				}
+			}
 		}
 
 		// remove old entries and files

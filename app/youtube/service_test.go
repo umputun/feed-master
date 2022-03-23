@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"context"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -42,6 +43,12 @@ func TestService_Do(t *testing.T) {
 		RemoveOldFunc: func(channelID string, keep int) ([]string, error) {
 			return []string{"/tmp/blah.mp3"}, nil
 		},
+		LoadFunc: func(channelID string, max int) ([]channel.Entry, error) {
+			return []channel.Entry{
+				{ChannelID: channelID, VideoID: "vid1", Title: "title1"},
+				{ChannelID: channelID, VideoID: "vid2", Title: "title2"},
+			}, nil
+		},
 	}
 
 	svc := Service{
@@ -51,6 +58,7 @@ func TestService_Do(t *testing.T) {
 		Store:          store,
 		CheckDuration:  time.Millisecond * 500,
 		KeepPerChannel: 10,
+		RSSFileStore:   RSSFileStore{Enabled: true, Location: "/tmp"},
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*900)
@@ -80,6 +88,17 @@ func TestService_Do(t *testing.T) {
 	require.Equal(t, "vid1", store.SaveCalls()[0].Entry.VideoID)
 	require.True(t, strings.HasPrefix(store.SaveCalls()[0].Entry.File, "/tmp/"))
 	require.True(t, strings.HasSuffix(store.SaveCalls()[0].Entry.File, ".mp3"))
+
+	rssData, err := os.ReadFile("/tmp/channel1.xml")
+	require.NoError(t, err)
+	assert.Contains(t, string(rssData), "<guid>channel1::vid1</guid>")
+	assert.Contains(t, string(rssData), "<guid>channel1::vid2</guid>")
+
+	rssData, err = os.ReadFile("/tmp/channel2.xml")
+	require.NoError(t, err)
+	assert.Contains(t, string(rssData), "<guid>channel2::vid1</guid>")
+	assert.Contains(t, string(rssData), "<guid>channel2::vid2</guid>")
+
 }
 
 func TestService_RSSFeed(t *testing.T) {

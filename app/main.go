@@ -98,6 +98,10 @@ func main() {
 			CheckDuration:  conf.YouTube.UpdateInterval,
 			KeepPerChannel: conf.YouTube.MaxItems,
 			RootURL:        conf.YouTube.BaseURL,
+			RSSFileStore: youtube.RSSFileStore{
+				Location: conf.YouTube.RSSLocation,
+				Enabled:  conf.YouTube.RSSLocation != "",
+			},
 		}
 		go func() {
 			if err := ytSvc.Do(context.TODO()); err != nil {

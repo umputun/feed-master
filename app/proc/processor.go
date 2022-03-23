@@ -52,6 +52,7 @@ type Conf struct {
 		UpdateInterval time.Duration         `yaml:"update"`
 		MaxItems       int                   `yaml:"max_per_channel"`
 		FilesLocation  string                `yaml:"files_location"`
+		RSSLocation    string                `yaml:"rss_location"`
 	} `yaml:"youtube"`
 }
 

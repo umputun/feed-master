@@ -94,6 +94,7 @@ youtube:
   update: 60s
   max_per_channel: 5
   files_location: ./var/yt
+  rss_location: ./var/rss
   channels:
   - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь"}
   - {id: UCTVk323gzizpujtn2T_BL7w, name: "Alexandr Plushev"}
