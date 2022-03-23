@@ -77,7 +77,8 @@ type Entry struct {
 
 // Parse gets url to rss feed and returns Rss2 items
 func Parse(uri string) (result Rss2, err error) {
-	resp, err := http.Get(uri) // nolint
+	client := http.Client{Timeout: time.Minute * 2}
+	resp, err := client.Get(uri) // nolint
 	if err != nil {
 		return result, err
 	}
