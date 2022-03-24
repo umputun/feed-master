@@ -2,6 +2,8 @@
 
 Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly sorted and podcast-client friendly. Optionally posts the new items to telegram's channel.
 
+In addition to combining multiple feeds from external sources, it also supports extracting audio from youtube channels and use it to make the final feed. The service uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to pull videos and [ffmpeg](https://www.ffmpeg.org/) for audio extraction.
+
 ## Run in docker (short version)
 
 - Copy `docker-compose.yml` and adjust exposed port if needed
@@ -43,3 +45,4 @@ By default, (with only `TELEGRAM_TOKEN` provided) Telegram notifications will be
 You can provide `TELEGRAM_API_ID` and `TELEGRAM_API_HASH` (from [here](https://my.telegram.org/apps)) to `telegram-bot-api` service in docker-compose.yml and uncomment `TELEGRAM_SERVER` for `feed-master`, then it would use the local bot api server to raise audio file upload limit from 50Mb [to 2000Mb](https://core.telegram.org/bots/api#using-a-local-bot-api-server).
 
 To use local telegram bot api server, use `docker-compose up -d` command instead of `docker-compose up -d feed-master`.
+

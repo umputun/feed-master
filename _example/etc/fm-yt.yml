@@ -74,9 +74,24 @@ feeds:
       - name: Большой дозор
         url: http://echo.msk.ru/programs/dozor/rss-audio.xml
 
+  yt-example:
+    title: Some cool channels
+    description: an example of youtube-based podcas
+    link: http://example.com
+    language: "ru-ru"
+    image: images/yt-example.png
+    ext_date: yyyyddmm
+    sources:
+      - name: Живой Гвоздь
+        url: https://feedmaster.umputun.com/yt/rss/UCWAIvx2yYLK_xTYD4F2mUNw
+      - name: Alexandr Plushev
+        url: https://feedmaster.umputun.com/yt/rss/UCTVk323gzizpujtn2T_BL7w
+      - name: Дилетант
+        url: https://feedmaster.umputun.com/yt/rss/UCuIE7-5QzeAR6EdZXwDRwuQ
+
   echo-msk-filtered-example:
-    title: Пример фильтрации постов в фиде
-    description: Фид с фильтром на базе http://feeds.rucast.net/echomsk
+    title: Example with filtering from the feed
+    description: filtered http://feeds.rucast.net/echomsk
     link: http://echo.msk.ru
     language: "ru-ru"
     image: images/echomsk.png
@@ -99,8 +114,6 @@ youtube:
   - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь"}
   - {id: UCTVk323gzizpujtn2T_BL7w, name: "Alexandr Plushev"}
   - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант"}
-  - {id: UCgpSieplNxXxLXYAzJLLpng, name: "Майкл Наки"}
-  - {id: UC0OiowQ-fTqw3Kq3bfopO_Q, name: "Татьяна Фельгенгауэр"}
 
 system:
   update: 1m
