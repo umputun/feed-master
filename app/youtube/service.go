@@ -3,7 +3,9 @@ package youtube
 
 import (
 	"context"
+	"crypto/sha1"
 	"encoding/xml"
+	"fmt"
 	"os"
 	"path"
 	"time"
@@ -156,7 +158,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				continue
 			}
 			log.Printf("[INFO] new entry %s, %s, %s", entry.VideoID, entry.Title, chanInfo.Name)
-			file, downErr := s.Downloader.Get(ctx, entry.VideoID, uuid.New().String())
+			file, downErr := s.Downloader.Get(ctx, entry.VideoID, s.makeFileName(entry))
 			if downErr != nil {
 				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, downErr)
 				continue
@@ -200,4 +202,12 @@ func (s *Service) procChannels(ctx context.Context) error {
 	}
 	log.Printf("[DEBUG] processed channels completed, total %d", len(s.Channels))
 	return nil
+}
+
+func (s *Service) makeFileName(entry channel.Entry) string {
+	h := sha1.New()
+	if _, err := h.Write([]byte(entry.ChannelID + "::" + entry.VideoID)); err != nil {
+		return uuid.New().String()
+	}
+	return fmt.Sprintf("%x", h.Sum(nil))
 }

@@ -3,6 +3,7 @@ package youtube
 import (
 	"context"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -126,4 +127,41 @@ func TestService_RSSFeed(t *testing.T) {
 	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/file1.mp3"`)
 	assert.Contains(t, res, `<guid>channel1::vid1</guid>`)
 	assert.Contains(t, res, `<guid>channel1::vid2</guid>`)
+}
+
+func TestService_makeFileName(t *testing.T) {
+
+	tbl := []struct {
+		entry channel.Entry
+		res   string
+	}{
+		{
+			entry: channel.Entry{ChannelID: "channel1", VideoID: "vid1", Title: "title1"},
+			res:   "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa",
+		},
+		{
+			entry: channel.Entry{ChannelID: "channel1", VideoID: "vid2", Title: "title2"},
+			res:   "4308c33c7ddb107c2d0c13a905e4c6962001bab4",
+		},
+		{
+			entry: channel.Entry{ChannelID: "channel2", VideoID: "vid1", Title: "title1"},
+			res:   "3be877c750abb87daee80c005fe87e7a3f824fed",
+		},
+		{
+			entry: channel.Entry{ChannelID: "channel2", VideoID: "vid2", Title: "title2"},
+			res:   "648f79b3a05ececb8a37600aa0aee332f0374e01",
+		},
+		{
+			entry: channel.Entry{ChannelID: "channel2", VideoID: "vid2", Title: "title2"},
+			res:   "648f79b3a05ececb8a37600aa0aee332f0374e01",
+		},
+	}
+
+	svc := Service{}
+	for i, tt := range tbl {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			assert.Equal(t, tt.res, svc.makeFileName(tt.entry))
+		})
+	}
+
 }
