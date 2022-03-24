@@ -87,11 +87,13 @@ func TestService_Do(t *testing.T) {
 	require.Equal(t, 4, len(store.SaveCalls()))
 	require.Equal(t, "channel1", store.SaveCalls()[0].Entry.ChannelID)
 	require.Equal(t, "vid1", store.SaveCalls()[0].Entry.VideoID)
+	require.Equal(t, "name1: title1", store.SaveCalls()[0].Entry.Title)
 	require.True(t, strings.HasPrefix(store.SaveCalls()[0].Entry.File, "/tmp/"))
 	require.True(t, strings.HasSuffix(store.SaveCalls()[0].Entry.File, ".mp3"))
 
 	rssData, err := os.ReadFile("/tmp/channel1.xml")
 	require.NoError(t, err)
+	t.Logf("%s", string(rssData))
 	assert.Contains(t, string(rssData), "<guid>channel1::vid1</guid>")
 	assert.Contains(t, string(rssData), "<guid>channel1::vid2</guid>")
 

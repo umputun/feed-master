@@ -165,6 +165,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 			}
 			log.Printf("[DEBUG] downloaded %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, chanInfo)
 			entry.File = file
+			entry.Title = chanInfo.Name + ": " + entry.Title
 			ok, saveErr := s.Store.Save(entry)
 			if saveErr != nil {
 				return errors.Wrapf(saveErr, "failed to save entry %+v", entry)
