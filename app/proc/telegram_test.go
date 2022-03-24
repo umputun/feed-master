@@ -2,7 +2,9 @@ package proc
 
 import (
 	"bytes"
+	"html/template"
 	"strconv"
+	"strings"
 	"testing"
 	"testing/iotest"
 	"time"
@@ -126,10 +128,18 @@ func TestFormattedMessage(t *testing.T) {
 		i := i
 		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			htmlMessage := client.getMessageHTML(tc.item, false)
+			htmlMessage := client.getMessageHTML(tc.item, false, false)
 			assert.Equal(t, tc.expectedHTML, htmlMessage)
 		})
 	}
+}
+
+func TestTruncatedMessage(t *testing.T) {
+	client := TelegramClient{}
+	htmlMessage := client.getMessageHTML(feed.Item{Title: "title", Enclosure: feed.Enclosure{URL: "https://example.com/some.mp3"}, Description: template.HTML(strings.Repeat("test", 1000))}, true, true) //nolint:gosec
+	assert.True(t, strings.HasPrefix(htmlMessage, "title\n\n"))
+	assert.True(t, strings.HasSuffix(htmlMessage, "\n\nhttps://example.com/some.mp3"))
+	assert.LessOrEqual(t, len(htmlMessage), 1024)
 }
 
 func TestGetMessageHTML(t *testing.T) {
@@ -145,7 +155,7 @@ func TestGetMessageHTML(t *testing.T) {
 	expected := "<a href=\"https://example.com/xyz\">Podcast</a>\n\nNews <a href=\"/test\">Podcast Link</a>\n\nhttps://example.com"
 
 	client := TelegramClient{}
-	msg := client.getMessageHTML(item, true)
+	msg := client.getMessageHTML(item, true, false)
 	assert.Equal(t, expected, msg)
 }
 

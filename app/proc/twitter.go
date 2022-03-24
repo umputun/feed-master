@@ -47,7 +47,7 @@ func (t *TwitterClient) Send(item feed.Item) error {
 	return nil
 }
 
-// CleanText removes html tags and shrinks result
+// CleanText removes html tags and shrinks result, adding 4 symbols on top
 func CleanText(inp string, max int) string {
 	res := striphtmltags.StripTags(inp)
 	if len([]rune(res)) > max {

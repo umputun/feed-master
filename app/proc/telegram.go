@@ -75,7 +75,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Message, error) {
 	message, err := client.Bot.Send(
 		recipient{chatID: channelID},
-		client.getMessageHTML(item, true),
+		client.getMessageHTML(item, true, false),
 		tb.ModeHTML,
 		tb.NoPreview,
 	)
@@ -97,7 +97,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		File:      tb.FromReader(&httpBodyCopy),
 		FileName:  item.GetFilename(),
 		MIME:      "audio/mpeg",
-		Caption:   client.getMessageHTML(item, false),
+		Caption:   client.getMessageHTML(item, false, true),
 		Title:     item.Title,
 		Performer: item.Author,
 		Duration:  client.duration(tee),
@@ -122,32 +122,35 @@ func (client TelegramClient) tagLinkOnlySupport(htmlText string) string {
 }
 
 // getMessageHTML generates HTML message from provided feed.Item
-func (client TelegramClient) getMessageHTML(item feed.Item, withMp3Link bool) string {
-	description := string(item.Description)
-
-	description = strings.TrimPrefix(description, "<![CDATA[")
-	description = strings.TrimSuffix(description, "]]>")
-
-	// apparently bluemonday doesn't remove escaped HTML tags
-	description = client.tagLinkOnlySupport(html.UnescapeString(description))
-	description = strings.TrimSpace(description)
-	messageHTML := description
-
+func (client TelegramClient) getMessageHTML(item feed.Item, withMp3Link, trimCaption bool) string {
+	var header, footer string
 	title := strings.TrimSpace(item.Title)
 	if title != "" {
 		switch {
 		case item.Link == "":
-			messageHTML = fmt.Sprintf("%s\n\n", title) + messageHTML
+			header = fmt.Sprintf("%s\n\n", title)
 		case item.Link != "":
-			messageHTML = fmt.Sprintf("<a href=%q>%s</a>\n\n", item.Link, title) + messageHTML
+			header = fmt.Sprintf("<a href=%q>%s</a>\n\n", item.Link, title)
 		}
 	}
 
 	if withMp3Link {
-		messageHTML += fmt.Sprintf("\n\n%s", item.Enclosure.URL)
+		footer += fmt.Sprintf("\n\n%s", item.Enclosure.URL)
 	}
 
-	return messageHTML
+	description := string(item.Description)
+	description = strings.TrimPrefix(description, "<![CDATA[")
+	description = strings.TrimSuffix(description, "]]>")
+	// apparently bluemonday doesn't remove escaped HTML tags
+	description = client.tagLinkOnlySupport(html.UnescapeString(description))
+	description = strings.TrimSpace(description)
+
+	// https://limits.tginfo.me/en 1024 symbol limit for caption
+	if trimCaption && len(header+description+footer) > 1024 {
+		description = CleanText(description, 1020-len(header+footer))
+	}
+
+	return header + description + footer
 }
 
 // duration scans MP3 file from provided io.Reader and returns it's duration in seconds, ignoring possible errors
