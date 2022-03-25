@@ -47,11 +47,12 @@ func (t *TwitterClient) Send(item feed.Item) error {
 	return nil
 }
 
-// CleanText removes html tags and shrinks result, adding 4 symbols on top
+// CleanText removes html tags and shrinks result
 func CleanText(inp string, max int) string {
 	res := striphtmltags.StripTags(inp)
 	if len([]rune(res)) > max {
-		snippet := []rune(res)[:max]
+		// 4 symbols reserved for space and three dots on the end
+		snippet := []rune(res)[:max-4]
 		// go back in snippet and found first space
 		for i := len(snippet) - 1; i >= 0; i-- {
 			if snippet[i] == ' ' {

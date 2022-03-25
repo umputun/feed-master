@@ -159,7 +159,7 @@ func makeTwitter(opts options) *proc.TwitterClient {
 			// template failed to parse record, backup predefined format
 			return fmt.Sprintf("%s - %s", item.Title, item.Link)
 		}
-		return strings.ReplaceAll(proc.CleanText(b1.String(), 275), `\n`, "\n") // \n in template
+		return strings.ReplaceAll(proc.CleanText(b1.String(), 280), `\n`, "\n") // \n in template
 	}
 
 	twiAuth := proc.TwitterAuth{

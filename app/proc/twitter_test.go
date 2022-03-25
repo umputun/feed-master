@@ -63,9 +63,9 @@ func TestCleanText(t *testing.T) {
 		max      int
 	}{
 		{"test", "test", 10},
-		{"test 12345 aaaa", "test ...", 6},
-		{"<b>test 12345 aaaa</b>", "test ...", 6},
-		{"<b>test12345 aaaa</b>", "test12 ...", 6},
+		{"test 12345 aaaa", "test ...", 10},
+		{"<b>test 12345 aaaa</b>", "test ...", 10},
+		{"<b>test12345 aaaa</b>", "test12 ...", 10},
 	}
 
 	for i, tt := range tbl {
