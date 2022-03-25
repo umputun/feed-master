@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/xml"
 	"net/http"
+	"sort"
 
 	"github.com/pkg/errors"
 )
@@ -37,5 +38,8 @@ func (c *Feed) Get(ctx context.Context, chanID string) ([]Entry, error) {
 		return nil, errors.Wrapf(err, "failed to decode channel %s", chanID)
 	}
 
+	sort.Slice(data.Entry, func(i, j int) bool {
+		return data.Entry[i].Published.After(data.Entry[j].Published)
+	})
 	return data.Entry, nil
 }
