@@ -33,6 +33,7 @@ type Service struct {
 	RSSFileStore   RSSFileStore
 	KeepPerChannel int
 	RootURL        string
+	processed      map[string]bool
 }
 
 // ChannelInfo is a pait of channel ID and name
@@ -62,6 +63,8 @@ type StoreService interface {
 // Do is a blocking function that downloads audio from youtube channels and updates metadata
 func (s *Service) Do(ctx context.Context) error {
 	log.Printf("[INFO] Starting youtube service")
+
+	s.processed = make(map[string]bool)
 	tick := time.NewTicker(s.CheckDuration)
 	defer tick.Stop()
 
@@ -151,6 +154,8 @@ func (s *Service) procChannels(ctx context.Context) error {
 			if i >= s.KeepPerChannel {
 				break
 			}
+
+			// check if entry already exists in store
 			exists, exErr := s.Store.Exist(entry)
 			if err != nil {
 				return errors.Wrapf(exErr, "failed to check if entry %s exists", entry.VideoID)
@@ -158,7 +163,15 @@ func (s *Service) procChannels(ctx context.Context) error {
 			if exists {
 				continue
 			}
-			log.Printf("[INFO] new entry %s, %s, %s", entry.VideoID, entry.Title, chanInfo.Name)
+
+			// check if we already processed this entry.
+			// this is needed to avoid infinite get/remove loop when the original feed is updated in place
+			if _, ok := s.processed[entry.VideoID]; ok {
+				log.Printf("[DEBUG] skipping already processed entry %s", entry.VideoID)
+				continue
+			}
+
+			log.Printf("[INFO] new entry [%d] %s, %s, %s", i+1, entry.VideoID, entry.Title, chanInfo.Name)
 			file, downErr := s.Downloader.Get(ctx, entry.VideoID, s.makeFileName(entry))
 			if downErr != nil {
 				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, downErr)
@@ -177,6 +190,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] attempt to save dup entry %+v", entry)
 			}
 			changed = true
+			s.processed[entry.UID()] = true // track processed entries
 			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, chanInfo)
 		}
 
@@ -201,6 +215,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] failed to remove file %s: %s", f, e)
 				continue
 			}
+
 			log.Printf("[INFO] removed %s for %s (%s)", f, chanInfo.ID, chanInfo.Name)
 		}
 	}

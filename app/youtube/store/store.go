@@ -22,14 +22,7 @@ type BoltDB struct {
 func (s *BoltDB) Save(entry channel.Entry) (bool, error) {
 	var created bool
 
-	key, keyErr := func() ([]byte, error) {
-		h := sha1.New()
-		if _, err := h.Write([]byte(entry.VideoID)); err != nil {
-			return nil, err
-		}
-		return []byte(fmt.Sprintf("%d-%x", entry.Published.Unix(), h.Sum(nil))), nil
-	}()
-
+	key, keyErr := s.key(entry)
 	if keyErr != nil {
 		return created, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
 	}
@@ -67,14 +60,7 @@ func (s *BoltDB) Save(entry channel.Entry) (bool, error) {
 func (s *BoltDB) Exist(entry channel.Entry) (bool, error) {
 	var found bool
 
-	key, keyErr := func() ([]byte, error) {
-		h := sha1.New()
-		if _, err := h.Write([]byte(entry.VideoID)); err != nil {
-			return nil, err
-		}
-		return []byte(fmt.Sprintf("%d-%x", entry.Published.Unix(), h.Sum(nil))), nil
-	}()
-
+	key, keyErr := s.key(entry)
 	if keyErr != nil {
 		return found, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
 	}
@@ -162,4 +148,12 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 		return e
 	})
 	return res, err
+}
+
+func (s *BoltDB) key(entry channel.Entry) ([]byte, error) {
+	h := sha1.New()
+	if _, err := h.Write([]byte(entry.VideoID)); err != nil {
+		return nil, err
+	}
+	return []byte(fmt.Sprintf("%d-%x", entry.Published.Unix(), h.Sum(nil))), nil
 }

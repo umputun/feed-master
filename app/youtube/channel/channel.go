@@ -29,3 +29,8 @@ type Entry struct {
 	} `xml:"author"`
 	File string
 }
+
+// UID returns the unique identifier of the entry.
+func (e *Entry) UID() string {
+	return e.ChannelID + ":" + e.VideoID
+}
