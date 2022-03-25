@@ -136,7 +136,7 @@ func TestFormattedMessage(t *testing.T) {
 
 func TestTruncatedMessage(t *testing.T) {
 	client := TelegramClient{}
-	htmlMessage := client.getMessageHTML(feed.Item{Title: "title", Enclosure: feed.Enclosure{URL: "https://example.com/some.mp3"}, Description: template.HTML(strings.Repeat("test", 1000))}, true, true) //nolint:gosec
+	htmlMessage := client.getMessageHTML(feed.Item{Title: "title", Enclosure: feed.Enclosure{URL: "https://example.com/some.mp3"}, Description: template.HTML(strings.Repeat("test", 1000))}, true, true) //nolint:gosec // no problem to have it in the test
 	assert.True(t, strings.HasPrefix(htmlMessage, "title\n\n"))
 	assert.True(t, strings.HasSuffix(htmlMessage, "\n\nhttps://example.com/some.mp3"))
 	assert.LessOrEqual(t, len(htmlMessage), 1024)
