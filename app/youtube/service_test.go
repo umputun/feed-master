@@ -22,6 +22,7 @@ func TestService_Do(t *testing.T) {
 			return []channel.Entry{
 				{ChannelID: chanID, VideoID: "vid1", Title: "title1"},
 				{ChannelID: chanID, VideoID: "vid2", Title: "title2"},
+				{ChannelID: chanID, VideoID: "vid2", Title: "title2"}, // duplicate
 			}, nil
 		},
 	}
@@ -74,17 +75,18 @@ func TestService_Do(t *testing.T) {
 	assert.Equal(t, "channel1", chans.GetCalls()[2].ChanID)
 	assert.Equal(t, "channel2", chans.GetCalls()[3].ChanID)
 
-	require.Equal(t, 8, len(store.ExistCalls()))
+	require.Equal(t, 10, len(store.ExistCalls()))
 	require.Equal(t, "channel1", store.ExistCalls()[0].Entry.ChannelID)
 	require.Equal(t, "channel1", store.ExistCalls()[1].Entry.ChannelID)
-	require.Equal(t, "channel2", store.ExistCalls()[2].Entry.ChannelID)
+	require.Equal(t, "channel1", store.ExistCalls()[2].Entry.ChannelID)
 	require.Equal(t, "channel2", store.ExistCalls()[3].Entry.ChannelID)
+	require.Equal(t, "channel2", store.ExistCalls()[4].Entry.ChannelID)
 
-	require.Equal(t, 4, len(downloader.GetCalls()))
+	require.Equal(t, 2, len(downloader.GetCalls()))
 	require.Equal(t, "vid1", downloader.GetCalls()[0].ID)
 	require.True(t, downloader.GetCalls()[0].Fname != "")
 
-	require.Equal(t, 4, len(store.SaveCalls()))
+	require.Equal(t, 2, len(store.SaveCalls()))
 	require.Equal(t, "channel1", store.SaveCalls()[0].Entry.ChannelID)
 	require.Equal(t, "vid1", store.SaveCalls()[0].Entry.VideoID)
 	require.Equal(t, "name1: title1", store.SaveCalls()[0].Entry.Title)
