@@ -15,12 +15,12 @@ type RSSFileStore struct {
 }
 
 // Save  RSS feed file to the FS
-func (s *RSSFileStore) Save(chanID string, rss string) error {
+func (s *RSSFileStore) Save(chanID, rss string) error {
 	if !s.Enabled {
 		return nil
 	}
 	fname := filepath.Join(s.Location, chanID+".xml")
-	fh, err := os.Create(fname)
+	fh, err := os.Create(fname) //nolint:gosec // tolerable security risk
 	if err != nil {
 		return errors.Wrapf(err, "failed to create file %s", fname)
 	}

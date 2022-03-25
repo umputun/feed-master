@@ -14,11 +14,12 @@ import (
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/jessevdk/go-flags"
+	bolt "go.etcd.io/bbolt"
+	"gopkg.in/yaml.v2"
+
 	"github.com/umputun/feed-master/app/youtube"
 	"github.com/umputun/feed-master/app/youtube/channel"
 	"github.com/umputun/feed-master/app/youtube/store"
-	bolt "go.etcd.io/bbolt"
-	"gopkg.in/yaml.v2"
 
 	"github.com/umputun/feed-master/app/api"
 	"github.com/umputun/feed-master/app/feed"
@@ -119,10 +120,10 @@ func main() {
 	server.Run(8080)
 }
 
-func singleFeedConf(feedURL, channel string, updateInterval time.Duration) *proc.Conf {
+func singleFeedConf(feedURL, ch string, updateInterval time.Duration) *proc.Conf {
 	conf := proc.Conf{}
 	f := proc.Feed{
-		TelegramChannel: channel,
+		TelegramChannel: ch,
 		Sources: []struct {
 			Name string `yaml:"name"`
 			URL  string `yaml:"url"`
@@ -158,7 +159,7 @@ func makeTwitter(opts options) *proc.TwitterClient {
 			// template failed to parse record, backup predefined format
 			return fmt.Sprintf("%s - %s", item.Title, item.Link)
 		}
-		return strings.Replace(proc.CleanText(b1.String(), 275), `\n`, "\n", -1) // \n in template
+		return strings.ReplaceAll(proc.CleanText(b1.String(), 275), `\n`, "\n") // \n in template
 	}
 
 	twiAuth := proc.TwitterAuth{

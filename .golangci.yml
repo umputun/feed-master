@@ -29,6 +29,7 @@ linters-settings:
 linters:
   disable-all: true
   enable:
+    - bodyclose
     - megacheck
     - revive
     - govet
@@ -47,7 +48,7 @@ linters:
     - stylecheck
     - gochecknoinits
     - exportloopref
-#    - gocritic
+    - gocritic
     - nakedret
     - gosimple
     - prealloc
@@ -66,6 +67,3 @@ issues:
       linters:
         - gosec
   exclude-use-default: false
-
-service:
-  golangci-lint-version: 1.23.x

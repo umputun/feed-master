@@ -173,7 +173,7 @@ func (rss *Rss2) Normalize() (Rss2, error) {
 			rss.ItemList[i].DT = dt
 			rss.ItemList[i].PubDate = dt.Format(time.RFC1123Z)
 		}
-		rss.ItemList[i].Title = strings.Replace(item.Title, "\n", "", -1)
+		rss.ItemList[i].Title = strings.ReplaceAll(item.Title, "\n", "")
 		rss.ItemList[i].Title = strings.TrimSpace(rss.ItemList[i].Title)
 	}
 	return *rss, nil

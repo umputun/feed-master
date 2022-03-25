@@ -43,7 +43,7 @@ func (t *TwitterClient) Send(item feed.Item) error {
 	if _, err := api.PostTweet(msg, v); err != nil {
 		return errors.Wrap(err, "can't send to twitter")
 	}
-	log.Printf("[DEBUG] published to twitter %s", strings.Replace(msg, "\n", " ", -1))
+	log.Printf("[DEBUG] published to twitter %s", strings.ReplaceAll(msg, "\n", " "))
 	return nil
 }
 
