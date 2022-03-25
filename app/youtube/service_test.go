@@ -75,7 +75,7 @@ func TestService_Do(t *testing.T) {
 	assert.Equal(t, "channel1", chans.GetCalls()[2].ChanID)
 	assert.Equal(t, "channel2", chans.GetCalls()[3].ChanID)
 
-	require.Equal(t, 10, len(store.ExistCalls()))
+	require.Equal(t, 12, len(store.ExistCalls()))
 	require.Equal(t, "channel1", store.ExistCalls()[0].Entry.ChannelID)
 	require.Equal(t, "channel1", store.ExistCalls()[1].Entry.ChannelID)
 	require.Equal(t, "channel1", store.ExistCalls()[2].Entry.ChannelID)

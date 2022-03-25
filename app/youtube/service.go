@@ -155,19 +155,19 @@ func (s *Service) procChannels(ctx context.Context) error {
 				break
 			}
 
-			// check if we already processed this entry.
-			// this is needed to avoid infinite get/remove loop when the original feed is updated in place
-			if _, ok := s.processed[entry.UID()]; ok {
-				log.Printf("[DEBUG] skipping already processed entry %s", entry.VideoID)
-				continue
-			}
-
 			// check if entry already exists in store
 			exists, exErr := s.Store.Exist(entry)
 			if err != nil {
 				return errors.Wrapf(exErr, "failed to check if entry %s exists", entry.VideoID)
 			}
 			if exists {
+				continue
+			}
+
+			// check if we already processed this entry.
+			// this is needed to avoid infinite get/remove loop when the original feed is updated in place
+			if _, ok := s.processed[entry.UID()]; ok {
+				log.Printf("[DEBUG] skipping already processed entry %s", entry.VideoID)
 				continue
 			}
 
