@@ -191,7 +191,8 @@ func (s *Service) procChannels(ctx context.Context) error {
 			}
 			changed = true
 			s.processed[entry.UID()] = true // track processed entries
-			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, chanInfo)
+			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v, total processed: %d",
+				entry.VideoID, entry.Title, file, chanInfo, len(s.processed))
 		}
 
 		if changed { // save rss feed to fs if there are new entries
