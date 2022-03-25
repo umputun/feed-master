@@ -75,7 +75,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Message, error) {
 	message, err := client.Bot.Send(
 		recipient{chatID: channelID},
-		client.getMessageHTML(item, true, false),
+		client.getMessageHTML(item, htmlMessageParams{WithMp3Link: true}),
 		tb.ModeHTML,
 		tb.NoPreview,
 	)
@@ -97,7 +97,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		File:      tb.FromReader(&httpBodyCopy),
 		FileName:  item.GetFilename(),
 		MIME:      "audio/mpeg",
-		Caption:   client.getMessageHTML(item, false, true),
+		Caption:   client.getMessageHTML(item, htmlMessageParams{TrimCaption: true}),
 		Title:     item.Title,
 		Performer: item.Author,
 		Duration:  client.duration(tee),
@@ -121,20 +121,19 @@ func (client TelegramClient) tagLinkOnlySupport(htmlText string) string {
 	return html.UnescapeString(p.Sanitize(htmlText))
 }
 
+type htmlMessageParams struct{ WithMp3Link, TrimCaption bool }
+
 // getMessageHTML generates HTML message from provided feed.Item
-func (client TelegramClient) getMessageHTML(item feed.Item, withMp3Link, trimCaption bool) string {
+func (client TelegramClient) getMessageHTML(item feed.Item, params htmlMessageParams) string {
 	var header, footer string
 	title := strings.TrimSpace(item.Title)
-	if title != "" {
-		switch {
-		case item.Link == "":
-			header = fmt.Sprintf("%s\n\n", title)
-		case item.Link != "":
-			header = fmt.Sprintf("<a href=%q>%s</a>\n\n", item.Link, title)
-		}
+	if title != "" && item.Link == "" {
+		header = fmt.Sprintf("%s\n\n", title)
+	} else if title != "" && item.Link != "" {
+		header = fmt.Sprintf("<a href=%q>%s</a>\n\n", item.Link, title)
 	}
 
-	if withMp3Link {
+	if params.WithMp3Link {
 		footer += fmt.Sprintf("\n\n%s", item.Enclosure.URL)
 	}
 
@@ -146,8 +145,8 @@ func (client TelegramClient) getMessageHTML(item feed.Item, withMp3Link, trimCap
 	description = strings.TrimSpace(description)
 
 	// https://limits.tginfo.me/en 1024 symbol limit for caption
-	if trimCaption && len(header+description+footer) > 1024 {
-		description = CleanText(description, 1020-len(header+footer))
+	if params.TrimCaption && len(header+description+footer) > 1024 {
+		description = CropText(description, 1024-len(header+footer))
 	}
 
 	return header + description + footer
@@ -180,4 +179,12 @@ func (r recipient) Recipient() string {
 	}
 
 	return r.chatID
+}
+
+// CropText shrinks the provided string, removing HTML tags in case it's exceeding the limit
+func CropText(inp string, max int) string {
+	if len([]rune(inp)) > max {
+		return CleanText(inp, max)
+	}
+	return inp
 }

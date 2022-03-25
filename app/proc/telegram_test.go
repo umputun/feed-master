@@ -128,7 +128,7 @@ func TestFormattedMessage(t *testing.T) {
 		i := i
 		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			htmlMessage := client.getMessageHTML(tc.item, false, false)
+			htmlMessage := client.getMessageHTML(tc.item, htmlMessageParams{})
 			assert.Equal(t, tc.expectedHTML, htmlMessage)
 		})
 	}
@@ -136,7 +136,13 @@ func TestFormattedMessage(t *testing.T) {
 
 func TestTruncatedMessage(t *testing.T) {
 	client := TelegramClient{}
-	htmlMessage := client.getMessageHTML(feed.Item{Title: "title", Enclosure: feed.Enclosure{URL: "https://example.com/some.mp3"}, Description: template.HTML(strings.Repeat("test", 1000))}, true, true) //nolint:gosec // no problem to have it in the test
+	htmlMessage := client.getMessageHTML(
+		feed.Item{
+			Title:       "title",
+			Enclosure:   feed.Enclosure{URL: "https://example.com/some.mp3"},
+			Description: template.HTML(strings.Repeat("test", 1000)), //nolint:gosec // test case, no security issues
+		},
+		htmlMessageParams{WithMp3Link: true, TrimCaption: true})
 	assert.True(t, strings.HasPrefix(htmlMessage, "title\n\n"))
 	assert.True(t, strings.HasSuffix(htmlMessage, "\n\nhttps://example.com/some.mp3"))
 	assert.LessOrEqual(t, len(htmlMessage), 1024)
@@ -155,7 +161,7 @@ func TestGetMessageHTML(t *testing.T) {
 	expected := "<a href=\"https://example.com/xyz\">Podcast</a>\n\nNews <a href=\"/test\">Podcast Link</a>\n\nhttps://example.com"
 
 	client := TelegramClient{}
-	msg := client.getMessageHTML(item, true, false)
+	msg := client.getMessageHTML(item, htmlMessageParams{WithMp3Link: true})
 	assert.Equal(t, expected, msg)
 }
 
