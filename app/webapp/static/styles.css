@@ -273,3 +273,7 @@ nav {
 .fa-info-circle {
     color: rgba(70, 70, 70, 0.4);
 }
+
+.tooltip-inner {
+    max-width: 40vw;
+}
