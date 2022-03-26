@@ -56,6 +56,11 @@ func TestStore_SaveAndLoad(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 2, len(res))
 	assert.Equal(t, "vid2", res[0].VideoID)
+
+	res, err = s.Load("chan1", 1)
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(res))
+	assert.Equal(t, "vid2", res[0].VideoID)
 }
 
 func TestStore_Channels(t *testing.T) {

@@ -62,7 +62,7 @@ func (s *BoltDB) Exist(entry channel.Entry) (bool, error) {
 
 	key, keyErr := s.key(entry)
 	if keyErr != nil {
-		return found, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
+		return false, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
 	}
 
 	err := s.DB.View(func(tx *bolt.Tx) error {

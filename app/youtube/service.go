@@ -168,7 +168,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 			// check if we already processed this entry.
 			// this is needed to avoid infinite get/remove loop when the original feed is updated in place
 			if _, ok := s.processed[entry.UID()]; ok {
-				log.Printf("[DEBUG] skipping already processed entry %s", entry.VideoID)
+				log.Printf("[INFO] skipping already processed entry %s, %+v", entry.VideoID, chanInfo)
 				continue
 			}
 
@@ -178,7 +178,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, downErr)
 				continue
 			}
-			log.Printf("[DEBUG] downloaded %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, chanInfo)
+			log.Printf("[INFO] downloaded %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, chanInfo)
 			entry.File = file
 			if !strings.HasPrefix(entry.Title, chanInfo.Name) {
 				entry.Title = chanInfo.Name + ": " + entry.Title
@@ -197,6 +197,9 @@ func (s *Service) procChannels(ctx context.Context) error {
 		}
 
 		if changed { // save rss feed to fs if there are new entries
+			if err := s.removeOld(chanInfo); err != nil {
+				log.Printf("[WARN] failed to remove old entries for %s: %v", chanInfo.Name, err)
+			}
 			rss, rssErr := s.RSSFeed(chanInfo)
 			if rssErr != nil {
 				log.Printf("[WARN] failed to generate rss for %s: %s", chanInfo.Name, rssErr)
@@ -206,23 +209,27 @@ func (s *Service) procChannels(ctx context.Context) error {
 				}
 			}
 		}
-
-		// remove old entries and files
-		keep := s.keep(chanInfo)
-		files, rmErr := s.Store.RemoveOld(chanInfo.ID, keep+1)
-		if rmErr != nil {
-			return errors.Wrapf(rmErr, "failed to remove old meta data for %s", chanInfo.ID)
-		}
-		for _, f := range files {
-			if e := os.Remove(f); e != nil {
-				log.Printf("[WARN] failed to remove file %s: %s", f, e)
-				continue
-			}
-
-			log.Printf("[INFO] removed %s for %s (%s)", f, chanInfo.ID, chanInfo.Name)
-		}
 	}
-	log.Printf("[DEBUG] processed channels completed, total %d", len(s.Channels))
+
+	log.Printf("[INFO] processed channels completed, total channels: %d", len(s.Channels))
+	return nil
+}
+
+// removeOld deletes old entries from store and corresponding files
+func (s *Service) removeOld(chanInfo ChannelInfo) error {
+	keep := s.keep(chanInfo)
+	files, err := s.Store.RemoveOld(chanInfo.ID, keep+1)
+	if err != nil {
+		return errors.Wrapf(err, "failed to remove old meta data for %s", chanInfo.ID)
+	}
+	for _, f := range files {
+		if e := os.Remove(f); e != nil {
+			log.Printf("[WARN] failed to remove file %s: %s", f, e)
+			continue
+		}
+
+		log.Printf("[INFO] removed %s for %s (%s)", f, chanInfo.ID, chanInfo.Name)
+	}
 	return nil
 }
 
