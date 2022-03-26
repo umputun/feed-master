@@ -90,7 +90,7 @@ func main() {
 	if len(conf.YouTube.Channels) > 0 {
 		log.Printf("[INFO] starting youtube processor for %d channels", len(conf.YouTube.Channels))
 		outWr := log.ToWriter(log.Default(), "DEBUG")
-		errWr := log.ToWriter(log.Default(), "WARN")
+		errWr := log.ToWriter(log.Default(), "INFO")
 		dwnl := channel.NewDownloader(conf.YouTube.DlTemplate, outWr, errWr, opts.YtLocation)
 		fd := channel.Feed{Client: &http.Client{Timeout: 10 * time.Second}, BaseURL: conf.YouTube.BaseChanURL}
 		ytSvc = youtube.Service{
