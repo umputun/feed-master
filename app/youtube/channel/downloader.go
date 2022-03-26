@@ -17,18 +17,20 @@ import (
 
 // Downloader executes an external command to download a video and extract its audio.
 type Downloader struct {
-	ytTemplate  string
-	logWriter   io.Writer
-	destination string
+	ytTemplate   string
+	logOutWriter io.Writer
+	logErrWriter io.Writer
+	destination  string
 }
 
 // NewDownloader creates a new Downloader with the given template (full command with placeholders for {{.ID}} and {{.Filename}}.
 // Destination is the directory where the audio files will be stored.
-func NewDownloader(tmpl string, logWriter io.Writer, destination string) *Downloader {
+func NewDownloader(tmpl string, logOutWriter, logErrWriter io.Writer, destination string) *Downloader {
 	return &Downloader{
-		ytTemplate:  tmpl,
-		logWriter:   logWriter,
-		destination: destination,
+		ytTemplate:   tmpl,
+		logOutWriter: logOutWriter,
+		logErrWriter: logErrWriter,
+		destination:  destination,
 	}
 }
 
@@ -54,8 +56,8 @@ func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, er
 
 	cmd := exec.CommandContext(ctx, "sh", "-c", b1.String()) // nolint
 	cmd.Stdin = os.Stdin
-	cmd.Stdout = d.logWriter
-	cmd.Stderr = d.logWriter
+	cmd.Stdout = d.logErrWriter
+	cmd.Stderr = d.logErrWriter
 	cmd.Dir = d.destination
 	log.Printf("[DEBUG] executing command: %s", b1.String())
 	if err := cmd.Run(); err != nil {

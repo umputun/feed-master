@@ -14,7 +14,7 @@ import (
 func TestDownloader_Get(t *testing.T) {
 	lw := bytes.NewBuffer(nil)
 	loc := os.TempDir()
-	d := NewDownloader("echo {{.ID}} blah {{.FileName}} 12345", lw, loc)
+	d := NewDownloader("echo {{.ID}} blah {{.FileName}} 12345", lw, lw, loc)
 	res, err := d.Get(context.Background(), "id1", "file123")
 	require.NoError(t, err)
 	assert.Equal(t, filepath.Join(loc, "file123.mp3"), res)
@@ -26,7 +26,7 @@ func TestDownloader_Get(t *testing.T) {
 func TestDownloader_GetFailed(t *testing.T) {
 	lw := bytes.NewBuffer(nil)
 	loc := os.TempDir()
-	d := NewDownloader("no-such-thing {{.ID}} blah {{.FileName}} 12345", lw, loc)
+	d := NewDownloader("no-such-thing {{.ID}} blah {{.FileName}} 12345", lw, lw, loc)
 	_, err := d.Get(context.Background(), "id1", "file123")
 	require.Error(t, err)
 	l := lw.String()
