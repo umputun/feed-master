@@ -38,8 +38,9 @@ type Service struct {
 
 // ChannelInfo is a pait of channel ID and name
 type ChannelInfo struct {
-	Name string
-	ID   string
+	Name string `yaml:"name"`
+	ID   string `yaml:"id"`
+	Keep int    `yaml:"keep"`
 }
 
 // DownloaderService is an interface for downloading audio from youtube
@@ -86,7 +87,7 @@ func (s *Service) Do(ctx context.Context) error {
 
 // RSSFeed generates RSS feed for given channel
 func (s *Service) RSSFeed(cinfo ChannelInfo) (string, error) {
-	entries, err := s.Store.Load(cinfo.ID, s.KeepPerChannel)
+	entries, err := s.Store.Load(cinfo.ID, s.keep(cinfo))
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get channel entries")
 	}
@@ -207,7 +208,8 @@ func (s *Service) procChannels(ctx context.Context) error {
 		}
 
 		// remove old entries and files
-		files, rmErr := s.Store.RemoveOld(chanInfo.ID, s.KeepPerChannel+1)
+		keep := s.keep(chanInfo)
+		files, rmErr := s.Store.RemoveOld(chanInfo.ID, keep)
 		if rmErr != nil {
 			return errors.Wrapf(rmErr, "failed to remove old meta data for %s", chanInfo.ID)
 		}
@@ -222,6 +224,14 @@ func (s *Service) procChannels(ctx context.Context) error {
 	}
 	log.Printf("[DEBUG] processed channels completed, total %d", len(s.Channels))
 	return nil
+}
+
+func (s *Service) keep(chanInfo ChannelInfo) int {
+	keep := s.KeepPerChannel + 1
+	if chanInfo.Keep > 0 {
+		keep = chanInfo.Keep
+	}
+	return keep
 }
 
 func (s *Service) makeFileName(entry channel.Entry) string {
