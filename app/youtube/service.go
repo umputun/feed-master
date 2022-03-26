@@ -149,10 +149,10 @@ func (s *Service) procChannels(ctx context.Context) error {
 			log.Printf("[WARN] failed to get channel entries for %s: %s", chanInfo.ID, err)
 			continue
 		}
-		log.Printf("[INFO] got %d entries for %s, limit to %d", len(entries), chanInfo.Name, s.KeepPerChannel)
+		log.Printf("[INFO] got %d entries for %s, limit to %d", len(entries), chanInfo.Name, s.keep(chanInfo))
 		changed := false
 		for i, entry := range entries {
-			if i >= s.KeepPerChannel {
+			if i >= s.keep(chanInfo) {
 				break
 			}
 
