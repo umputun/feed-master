@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"github.com/umputun/feed-master/app/proc"
 	"html/template"
 	"net/http"
 	"time"
@@ -46,6 +47,49 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 		res := bytes.NewBuffer(nil)
 		err = templates.ExecuteTemplate(res, "feed.tmpl", &tmplData)
+		return res.Bytes(), err
+	})
+
+	if err != nil {
+		s.renderErrorPage(w, r, err, 400)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(data.([]byte)) // nolint
+}
+
+// GET /feeds - renders page with list of feeds
+func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
+	data, err := s.cache.Get("feeds", func() (interface{}, error) {
+		feeds, err := s.Store.Buckets()
+		if err != nil {
+			return nil, err
+		}
+
+		type feedItem struct {
+			proc.Feed
+			FeedURL string
+		}
+		var feedItems []feedItem
+		for _, f := range feeds {
+			feedItems = append(
+				feedItems,
+				feedItem{Feed: s.Conf.Feeds[f], FeedURL: s.Conf.System.BaseURL + "/feed/" + f},
+			)
+		}
+
+		tmplData := struct {
+			Feeds      []feedItem
+			FeedsCount int
+		}{
+			Feeds:      feedItems,
+			FeedsCount: len(feedItems),
+		}
+
+		res := bytes.NewBuffer(nil)
+		err = templates.ExecuteTemplate(res, "feeds.tmpl", &tmplData)
 		return res.Bytes(), err
 	})
 
