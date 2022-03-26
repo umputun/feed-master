@@ -1,7 +1,8 @@
 html,
 body {
-    height: 100%;
     margin: 0;
+    position: relative;
+    min-height: 100vh;
 }
 
 body {
@@ -114,6 +115,10 @@ nav {
 #footer {
     font-size: 1em;
     height: 30px;
+}
+
+.ump-feed-master {
+    padding-bottom: 50px;
 }
 
 .ump-feed-master-header {
@@ -255,6 +260,10 @@ nav {
     text-align: center;
     padding: 1rem;
     background: rgba(4, 115, 180, 0.17);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 50px;
 }
 
 .fa-volume-up {
