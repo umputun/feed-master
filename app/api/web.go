@@ -70,14 +70,24 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 		type feedItem struct {
 			proc.Feed
-			FeedURL string
+			FeedURL     string
+			Sources     int
+			LastUpdated time.Time
 		}
 		var feedItems []feedItem
 		for _, f := range feeds {
-			feedItems = append(
-				feedItems,
-				feedItem{Feed: s.Conf.Feeds[f], FeedURL: s.Conf.System.BaseURL + "/feed/" + f},
-			)
+			items, err := s.Store.Load(f, s.Conf.System.MaxTotal, true)
+			if err != nil {
+				continue
+			}
+			feedConf := s.Conf.Feeds[f]
+			item := feedItem{
+				Feed:        feedConf,
+				FeedURL:     s.Conf.System.BaseURL + "/feed/" + f,
+				Sources:     len(feedConf.Sources),
+				LastUpdated: items[0].DT,
+			}
+			feedItems = append(feedItems, item)
 		}
 
 		tmplData := struct {

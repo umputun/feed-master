@@ -39,8 +39,18 @@
                 <a href="{{.FeedURL}}"
                    target="_blank"><span class="ump-feed-master-program-name">{{.Title}}</span>
                 </a>
+                {{if .Feed.TelegramChannel}}
+                <a href="https://t.me/{{.Feed.TelegramChannel}}">
+                    <i class="fab fa-telegram-plane"
+                        aria-hidden="true"
+                        data-toggle="tooltip"
+                        title="t.me/{{.Feed.TelegramChannel}}">
+                    </i>
+                </a>
+                {{end}}
             </div>
         </div>
+        <div class="ump-feed-master-timestamp-cell">{{.Sources}} sources, {{.LastUpdated.Format "02 Jan 15:04"}}</div>
     </div>
     {{end}}
 </main>
