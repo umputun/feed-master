@@ -209,7 +209,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 
 		// remove old entries and files
 		keep := s.keep(chanInfo)
-		files, rmErr := s.Store.RemoveOld(chanInfo.ID, keep)
+		files, rmErr := s.Store.RemoveOld(chanInfo.ID, keep+1)
 		if rmErr != nil {
 			return errors.Wrapf(rmErr, "failed to remove old meta data for %s", chanInfo.ID)
 		}
@@ -227,7 +227,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 }
 
 func (s *Service) keep(chanInfo ChannelInfo) int {
-	keep := s.KeepPerChannel + 1
+	keep := s.KeepPerChannel
 	if chanInfo.Keep > 0 {
 		keep = chanInfo.Keep
 	}
