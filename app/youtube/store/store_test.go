@@ -8,9 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/umputun/feed-master/app/youtube/feed"
 	bolt "go.etcd.io/bbolt"
-
-	"github.com/umputun/feed-master/app/youtube/channel"
 )
 
 func TestStore_SaveAndLoad(t *testing.T) {
@@ -22,7 +21,7 @@ func TestStore_SaveAndLoad(t *testing.T) {
 
 	s := BoltDB{DB: db}
 
-	entry := channel.Entry{
+	entry := feed.Entry{
 		ChannelID: "chan1",
 		VideoID:   "vid1",
 		Title:     "title1",
@@ -42,7 +41,7 @@ func TestStore_SaveAndLoad(t *testing.T) {
 	assert.Equal(t, 1, len(res))
 	assert.Equal(t, "vid1", res[0].VideoID)
 
-	entry2 := channel.Entry{
+	entry2 := feed.Entry{
 		ChannelID: "chan1",
 		VideoID:   "vid2",
 		Title:     "title2",
@@ -72,7 +71,7 @@ func TestStore_Channels(t *testing.T) {
 
 	s := BoltDB{DB: db}
 	{
-		entry := channel.Entry{
+		entry := feed.Entry{
 			ChannelID: "chan1",
 			VideoID:   "vid1",
 			Title:     "title1",
@@ -83,7 +82,7 @@ func TestStore_Channels(t *testing.T) {
 		assert.True(t, created)
 	}
 	{
-		entry := channel.Entry{
+		entry := feed.Entry{
 			ChannelID: "chan2",
 			VideoID:   "vid2",
 			Title:     "title2",
@@ -108,7 +107,7 @@ func TestStore_Exist(t *testing.T) {
 
 	s := BoltDB{DB: db}
 
-	entry := channel.Entry{
+	entry := feed.Entry{
 		ChannelID: "chan1",
 		VideoID:   "vid1",
 		Title:     "title1",
@@ -123,7 +122,7 @@ func TestStore_Exist(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, ok)
 
-	ok, err = s.Exist(channel.Entry{ChannelID: "chan2", VideoID: "vid2"})
+	ok, err = s.Exist(feed.Entry{ChannelID: "chan2", VideoID: "vid2"})
 	require.NoError(t, err)
 	assert.False(t, ok)
 
@@ -138,7 +137,7 @@ func TestBoldDB_RemoveOld(t *testing.T) {
 
 	s := BoltDB{DB: db}
 	{
-		entry := channel.Entry{
+		entry := feed.Entry{
 			ChannelID: "chan1",
 			VideoID:   "vid1",
 			Title:     "title1",
@@ -150,7 +149,7 @@ func TestBoldDB_RemoveOld(t *testing.T) {
 		assert.True(t, created)
 	}
 	{
-		entry := channel.Entry{
+		entry := feed.Entry{
 			ChannelID: "chan1",
 			VideoID:   "vid2",
 			Title:     "title2",
@@ -162,7 +161,7 @@ func TestBoldDB_RemoveOld(t *testing.T) {
 		assert.True(t, created)
 	}
 	{
-		entry := channel.Entry{
+		entry := feed.Entry{
 			ChannelID: "chan1",
 			VideoID:   "vid3",
 			Title:     "title3",

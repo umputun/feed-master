@@ -7,7 +7,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/umputun/feed-master/app/youtube/channel"
+	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
 )
 
 // ChannelServiceMock is a mock implementation of youtube.ChannelService.
@@ -16,7 +16,7 @@ import (
 //
 // 		// make and configure a mocked youtube.ChannelService
 // 		mockedChannelService := &ChannelServiceMock{
-// 			GetFunc: func(ctx context.Context, chanID string) ([]channel.Entry, error) {
+// 			GetFunc: func(ctx context.Context, chanID string, feedType ytfeed.Type) ([]ytfeed.Entry, error) {
 // 				panic("mock out the Get method")
 // 			},
 // 		}
@@ -27,7 +27,7 @@ import (
 // 	}
 type ChannelServiceMock struct {
 	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context, chanID string) ([]channel.Entry, error)
+	GetFunc func(ctx context.Context, chanID string, feedType ytfeed.Type) ([]ytfeed.Entry, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -37,39 +37,45 @@ type ChannelServiceMock struct {
 			Ctx context.Context
 			// ChanID is the chanID argument value.
 			ChanID string
+			// FeedType is the feedType argument value.
+			FeedType ytfeed.Type
 		}
 	}
 	lockGet sync.RWMutex
 }
 
 // Get calls GetFunc.
-func (mock *ChannelServiceMock) Get(ctx context.Context, chanID string) ([]channel.Entry, error) {
+func (mock *ChannelServiceMock) Get(ctx context.Context, chanID string, feedType ytfeed.Type) ([]ytfeed.Entry, error) {
 	if mock.GetFunc == nil {
 		panic("ChannelServiceMock.GetFunc: method is nil but ChannelService.Get was just called")
 	}
 	callInfo := struct {
-		Ctx    context.Context
-		ChanID string
+		Ctx      context.Context
+		ChanID   string
+		FeedType ytfeed.Type
 	}{
-		Ctx:    ctx,
-		ChanID: chanID,
+		Ctx:      ctx,
+		ChanID:   chanID,
+		FeedType: feedType,
 	}
 	mock.lockGet.Lock()
 	mock.calls.Get = append(mock.calls.Get, callInfo)
 	mock.lockGet.Unlock()
-	return mock.GetFunc(ctx, chanID)
+	return mock.GetFunc(ctx, chanID, feedType)
 }
 
 // GetCalls gets all the calls that were made to Get.
 // Check the length with:
 //     len(mockedChannelService.GetCalls())
 func (mock *ChannelServiceMock) GetCalls() []struct {
-	Ctx    context.Context
-	ChanID string
+	Ctx      context.Context
+	ChanID   string
+	FeedType ytfeed.Type
 } {
 	var calls []struct {
-		Ctx    context.Context
-		ChanID string
+		Ctx      context.Context
+		ChanID   string
+		FeedType ytfeed.Type
 	}
 	mock.lockGet.RLock()
 	calls = mock.calls.Get

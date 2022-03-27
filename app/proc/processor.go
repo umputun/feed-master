@@ -45,14 +45,15 @@ type Conf struct {
 	} `yaml:"system"`
 
 	YouTube struct {
-		DlTemplate     string                `yaml:"dl_template"`
-		BaseChanURL    string                `yaml:"base_chan_url"`
-		Channels       []youtube.ChannelInfo `yaml:"channels"`
-		BaseURL        string                `yaml:"base_url"`
-		UpdateInterval time.Duration         `yaml:"update"`
-		MaxItems       int                   `yaml:"max_per_channel"`
-		FilesLocation  string                `yaml:"files_location"`
-		RSSLocation    string                `yaml:"rss_location"`
+		DlTemplate      string             `yaml:"dl_template"`
+		BaseChanURL     string             `yaml:"base_chan_url"`
+		BasePlaylistURL string             `yaml:"base_playlist_url"`
+		Channels        []youtube.FeedInfo `yaml:"channels"`
+		BaseURL         string             `yaml:"base_url"`
+		UpdateInterval  time.Duration      `yaml:"update"`
+		MaxItems        int                `yaml:"max_per_channel"`
+		FilesLocation   string             `yaml:"files_location"`
+		RSSLocation     string             `yaml:"rss_location"`
 	} `yaml:"youtube"`
 }
 
@@ -83,7 +84,7 @@ type YTChannel struct {
 	Name string
 }
 
-// Do activates loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent
+// Do activate loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent
 func (p *Processor) Do() {
 	log.Printf("[INFO] activate processor, feeds=%d, %+v", len(p.Conf.Feeds), p.Conf)
 	p.setDefaults()
