@@ -80,6 +80,7 @@ func (s *Server) Run(port int) {
 		rrss.Get("/rss/{name}", s.getFeedCtrl)
 		rrss.Get("/list", s.getListCtrl)
 		rrss.Get("/feed/{name}", s.getFeedPageCtrl)
+		rrss.Get("/feeds", s.getFeedsPageCtrl)
 	})
 
 	router.Route("/yt", func(r chi.Router) {
