@@ -10,16 +10,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
 
-	"github.com/umputun/feed-master/app/youtube/channel"
 	"github.com/umputun/feed-master/app/youtube/mocks"
 )
 
 func TestService_Do(t *testing.T) {
 
 	chans := &mocks.ChannelServiceMock{
-		GetFunc: func(ctx context.Context, chanID string) ([]channel.Entry, error) {
-			return []channel.Entry{
+		GetFunc: func(ctx context.Context, chanID string, feedType ytfeed.Type) ([]ytfeed.Entry, error) {
+			return []ytfeed.Entry{
 				{ChannelID: chanID, VideoID: "vid1", Title: "title1"},
 				{ChannelID: chanID, VideoID: "vid2", Title: "title2"},
 				{ChannelID: chanID, VideoID: "vid2", Title: "title2"}, // duplicate
@@ -32,21 +32,21 @@ func TestService_Do(t *testing.T) {
 		},
 	}
 	store := &mocks.StoreServiceMock{
-		ExistFunc: func(entry channel.Entry) (bool, error) {
+		ExistFunc: func(entry ytfeed.Entry) (bool, error) {
 			if entry.VideoID == "vid2" {
 				return true, nil
 			}
 			return false, nil
 		},
-		SaveFunc: func(entry channel.Entry) (bool, error) {
+		SaveFunc: func(entry ytfeed.Entry) (bool, error) {
 			return true, nil
 		},
 
 		RemoveOldFunc: func(channelID string, keep int) ([]string, error) {
 			return []string{"/tmp/blah.mp3"}, nil
 		},
-		LoadFunc: func(channelID string, max int) ([]channel.Entry, error) {
-			return []channel.Entry{
+		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
+			return []ytfeed.Entry{
 				{ChannelID: channelID, VideoID: "vid1", Title: "title1"},
 				{ChannelID: channelID, VideoID: "vid2", Title: "title2"},
 			}, nil
@@ -54,7 +54,10 @@ func TestService_Do(t *testing.T) {
 	}
 
 	svc := Service{
-		Channels:       []ChannelInfo{{ID: "channel1", Name: "name1"}, {ID: "channel2", Name: "name2"}},
+		Feeds: []FeedInfo{
+			{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel},
+			{ID: "channel2", Name: "name2", Type: ytfeed.FTPlaylist},
+		},
 		Downloader:     downloader,
 		ChannelService: chans,
 		Store:          store,
@@ -71,7 +74,9 @@ func TestService_Do(t *testing.T) {
 
 	require.Equal(t, 4, len(chans.GetCalls()))
 	assert.Equal(t, "channel1", chans.GetCalls()[0].ChanID)
+	assert.Equal(t, ytfeed.FTChannel, chans.GetCalls()[0].FeedType)
 	assert.Equal(t, "channel2", chans.GetCalls()[1].ChanID)
+	assert.Equal(t, ytfeed.FTPlaylist, chans.GetCalls()[1].FeedType)
 	assert.Equal(t, "channel1", chans.GetCalls()[2].ChanID)
 	assert.Equal(t, "channel2", chans.GetCalls()[3].ChanID)
 
@@ -108,8 +113,8 @@ func TestService_Do(t *testing.T) {
 
 func TestService_RSSFeed(t *testing.T) {
 	store := &mocks.StoreServiceMock{
-		LoadFunc: func(channelID string, max int) ([]channel.Entry, error) {
-			return []channel.Entry{
+		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
+			return []ytfeed.Entry{
 				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: "/tmp/file1.mp3"},
 				{ChannelID: "channel1", VideoID: "vid2", Title: "title2", File: "/tmp/file2.mp3"},
 			}, nil
@@ -117,13 +122,13 @@ func TestService_RSSFeed(t *testing.T) {
 	}
 
 	svc := Service{
-		Channels:       []ChannelInfo{{ID: "channel1", Name: "name1"}, {ID: "channel2", Name: "name2"}},
+		Feeds:          []FeedInfo{{ID: "channel1", Name: "name1"}, {ID: "channel2", Name: "name2"}},
 		Store:          store,
 		RootURL:        "http://localhost:8080/yt",
 		KeepPerChannel: 10,
 	}
 
-	res, err := svc.RSSFeed(ChannelInfo{ID: "channel1", Name: "name1"})
+	res, err := svc.RSSFeed(FeedInfo{ID: "channel1", Name: "name1"})
 	require.NoError(t, err)
 	t.Logf("%v", res)
 
@@ -136,27 +141,27 @@ func TestService_RSSFeed(t *testing.T) {
 func TestService_makeFileName(t *testing.T) {
 
 	tbl := []struct {
-		entry channel.Entry
+		entry ytfeed.Entry
 		res   string
 	}{
 		{
-			entry: channel.Entry{ChannelID: "channel1", VideoID: "vid1", Title: "title1"},
+			entry: ytfeed.Entry{ChannelID: "channel1", VideoID: "vid1", Title: "title1"},
 			res:   "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa",
 		},
 		{
-			entry: channel.Entry{ChannelID: "channel1", VideoID: "vid2", Title: "title2"},
+			entry: ytfeed.Entry{ChannelID: "channel1", VideoID: "vid2", Title: "title2"},
 			res:   "4308c33c7ddb107c2d0c13a905e4c6962001bab4",
 		},
 		{
-			entry: channel.Entry{ChannelID: "channel2", VideoID: "vid1", Title: "title1"},
+			entry: ytfeed.Entry{ChannelID: "channel2", VideoID: "vid1", Title: "title1"},
 			res:   "3be877c750abb87daee80c005fe87e7a3f824fed",
 		},
 		{
-			entry: channel.Entry{ChannelID: "channel2", VideoID: "vid2", Title: "title2"},
+			entry: ytfeed.Entry{ChannelID: "channel2", VideoID: "vid2", Title: "title2"},
 			res:   "648f79b3a05ececb8a37600aa0aee332f0374e01",
 		},
 		{
-			entry: channel.Entry{ChannelID: "channel2", VideoID: "vid2", Title: "title2"},
+			entry: ytfeed.Entry{ChannelID: "channel2", VideoID: "vid2", Title: "title2"},
 			res:   "648f79b3a05ececb8a37600aa0aee332f0374e01",
 		},
 	}

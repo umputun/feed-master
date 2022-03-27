@@ -80,14 +80,15 @@ feeds:
     link: http://example.com
     language: "ru-ru"
     image: images/yt-example.png
-    ext_date: yyyyddmm
     sources:
+      - name: Точка
+        url: https://localhost:8080/yt/rss/PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd
       - name: Живой Гвоздь
-        url: https://feedmaster.umputun.com/yt/rss/UCWAIvx2yYLK_xTYD4F2mUNw
+        url: https://localhost:8080/yt/rss/UCWAIvx2yYLK_xTYD4F2mUNw
       - name: Alexandr Plushev
-        url: https://feedmaster.umputun.com/yt/rss/UCTVk323gzizpujtn2T_BL7w
+        url: https://localhost:8080/yt/rss/UCTVk323gzizpujtn2T_BL7w
       - name: Дилетант
-        url: https://feedmaster.umputun.com/yt/rss/UCuIE7-5QzeAR6EdZXwDRwuQ
+        url: https://localhost:8080/yt/rss/UCuIE7-5QzeAR6EdZXwDRwuQ
 
   echo-msk-filtered-example:
     title: Example with filtering from the feed
@@ -106,18 +107,20 @@ youtube:
   base_url: http://localhost:8080/yt/media
   dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}}.tmp
   base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id="
+  base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id="
   update: 60s
-  max_per_channel: 5
+  max_per_channel: 3
   files_location: ./var/yt
   rss_location: ./var/rss
   channels:
   - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь"}
   - {id: UCTVk323gzizpujtn2T_BL7w, name: "Alexandr Plushev"}
-  - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант"}
+  - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel"}
+  - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist"}
 
 system:
   update: 1m
   max_per_feed: 10
   max_total: 50
   max_keep: 1000
-  base_url: https://feedmaster.umputun.com
+  base_url: http://localhost:8080

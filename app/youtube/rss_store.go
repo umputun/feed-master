@@ -19,6 +19,10 @@ func (s *RSSFileStore) Save(chanID, rss string) error {
 	if !s.Enabled {
 		return nil
 	}
+	if err := os.MkdirAll(s.Location, 0o750); err != nil {
+		return errors.Wrapf(err, "failed to create dir %s", s.Location)
+	}
+
 	fname := filepath.Join(s.Location, chanID+".xml")
 	fh, err := os.Create(fname) //nolint:gosec // tolerable security risk
 	if err != nil {

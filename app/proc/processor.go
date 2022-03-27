@@ -45,14 +45,15 @@ type Conf struct {
 	} `yaml:"system"`
 
 	YouTube struct {
-		DlTemplate     string                `yaml:"dl_template"`
-		BaseChanURL    string                `yaml:"base_chan_url"`
-		Channels       []youtube.ChannelInfo `yaml:"channels"`
-		BaseURL        string                `yaml:"base_url"`
-		UpdateInterval time.Duration         `yaml:"update"`
-		MaxItems       int                   `yaml:"max_per_channel"`
-		FilesLocation  string                `yaml:"files_location"`
-		RSSLocation    string                `yaml:"rss_location"`
+		DlTemplate      string             `yaml:"dl_template"`
+		BaseChanURL     string             `yaml:"base_chan_url"`
+		BasePlaylistURL string             `yaml:"base_playlist_url"`
+		Channels        []youtube.FeedInfo `yaml:"channels"`
+		BaseURL         string             `yaml:"base_url"`
+		UpdateInterval  time.Duration      `yaml:"update"`
+		MaxItems        int                `yaml:"max_per_channel"`
+		FilesLocation   string             `yaml:"files_location"`
+		RSSLocation     string             `yaml:"rss_location"`
 	} `yaml:"youtube"`
 }
 

@@ -8,9 +8,8 @@ import (
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/pkg/errors"
+	"github.com/umputun/feed-master/app/youtube/feed"
 	bolt "go.etcd.io/bbolt"
-
-	"github.com/umputun/feed-master/app/youtube/channel"
 )
 
 // BoltDB store for metadata related to downloaded YouTube audio.
@@ -19,7 +18,7 @@ type BoltDB struct {
 }
 
 // Save to bolt, skip if found
-func (s *BoltDB) Save(entry channel.Entry) (bool, error) {
+func (s *BoltDB) Save(entry feed.Entry) (bool, error) {
 	var created bool
 
 	key, keyErr := s.key(entry)
@@ -57,7 +56,7 @@ func (s *BoltDB) Save(entry channel.Entry) (bool, error) {
 }
 
 // Exist checks if entry exists
-func (s *BoltDB) Exist(entry channel.Entry) (bool, error) {
+func (s *BoltDB) Exist(entry feed.Entry) (bool, error) {
 	var found bool
 
 	key, keyErr := s.key(entry)
@@ -82,8 +81,8 @@ func (s *BoltDB) Exist(entry channel.Entry) (bool, error) {
 }
 
 // Load entries from bolt for a given channel, up to max in reverse order (from newest to oldest)
-func (s *BoltDB) Load(channelID string, max int) ([]channel.Entry, error) {
-	var result []channel.Entry
+func (s *BoltDB) Load(channelID string, max int) ([]feed.Entry, error) {
+	var result []feed.Entry
 
 	err := s.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(channelID))
@@ -92,7 +91,7 @@ func (s *BoltDB) Load(channelID string, max int) ([]channel.Entry, error) {
 		}
 		c := bucket.Cursor()
 		for k, v := c.Last(); k != nil; k, v = c.Prev() {
-			var item channel.Entry
+			var item feed.Entry
 			if err := json.Unmarshal(v, &item); err != nil {
 				log.Printf("[WARN] failed to unmarshal, %v", err)
 				continue
@@ -134,7 +133,7 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 		for k, v := c.Last(); k != nil; k, v = c.Prev() {
 			recs++
 			if recs > keep {
-				var item channel.Entry
+				var item feed.Entry
 				if err := json.Unmarshal(v, &item); err != nil {
 					log.Printf("[WARN] failed to unmarshal, %v", err)
 					continue
@@ -150,7 +149,7 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 	return res, err
 }
 
-func (s *BoltDB) key(entry channel.Entry) ([]byte, error) {
+func (s *BoltDB) key(entry feed.Entry) ([]byte, error) {
 	h := sha1.New()
 	if _, err := h.Write([]byte(entry.VideoID)); err != nil {
 		return nil, err

@@ -17,13 +17,12 @@ import (
 	bolt "go.etcd.io/bbolt"
 	"gopkg.in/yaml.v2"
 
-	"github.com/umputun/feed-master/app/youtube"
-	"github.com/umputun/feed-master/app/youtube/channel"
-	"github.com/umputun/feed-master/app/youtube/store"
-
 	"github.com/umputun/feed-master/app/api"
-	"github.com/umputun/feed-master/app/feed"
+	rssfeed "github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/proc"
+	"github.com/umputun/feed-master/app/youtube"
+	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
+	"github.com/umputun/feed-master/app/youtube/store"
 )
 
 type options struct {
@@ -91,10 +90,11 @@ func main() {
 		log.Printf("[INFO] starting youtube processor for %d channels", len(conf.YouTube.Channels))
 		outWr := log.ToWriter(log.Default(), "DEBUG")
 		errWr := log.ToWriter(log.Default(), "INFO")
-		dwnl := channel.NewDownloader(conf.YouTube.DlTemplate, outWr, errWr, opts.YtLocation)
-		fd := channel.Feed{Client: &http.Client{Timeout: 10 * time.Second}, BaseURL: conf.YouTube.BaseChanURL}
+		dwnl := ytfeed.NewDownloader(conf.YouTube.DlTemplate, outWr, errWr, opts.YtLocation)
+		fd := ytfeed.Feed{Client: &http.Client{Timeout: 10 * time.Second},
+			ChannelBaseURL: conf.YouTube.BaseChanURL, PlaylistBaseURL: conf.YouTube.BasePlaylistURL}
 		ytSvc = youtube.Service{
-			Channels:       conf.YouTube.Channels,
+			Feeds:          conf.YouTube.Channels,
 			Downloader:     dwnl,
 			ChannelService: &fd,
 			Store:          &store.BoltDB{DB: db},
@@ -155,7 +155,7 @@ func makeBoltDB(dbFile string) (*bolt.DB, error) {
 }
 
 func makeTwitter(opts options) *proc.TwitterClient {
-	twitterFmtFn := func(item feed.Item) string {
+	twitterFmtFn := func(item rssfeed.Item) string {
 		b1 := bytes.Buffer{}
 		if err := template.Must(template.New("twi").Parse(opts.TwitterTemplate)).Execute(&b1, item); err != nil { // nolint
 			// template failed to parse record, backup predefined format
