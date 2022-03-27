@@ -111,6 +111,7 @@ func TestService_Do(t *testing.T) {
 
 }
 
+// nolint:dupl // test if very similar to TestService_RSSFeed
 func TestService_RSSFeed(t *testing.T) {
 	store := &mocks.StoreServiceMock{
 		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
@@ -148,6 +149,7 @@ func TestService_RSSFeed(t *testing.T) {
 	assert.Contains(t, res, `<link>http://example.com/c1</link>`)
 }
 
+// nolint:dupl // test if very similar to TestService_RSSFeed
 func TestService_RSSFeedPlayList(t *testing.T) {
 	store := &mocks.StoreServiceMock{
 		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {

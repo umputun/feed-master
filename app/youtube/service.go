@@ -173,12 +173,14 @@ func (s *Service) procChannels(ctx context.Context) error {
 				return errors.Wrapf(exErr, "failed to check if entry %s exists", entry.VideoID)
 			}
 			if exists {
+				processed++
 				continue
 			}
 
 			// check if we already processed this entry.
 			// this is needed to avoid infinite get/remove loop when the original feed is updated in place
 			if _, ok := s.processed[entry.UID()]; ok {
+				processed++
 				log.Printf("[INFO] skipping already processed entry %s, %+v", entry.VideoID, feedInfo)
 				continue
 			}
@@ -189,6 +191,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, downErr)
 				continue
 			}
+			processed++
 			log.Printf("[INFO] downloaded %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, feedInfo)
 			entry.File = file
 			if !strings.HasPrefix(entry.Title, feedInfo.Name) {
@@ -202,7 +205,6 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] attempt to save dup entry %+v", entry)
 			}
 			changed = true
-			processed++
 			s.processed[entry.UID()] = true // track processed entries
 			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v, total processed: %d",
 				entry.VideoID, entry.Title, file, feedInfo, len(s.processed))

@@ -84,7 +84,7 @@ type YTChannel struct {
 	Name string
 }
 
-// Do activates loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent
+// Do activate loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent
 func (p *Processor) Do() {
 	log.Printf("[INFO] activate processor, feeds=%d, %+v", len(p.Conf.Feeds), p.Conf)
 	p.setDefaults()
