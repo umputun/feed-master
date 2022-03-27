@@ -40,7 +40,7 @@ type Server struct {
 
 // YoutubeSvc provides access to youtube's audio rss
 type YoutubeSvc interface {
-	RSSFeed(cinfo youtube.ChannelInfo) (string, error)
+	RSSFeed(cinfo youtube.FeedInfo) (string, error)
 }
 
 // Run starts http server for API with all routes
@@ -214,7 +214,7 @@ func (s *Server) getListCtrl(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getYoutubeFeedCtrl(w http.ResponseWriter, r *http.Request) {
 	channel := chi.URLParam(r, "channel")
 
-	res, err := s.YoutubeSvc.RSSFeed(youtube.ChannelInfo{ID: channel})
+	res, err := s.YoutubeSvc.RSSFeed(youtube.FeedInfo{ID: channel})
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to read yt list")
 		return

@@ -6,7 +6,7 @@ package mocks
 import (
 	"sync"
 
-	"github.com/umputun/feed-master/app/youtube/channel"
+	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
 )
 
 // StoreServiceMock is a mock implementation of youtube.StoreService.
@@ -15,16 +15,16 @@ import (
 //
 // 		// make and configure a mocked youtube.StoreService
 // 		mockedStoreService := &StoreServiceMock{
-// 			ExistFunc: func(entry channel.Entry) (bool, error) {
+// 			ExistFunc: func(entry ytfeed.Entry) (bool, error) {
 // 				panic("mock out the Exist method")
 // 			},
-// 			LoadFunc: func(channelID string, max int) ([]channel.Entry, error) {
+// 			LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
 // 				panic("mock out the Load method")
 // 			},
 // 			RemoveOldFunc: func(channelID string, keep int) ([]string, error) {
 // 				panic("mock out the RemoveOld method")
 // 			},
-// 			SaveFunc: func(entry channel.Entry) (bool, error) {
+// 			SaveFunc: func(entry ytfeed.Entry) (bool, error) {
 // 				panic("mock out the Save method")
 // 			},
 // 		}
@@ -35,23 +35,23 @@ import (
 // 	}
 type StoreServiceMock struct {
 	// ExistFunc mocks the Exist method.
-	ExistFunc func(entry channel.Entry) (bool, error)
+	ExistFunc func(entry ytfeed.Entry) (bool, error)
 
 	// LoadFunc mocks the Load method.
-	LoadFunc func(channelID string, max int) ([]channel.Entry, error)
+	LoadFunc func(channelID string, max int) ([]ytfeed.Entry, error)
 
 	// RemoveOldFunc mocks the RemoveOld method.
 	RemoveOldFunc func(channelID string, keep int) ([]string, error)
 
 	// SaveFunc mocks the Save method.
-	SaveFunc func(entry channel.Entry) (bool, error)
+	SaveFunc func(entry ytfeed.Entry) (bool, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// Exist holds details about calls to the Exist method.
 		Exist []struct {
 			// Entry is the entry argument value.
-			Entry channel.Entry
+			Entry ytfeed.Entry
 		}
 		// Load holds details about calls to the Load method.
 		Load []struct {
@@ -70,7 +70,7 @@ type StoreServiceMock struct {
 		// Save holds details about calls to the Save method.
 		Save []struct {
 			// Entry is the entry argument value.
-			Entry channel.Entry
+			Entry ytfeed.Entry
 		}
 	}
 	lockExist     sync.RWMutex
@@ -80,12 +80,12 @@ type StoreServiceMock struct {
 }
 
 // Exist calls ExistFunc.
-func (mock *StoreServiceMock) Exist(entry channel.Entry) (bool, error) {
+func (mock *StoreServiceMock) Exist(entry ytfeed.Entry) (bool, error) {
 	if mock.ExistFunc == nil {
 		panic("StoreServiceMock.ExistFunc: method is nil but StoreService.Exist was just called")
 	}
 	callInfo := struct {
-		Entry channel.Entry
+		Entry ytfeed.Entry
 	}{
 		Entry: entry,
 	}
@@ -99,10 +99,10 @@ func (mock *StoreServiceMock) Exist(entry channel.Entry) (bool, error) {
 // Check the length with:
 //     len(mockedStoreService.ExistCalls())
 func (mock *StoreServiceMock) ExistCalls() []struct {
-	Entry channel.Entry
+	Entry ytfeed.Entry
 } {
 	var calls []struct {
-		Entry channel.Entry
+		Entry ytfeed.Entry
 	}
 	mock.lockExist.RLock()
 	calls = mock.calls.Exist
@@ -111,7 +111,7 @@ func (mock *StoreServiceMock) ExistCalls() []struct {
 }
 
 // Load calls LoadFunc.
-func (mock *StoreServiceMock) Load(channelID string, max int) ([]channel.Entry, error) {
+func (mock *StoreServiceMock) Load(channelID string, max int) ([]ytfeed.Entry, error) {
 	if mock.LoadFunc == nil {
 		panic("StoreServiceMock.LoadFunc: method is nil but StoreService.Load was just called")
 	}
@@ -181,12 +181,12 @@ func (mock *StoreServiceMock) RemoveOldCalls() []struct {
 }
 
 // Save calls SaveFunc.
-func (mock *StoreServiceMock) Save(entry channel.Entry) (bool, error) {
+func (mock *StoreServiceMock) Save(entry ytfeed.Entry) (bool, error) {
 	if mock.SaveFunc == nil {
 		panic("StoreServiceMock.SaveFunc: method is nil but StoreService.Save was just called")
 	}
 	callInfo := struct {
-		Entry channel.Entry
+		Entry ytfeed.Entry
 	}{
 		Entry: entry,
 	}
@@ -200,10 +200,10 @@ func (mock *StoreServiceMock) Save(entry channel.Entry) (bool, error) {
 // Check the length with:
 //     len(mockedStoreService.SaveCalls())
 func (mock *StoreServiceMock) SaveCalls() []struct {
-	Entry channel.Entry
+	Entry ytfeed.Entry
 } {
 	var calls []struct {
-		Entry channel.Entry
+		Entry ytfeed.Entry
 	}
 	mock.lockSave.RLock()
 	calls = mock.calls.Save
