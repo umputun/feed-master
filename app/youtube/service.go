@@ -38,10 +38,11 @@ type Service struct {
 
 // FeedInfo contains channel or feed ID, readable name and other per-feed info
 type FeedInfo struct {
-	Name string      `yaml:"name"`
-	ID   string      `yaml:"id"`
-	Type ytfeed.Type `yaml:"type"`
-	Keep int         `yaml:"keep"`
+	Name     string      `yaml:"name"`
+	ID       string      `yaml:"id"`
+	Type     ytfeed.Type `yaml:"type"`
+	Keep     int         `yaml:"keep"`
+	Language string      `yaml:"lang"`
 }
 
 // DownloaderService is an interface for downloading audio from youtube
@@ -137,6 +138,11 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 		Link:          entries[0].Author.URI,
 		PubDate:       items[0].PubDate,
 		LastBuildDate: time.Now().Format(time.RFC822Z),
+		Language:      fi.Language,
+	}
+
+	if fi.Type == ytfeed.FTPlaylist {
+		rss.Link = "https://www.youtube.com/playlist?list=" + fi.ID
 	}
 
 	b, err := xml.MarshalIndent(&rss, "", "  ")

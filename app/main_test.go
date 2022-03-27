@@ -47,8 +47,8 @@ youtube:
   base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id="
   rss_location: ./var/rss
   channels:
-  - {id: id1, name: name1}
-  - {id: id2, name: name2}
+  - {id: id1, name: name1, type: playlist}
+  - {id: id2, name: name2, lang: ru-ru, type: channel}
 `)
 
 	assert.Nil(t, ioutil.WriteFile("/tmp/fm.yml", data, 0777), "failed write yml") // nolint
@@ -61,7 +61,8 @@ youtube:
 	assert.Equal(t, "https://bbb.com/u1", r.Feeds["second"].Sources[0].URL)
 	assert.Equal(t, "^filterme*", r.Feeds["filtered"].Filter.Title)
 	assert.Equal(t, time.Second*600, r.System.UpdateInterval)
-	assert.Equal(t, []youtube.FeedInfo{{Name: "name1", ID: "id1"}, {Name: "name2", ID: "id2"}},
+	assert.Equal(t, []youtube.FeedInfo{{Name: "name1", ID: "id1", Type: "playlist"},
+		{Name: "name2", ID: "id2", Type: "channel", Language: "ru-ru"}},
 		r.YouTube.Channels, "2 yt")
 	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.Filename}}.tmp", r.YouTube.DlTemplate)
 	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?channel_id=", r.YouTube.BaseChanURL)

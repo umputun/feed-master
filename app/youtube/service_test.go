@@ -114,21 +114,28 @@ func TestService_Do(t *testing.T) {
 func TestService_RSSFeed(t *testing.T) {
 	store := &mocks.StoreServiceMock{
 		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
-			return []ytfeed.Entry{
+			res := []ytfeed.Entry{
 				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: "/tmp/file1.mp3"},
 				{ChannelID: "channel1", VideoID: "vid2", Title: "title2", File: "/tmp/file2.mp3"},
-			}, nil
+			}
+			res[0].Link.Href = "http://example.com/v1"
+			res[1].Link.Href = "http://example.com/v2"
+			res[0].Author.URI = "http://example.com/c1"
+			return res, nil
 		},
 	}
 
 	svc := Service{
-		Feeds:          []FeedInfo{{ID: "channel1", Name: "name1"}, {ID: "channel2", Name: "name2"}},
+		Feeds: []FeedInfo{
+			{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel},
+			{ID: "channel2", Name: "name2", Type: ytfeed.FTPlaylist},
+		},
 		Store:          store,
 		RootURL:        "http://localhost:8080/yt",
 		KeepPerChannel: 10,
 	}
 
-	res, err := svc.RSSFeed(FeedInfo{ID: "channel1", Name: "name1"})
+	res, err := svc.RSSFeed(FeedInfo{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel})
 	require.NoError(t, err)
 	t.Logf("%v", res)
 
@@ -136,6 +143,46 @@ func TestService_RSSFeed(t *testing.T) {
 	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/file1.mp3"`)
 	assert.Contains(t, res, `<guid>channel1::vid1</guid>`)
 	assert.Contains(t, res, `<guid>channel1::vid2</guid>`)
+	assert.Contains(t, res, `<link>http://example.com/v1</link>`)
+	assert.Contains(t, res, `<link>http://example.com/v2</link>`)
+	assert.Contains(t, res, `<link>http://example.com/c1</link>`)
+}
+
+func TestService_RSSFeedPlayList(t *testing.T) {
+	store := &mocks.StoreServiceMock{
+		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
+			res := []ytfeed.Entry{
+				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: "/tmp/file1.mp3"},
+				{ChannelID: "channel1", VideoID: "vid2", Title: "title2", File: "/tmp/file2.mp3"},
+			}
+			res[0].Link.Href = "http://example.com/v1"
+			res[1].Link.Href = "http://example.com/v2"
+			res[0].Author.URI = "http://example.com/c1"
+			return res, nil
+		},
+	}
+
+	svc := Service{
+		Feeds: []FeedInfo{
+			{ID: "channel1", Name: "name1", Type: ytfeed.FTPlaylist},
+			{ID: "channel2", Name: "name2", Type: ytfeed.FTPlaylist},
+		},
+		Store:          store,
+		RootURL:        "http://localhost:8080/yt",
+		KeepPerChannel: 10,
+	}
+
+	res, err := svc.RSSFeed(FeedInfo{ID: "channel1", Name: "name1", Type: ytfeed.FTPlaylist})
+	require.NoError(t, err)
+	t.Logf("%v", res)
+
+	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/file1.mp3"`)
+	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/file1.mp3"`)
+	assert.Contains(t, res, `<guid>channel1::vid1</guid>`)
+	assert.Contains(t, res, `<guid>channel1::vid2</guid>`)
+	assert.Contains(t, res, `<link>http://example.com/v1</link>`)
+	assert.Contains(t, res, `<link>http://example.com/v2</link>`)
+	assert.Contains(t, res, `<link>https://www.youtube.com/playlist?list=channel1</link>`)
 }
 
 func TestService_makeFileName(t *testing.T) {
