@@ -2,10 +2,11 @@ package api
 
 import (
 	"bytes"
-	"github.com/umputun/feed-master/app/proc"
 	"html/template"
 	"net/http"
 	"time"
+
+	"github.com/umputun/feed-master/app/proc"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -76,8 +77,8 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 		}
 		var feedItems []feedItem
 		for _, f := range feeds {
-			items, err := s.Store.Load(f, s.Conf.System.MaxTotal, true)
-			if err != nil {
+			items, loadErr := s.Store.Load(f, s.Conf.System.MaxTotal, true)
+			if loadErr != nil {
 				continue
 			}
 			feedConf := s.Conf.Feeds[f]
