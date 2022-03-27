@@ -161,9 +161,9 @@ func (s *Service) procChannels(ctx context.Context) error {
 			continue
 		}
 		log.Printf("[INFO] got %d entries for %s, limit to %d", len(entries), feedInfo.Name, s.keep(feedInfo))
-		changed := false
+		changed, processed := false, 0
 		for i, entry := range entries {
-			if i >= s.keep(feedInfo) {
+			if processed >= s.keep(feedInfo) {
 				break
 			}
 
@@ -202,6 +202,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] attempt to save dup entry %+v", entry)
 			}
 			changed = true
+			processed++
 			s.processed[entry.UID()] = true // track processed entries
 			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v, total processed: %d",
 				entry.VideoID, entry.Title, file, feedInfo, len(s.processed))

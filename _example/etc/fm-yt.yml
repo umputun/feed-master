@@ -114,9 +114,9 @@ youtube:
   rss_location: ./var/rss
   channels:
   - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь", lang: "ru-ru"}
-  - {id: UCTVk323gzizpujtn2T_BL7w, name: "Alexandr Plushev"}
-  - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel"}
-  - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist"}
+  - {id: UCTVk323gzizpujtn2T_BL7w, name: "Alexandr Plushev", lang: "ru-ru"}
+  - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel", lang: "ru-ru"}
+  - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru"}
 
 system:
   update: 1m
