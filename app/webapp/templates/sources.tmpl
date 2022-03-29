@@ -33,12 +33,11 @@
     <div class="ump-feed-master__data-row">
         <div class="ump-feed-master__data-row-info-cell">
             <div>
-                <a href="{{.Source.URL}}"
-                   target="_blank"><span class="ump-feed-master-program-name">{{.Source.Name}}</span>
+                <a href="{{.URL}}"
+                   target="_blank"><span class="ump-feed-master-program-name">{{.Name}}</span>
                 </a>
             </div>
         </div>
-        <div class="ump-feed-master-timestamp-cell">{{.EntriesCount}} entries, last updated {{.LastUpdated.Format "02 Jan 2006 15:04"}}</div>
     </div>
     {{end}}
 </main>

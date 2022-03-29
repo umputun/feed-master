@@ -5,7 +5,6 @@ package proc
 import (
 	"context"
 	"regexp"
-	"strings"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
@@ -144,10 +143,6 @@ func (p *Processor) feed(name, url, telegramChannel string, max int, filter Filt
 			item.Junk = true
 			log.Printf("[INFO] filtered %s (%s), %s %s", item.GUID, item.PubDate, name, item.Title)
 		}
-		// fixme: better way to get channel ID from item? need to map item to channel
-		splitted := strings.Split(item.GUID, "::")
-		channel := splitted[0]
-		item.Channel = channel
 
 		created, err := p.Store.Save(name, item)
 		if err != nil {

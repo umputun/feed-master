@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"html/template"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/umputun/feed-master/app/proc"
@@ -121,47 +120,14 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
 	data, err := s.cache.Get(feedName+"-sources", func() (interface{}, error) {
-		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, true)
-		if err != nil {
-			return nil, err
-		}
-
-		type sourceItem struct {
-			Source       proc.Source
-			LastUpdated  time.Time
-			EntriesCount int
-		}
-		var sources []sourceItem
-
-		feedConf := s.Conf.Feeds[feedName]
-		for _, s := range feedConf.Sources {
-			item := sourceItem{
-				Source:       s,
-				LastUpdated:  items[0].DT,
-				EntriesCount: 0,
-			}
-
-			// fixme: should be a better way?
-			for _, i := range items {
-				if strings.Contains(s.URL, i.Channel) {
-					if item.EntriesCount == 0 {
-						item.LastUpdated = i.DT
-					}
-					item.EntriesCount++
-				}
-			}
-			sources = append(sources, item)
-
-		}
-
 		tmplData := struct {
-			Sources []sourceItem
+			Sources []proc.Source
 		}{
-			Sources: sources,
+			Sources: s.Conf.Feeds[feedName].Sources,
 		}
 
 		res := bytes.NewBuffer(nil)
-		err = templates.ExecuteTemplate(res, "sources.tmpl", &tmplData)
+		err := templates.ExecuteTemplate(res, "sources.tmpl", &tmplData)
 		return res.Bytes(), err
 	})
 
