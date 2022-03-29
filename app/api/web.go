@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"net/http"
 	"time"
@@ -35,6 +36,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			Feeds       int
 			Version     string
 			RSSLink     string
+			SourcesLink string
 		}{
 			Items:       items,
 			Name:        s.Conf.Feeds[feedName].Title,
@@ -44,6 +46,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			Feeds:       len(s.Conf.Feeds[feedName].Sources),
 			Version:     s.Version,
 			RSSLink:     s.Conf.System.BaseURL + "/rss/" + feedName,
+			SourcesLink: s.Conf.System.BaseURL + "/feed/" + feedName + "/sources",
 		}
 
 		res := bytes.NewBuffer(nil)
@@ -101,6 +104,38 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 		res := bytes.NewBuffer(nil)
 		err = templates.ExecuteTemplate(res, "feeds.tmpl", &tmplData)
+		return res.Bytes(), err
+	})
+
+	if err != nil {
+		s.renderErrorPage(w, r, err, 400)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(data.([]byte)) // nolint
+}
+
+// GET /feed/{name}/sources - renders page with feed's list of sources
+func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
+	feedName := chi.URLParam(r, "name")
+	data, err := s.cache.Get(feedName+"-sources", func() (interface{}, error) {
+		if _, ok := s.Conf.Feeds[feedName]; !ok {
+			return nil, fmt.Errorf("feed %s not found", feedName)
+		}
+		feedConf := s.Conf.Feeds[feedName]
+
+		tmplData := struct {
+			Sources  []proc.Source
+			SrcCount int
+		}{
+			Sources:  feedConf.Sources,
+			SrcCount: len(feedConf.Sources),
+		}
+
+		res := bytes.NewBuffer(nil)
+		err := templates.ExecuteTemplate(res, "sources.tmpl", &tmplData)
 		return res.Bytes(), err
 	})
 

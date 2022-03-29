@@ -57,20 +57,23 @@ type Conf struct {
 	} `yaml:"youtube"`
 }
 
+// Source defines config section for source
+type Source struct {
+	Name string `yaml:"name"`
+	URL  string `yaml:"url"`
+}
+
 // Feed defines config section for a feed~
 type Feed struct {
-	Title           string `yaml:"title"`
-	Description     string `yaml:"description"`
-	Link            string `yaml:"link"`
-	Image           string `yaml:"image"`
-	Language        string `yaml:"language"`
-	TelegramChannel string `yaml:"telegram_channel"`
-	Filter          Filter `yaml:"filter"`
-	Sources         []struct {
-		Name string `yaml:"name"`
-		URL  string `yaml:"url"`
-	} `yaml:"sources"`
-	ExtendDateTitle string `yaml:"ext_date"`
+	Title           string   `yaml:"title"`
+	Description     string   `yaml:"description"`
+	Link            string   `yaml:"link"`
+	Image           string   `yaml:"image"`
+	Language        string   `yaml:"language"`
+	TelegramChannel string   `yaml:"telegram_channel"`
+	Filter          Filter   `yaml:"filter"`
+	Sources         []Source `yaml:"sources"`
+	ExtendDateTitle string   `yaml:"ext_date"`
 }
 
 // Filter defines feed section for a feed filter~

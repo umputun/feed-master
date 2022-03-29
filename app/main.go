@@ -126,10 +126,7 @@ func singleFeedConf(feedURL, ch string, updateInterval time.Duration) *proc.Conf
 	conf := proc.Conf{}
 	f := proc.Feed{
 		TelegramChannel: ch,
-		Sources: []struct {
-			Name string `yaml:"name"`
-			URL  string `yaml:"url"`
-		}{
+		Sources: []proc.Source{
 			{Name: "auto", URL: feedURL},
 		},
 	}
