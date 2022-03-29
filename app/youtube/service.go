@@ -154,6 +154,13 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 }
 
 func (s *Service) procChannels(ctx context.Context) error {
+
+	var (
+		allEntries   int
+		allProcessed int
+		allAdded     int
+	)
+
 	for _, feedInfo := range s.Feeds {
 		entries, err := s.ChannelService.Get(ctx, feedInfo.ID, feedInfo.Type)
 		if err != nil {
@@ -163,6 +170,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 		log.Printf("[INFO] got %d entries for %s, limit to %d", len(entries), feedInfo.Name, s.keep(feedInfo))
 		changed, processed := false, 0
 		for i, entry := range entries {
+			allEntries++
 			if processed >= s.keep(feedInfo) {
 				break
 			}
@@ -213,8 +221,10 @@ func (s *Service) procChannels(ctx context.Context) error {
 			if procErr = s.Store.SetProcessed(entry); procErr != nil {
 				log.Printf("[WARN] failed to set processed status for %s: %v", entry.VideoID, procErr)
 			}
+			allAdded++
 			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, feedInfo)
 		}
+		allProcessed += processed
 
 		if changed { // save rss feed to fs if there are new entries
 			if err := s.removeOld(feedInfo); err != nil {
@@ -231,7 +241,8 @@ func (s *Service) procChannels(ctx context.Context) error {
 		}
 	}
 
-	log.Printf("[INFO] processed channels completed, total channels: %d", len(s.Feeds))
+	log.Printf("[INFO] all channels processed - channels: %d, entries: %d, processed: %d, updated: %d",
+		len(s.Feeds), allEntries, allProcessed, allAdded)
 	return nil
 }
 
