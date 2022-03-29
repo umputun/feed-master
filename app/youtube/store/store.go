@@ -5,12 +5,15 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/pkg/errors"
 	"github.com/umputun/feed-master/app/youtube/feed"
 	bolt "go.etcd.io/bbolt"
 )
+
+var processedBkt = []byte("processed")
 
 // BoltDB store for metadata related to downloaded YouTube audio.
 type BoltDB struct {
@@ -149,10 +152,77 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 	return res, err
 }
 
+// SetProcessed sets processed status with ts for a given channel+video
+func (s *BoltDB) SetProcessed(entry feed.Entry) error {
+
+	key, keyErr := s.procKey(entry)
+	if keyErr != nil {
+		return errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
+	}
+
+	err := s.DB.Update(func(tx *bolt.Tx) error {
+		bucket, e := tx.CreateBucketIfNotExists(processedBkt)
+		if e != nil {
+			return errors.Wrapf(e, "create bucket %s", processedBkt)
+		}
+		if bucket.Get(key) != nil {
+			return nil
+		}
+
+		log.Printf("[INFO] set processed %s - {ChannelID:%s, VideoID:%s, Title:%s, File:%s, Author:%s, Published:%s}",
+			string(key), entry.ChannelID, entry.VideoID, entry.Title, entry.File, entry.Author.Name, entry.Published)
+
+		e = bucket.Put(key, []byte(entry.Published.Format(time.RFC3339)))
+		if e != nil {
+			return errors.Wrapf(e, "save processed %s", entry.VideoID)
+		}
+		return e
+	})
+
+	return err
+}
+
+// CheckProcessed get processed status and returns timestamp for a given channel+video
+// returns found=true if was set before and also the timestamp from stored entry.Published
+func (s *BoltDB) CheckProcessed(entry feed.Entry) (found bool, ts time.Time, err error) {
+
+	key, keyErr := s.procKey(entry)
+	if keyErr != nil {
+		return false, time.Time{}, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
+	}
+
+	err = s.DB.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(processedBkt)
+		if bucket == nil {
+			return nil
+		}
+
+		res := bucket.Get(key)
+		if res == nil {
+			found = false
+			return nil
+		}
+		found = true
+		var tsErr error
+		ts, tsErr = time.Parse(time.RFC3339, string(res))
+		return tsErr
+	})
+
+	return found, ts, err
+}
+
 func (s *BoltDB) key(entry feed.Entry) ([]byte, error) {
 	h := sha1.New()
 	if _, err := h.Write([]byte(entry.VideoID)); err != nil {
 		return nil, err
 	}
 	return []byte(fmt.Sprintf("%d-%x", entry.Published.Unix(), h.Sum(nil))), nil
+}
+
+func (s *BoltDB) procKey(entry feed.Entry) ([]byte, error) {
+	h := sha1.New()
+	if _, err := h.Write([]byte(entry.ChannelID + "::" + entry.VideoID)); err != nil {
+		return nil, err
+	}
+	return []byte(fmt.Sprintf("%x", h.Sum(nil))), nil
 }

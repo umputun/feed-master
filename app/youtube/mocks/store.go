@@ -5,6 +5,7 @@ package mocks
 
 import (
 	"sync"
+	"time"
 
 	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
 )
@@ -15,6 +16,9 @@ import (
 //
 // 		// make and configure a mocked youtube.StoreService
 // 		mockedStoreService := &StoreServiceMock{
+// 			CheckProcessedFunc: func(entry ytfeed.Entry) (bool, time.Time, error) {
+// 				panic("mock out the CheckProcessed method")
+// 			},
 // 			ExistFunc: func(entry ytfeed.Entry) (bool, error) {
 // 				panic("mock out the Exist method")
 // 			},
@@ -27,6 +31,9 @@ import (
 // 			SaveFunc: func(entry ytfeed.Entry) (bool, error) {
 // 				panic("mock out the Save method")
 // 			},
+// 			SetProcessedFunc: func(entry ytfeed.Entry) error {
+// 				panic("mock out the SetProcessed method")
+// 			},
 // 		}
 //
 // 		// use mockedStoreService in code that requires youtube.StoreService
@@ -34,6 +41,9 @@ import (
 //
 // 	}
 type StoreServiceMock struct {
+	// CheckProcessedFunc mocks the CheckProcessed method.
+	CheckProcessedFunc func(entry ytfeed.Entry) (bool, time.Time, error)
+
 	// ExistFunc mocks the Exist method.
 	ExistFunc func(entry ytfeed.Entry) (bool, error)
 
@@ -46,8 +56,16 @@ type StoreServiceMock struct {
 	// SaveFunc mocks the Save method.
 	SaveFunc func(entry ytfeed.Entry) (bool, error)
 
+	// SetProcessedFunc mocks the SetProcessed method.
+	SetProcessedFunc func(entry ytfeed.Entry) error
+
 	// calls tracks calls to the methods.
 	calls struct {
+		// CheckProcessed holds details about calls to the CheckProcessed method.
+		CheckProcessed []struct {
+			// Entry is the entry argument value.
+			Entry ytfeed.Entry
+		}
 		// Exist holds details about calls to the Exist method.
 		Exist []struct {
 			// Entry is the entry argument value.
@@ -72,11 +90,49 @@ type StoreServiceMock struct {
 			// Entry is the entry argument value.
 			Entry ytfeed.Entry
 		}
+		// SetProcessed holds details about calls to the SetProcessed method.
+		SetProcessed []struct {
+			// Entry is the entry argument value.
+			Entry ytfeed.Entry
+		}
 	}
-	lockExist     sync.RWMutex
-	lockLoad      sync.RWMutex
-	lockRemoveOld sync.RWMutex
-	lockSave      sync.RWMutex
+	lockCheckProcessed sync.RWMutex
+	lockExist          sync.RWMutex
+	lockLoad           sync.RWMutex
+	lockRemoveOld      sync.RWMutex
+	lockSave           sync.RWMutex
+	lockSetProcessed   sync.RWMutex
+}
+
+// CheckProcessed calls CheckProcessedFunc.
+func (mock *StoreServiceMock) CheckProcessed(entry ytfeed.Entry) (bool, time.Time, error) {
+	if mock.CheckProcessedFunc == nil {
+		panic("StoreServiceMock.CheckProcessedFunc: method is nil but StoreService.CheckProcessed was just called")
+	}
+	callInfo := struct {
+		Entry ytfeed.Entry
+	}{
+		Entry: entry,
+	}
+	mock.lockCheckProcessed.Lock()
+	mock.calls.CheckProcessed = append(mock.calls.CheckProcessed, callInfo)
+	mock.lockCheckProcessed.Unlock()
+	return mock.CheckProcessedFunc(entry)
+}
+
+// CheckProcessedCalls gets all the calls that were made to CheckProcessed.
+// Check the length with:
+//     len(mockedStoreService.CheckProcessedCalls())
+func (mock *StoreServiceMock) CheckProcessedCalls() []struct {
+	Entry ytfeed.Entry
+} {
+	var calls []struct {
+		Entry ytfeed.Entry
+	}
+	mock.lockCheckProcessed.RLock()
+	calls = mock.calls.CheckProcessed
+	mock.lockCheckProcessed.RUnlock()
+	return calls
 }
 
 // Exist calls ExistFunc.
@@ -208,5 +264,36 @@ func (mock *StoreServiceMock) SaveCalls() []struct {
 	mock.lockSave.RLock()
 	calls = mock.calls.Save
 	mock.lockSave.RUnlock()
+	return calls
+}
+
+// SetProcessed calls SetProcessedFunc.
+func (mock *StoreServiceMock) SetProcessed(entry ytfeed.Entry) error {
+	if mock.SetProcessedFunc == nil {
+		panic("StoreServiceMock.SetProcessedFunc: method is nil but StoreService.SetProcessed was just called")
+	}
+	callInfo := struct {
+		Entry ytfeed.Entry
+	}{
+		Entry: entry,
+	}
+	mock.lockSetProcessed.Lock()
+	mock.calls.SetProcessed = append(mock.calls.SetProcessed, callInfo)
+	mock.lockSetProcessed.Unlock()
+	return mock.SetProcessedFunc(entry)
+}
+
+// SetProcessedCalls gets all the calls that were made to SetProcessed.
+// Check the length with:
+//     len(mockedStoreService.SetProcessedCalls())
+func (mock *StoreServiceMock) SetProcessedCalls() []struct {
+	Entry ytfeed.Entry
+} {
+	var calls []struct {
+		Entry ytfeed.Entry
+	}
+	mock.lockSetProcessed.RLock()
+	calls = mock.calls.SetProcessed
+	mock.lockSetProcessed.RUnlock()
 	return calls
 }

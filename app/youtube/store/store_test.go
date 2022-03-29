@@ -177,3 +177,61 @@ func TestBoldDB_RemoveOld(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, []string{"f2", "f1"}, res)
 }
+
+func TestBoltDB_SetProcessed(t *testing.T) {
+	tmpfile := filepath.Join(os.TempDir(), "test.db")
+	defer os.Remove(tmpfile)
+
+	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+	require.NoError(t, err)
+
+	s := BoltDB{DB: db}
+
+	{
+		entry := feed.Entry{
+			ChannelID: "chan1",
+			VideoID:   "vid1",
+			Title:     "title1",
+			Published: time.Date(2022, time.March, 21, 16, 45, 22, 0, time.UTC),
+			File:      "f1",
+		}
+		e := s.SetProcessed(entry)
+		require.NoError(t, e)
+	}
+	{
+		entry := feed.Entry{
+			ChannelID: "chan1",
+			VideoID:   "vid2",
+			Title:     "title2",
+			Published: time.Date(2022, time.March, 21, 17, 45, 22, 0, time.UTC),
+			File:      "f2",
+		}
+		e := s.SetProcessed(entry)
+		require.NoError(t, e)
+	}
+	{
+		entry := feed.Entry{
+			ChannelID: "chan1",
+			VideoID:   "vid3",
+			Title:     "title3",
+			Published: time.Date(2022, time.March, 21, 18, 45, 22, 0, time.UTC),
+			File:      "f3",
+		}
+		e := s.SetProcessed(entry)
+		require.NoError(t, e)
+	}
+
+	found, ts, err := s.CheckProcessed(feed.Entry{ChannelID: "chan1", VideoID: "vid2"})
+	require.NoError(t, err)
+	assert.True(t, found)
+	assert.Equal(t, time.Date(2022, time.March, 21, 17, 45, 22, 0, time.UTC), ts)
+
+	found, ts, err = s.CheckProcessed(feed.Entry{ChannelID: "chan1", VideoID: "vid3"})
+	require.NoError(t, err)
+	assert.True(t, found)
+	assert.Equal(t, time.Date(2022, time.March, 21, 18, 45, 22, 0, time.UTC), ts)
+
+	found, _, err = s.CheckProcessed(feed.Entry{ChannelID: "chan1", VideoID: "vidXXX"})
+	require.NoError(t, err)
+	assert.False(t, found)
+}
