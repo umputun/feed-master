@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"net/http"
 	"time"
@@ -120,10 +121,15 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
 	data, err := s.cache.Get(feedName+"-sources", func() (interface{}, error) {
+		if _, ok := s.Conf.Feeds[feedName]; !ok {
+			return nil, fmt.Errorf("feed %s not found", feedName)
+		}
+		feedConf := s.Conf.Feeds[feedName]
+
 		tmplData := struct {
 			Sources []proc.Source
 		}{
-			Sources: s.Conf.Feeds[feedName].Sources,
+			Sources: feedConf.Sources,
 		}
 
 		res := bytes.NewBuffer(nil)
