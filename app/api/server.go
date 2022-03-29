@@ -148,6 +148,8 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 
 	rss := feed.Rss2{
 		Version:       "2.0",
+		NsItunes:      "http://www.itunes.com/dtds/podcast-1.0.dtd",
+		NsMedia:       "http://search.yahoo.com/mrss/",
 		ItemList:      items,
 		Title:         s.Conf.Feeds[feedName].Title,
 		Description:   s.Conf.Feeds[feedName].Description,
@@ -160,7 +162,14 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 
 	// replace link to UI page
 	if s.Conf.System.BaseURL != "" {
-		rss.Link = s.Conf.System.BaseURL + "/feed/" + feedName
+		baseURL := s.Conf.System.BaseURL
+		rss.Link = baseURL + "/feed/" + feedName
+		rss.ItunesImage = feed.ItunesImg{
+			URL: baseURL + "/image/" + feedName,
+		}
+		rss.MediaThumbnail = feed.MediaThumbnail{
+			URL: baseURL + "/image/" + feedName,
+		}
 	}
 
 	b, err := xml.MarshalIndent(&rss, "", "  ")
