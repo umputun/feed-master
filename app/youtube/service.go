@@ -199,7 +199,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 			processed++
 			log.Printf("[INFO] downloaded %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, feedInfo)
 			entry.File = file
-			if !strings.HasPrefix(entry.Title, feedInfo.Name) {
+			if strings.Contains(entry.Title, feedInfo.Name) {
 				entry.Title = feedInfo.Name + ": " + entry.Title
 			}
 			ok, saveErr := s.Store.Save(entry)
