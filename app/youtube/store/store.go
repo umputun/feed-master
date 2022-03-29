@@ -8,6 +8,7 @@ import (
 	"time"
 
 	log "github.com/go-pkgz/lgr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/umputun/feed-master/app/youtube/feed"
 	bolt "go.etcd.io/bbolt"
@@ -122,11 +123,13 @@ func (s *BoltDB) Channels() (result []string, err error) {
 
 // RemoveOld removes old entries from bolt and returns the list of removed entry.File
 // the caller should delete the files
+// important: this method returns the list of removed keys even if there was an error
 func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 	deleted := 0
 	var res []string
 
 	err := s.DB.Update(func(tx *bolt.Tx) (e error) {
+		errs := new(multierror.Error)
 		bucket := tx.Bucket([]byte(channelID))
 		if bucket == nil {
 			return fmt.Errorf("no bucket for %s", channelID)
@@ -141,14 +144,17 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 					log.Printf("[WARN] failed to unmarshal, %v", err)
 					continue
 				}
+				if err := bucket.Delete(k); err != nil {
+					errs = multierror.Append(errs, errors.Wrapf(err, "failed to delete %s (%s)", string(k), item.File))
+					continue
+				}
 				res = append(res, item.File)
-
-				e = bucket.Delete(k)
 				deleted++
 			}
 		}
-		return e
+		return errs.ErrorOrNil()
 	})
+
 	return res, err
 }
 
