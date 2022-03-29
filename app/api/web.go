@@ -120,7 +120,7 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 // GET /feed/{name}/sources - renders page with feed's list of sources
 func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
-	data, err := s.cache.Get(feedName+"sources", func() (interface{}, error) {
+	data, err := s.cache.Get(feedName+"-sources", func() (interface{}, error) {
 		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, true)
 		if err != nil {
 			return nil, err
