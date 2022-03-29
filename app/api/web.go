@@ -127,9 +127,11 @@ func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 		feedConf := s.Conf.Feeds[feedName]
 
 		tmplData := struct {
-			Sources []proc.Source
+			Sources  []proc.Source
+			SrcCount int
 		}{
-			Sources: feedConf.Sources,
+			Sources:  feedConf.Sources,
+			SrcCount: len(feedConf.Sources),
 		}
 
 		res := bytes.NewBuffer(nil)
