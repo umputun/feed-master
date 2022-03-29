@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/umputun/feed-master/app/proc"
@@ -35,6 +36,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			Feeds       int
 			Version     string
 			RSSLink     string
+			SourcesLink string
 		}{
 			Items:       items,
 			Name:        s.Conf.Feeds[feedName].Title,
@@ -44,6 +46,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			Feeds:       len(s.Conf.Feeds[feedName].Sources),
 			Version:     s.Version,
 			RSSLink:     s.Conf.System.BaseURL + "/rss/" + feedName,
+			SourcesLink: s.Conf.System.BaseURL + "/feed/" + feedName + "/sources",
 		}
 
 		res := bytes.NewBuffer(nil)
@@ -101,6 +104,64 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 		res := bytes.NewBuffer(nil)
 		err = templates.ExecuteTemplate(res, "feeds.tmpl", &tmplData)
+		return res.Bytes(), err
+	})
+
+	if err != nil {
+		s.renderErrorPage(w, r, err, 400)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(data.([]byte)) // nolint
+}
+
+// GET /feed/{name}/sources - renders page with feed's list of sources
+func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
+	feedName := chi.URLParam(r, "name")
+	data, err := s.cache.Get(feedName+"sources", func() (interface{}, error) {
+		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, true)
+		if err != nil {
+			return nil, err
+		}
+
+		type sourceItem struct {
+			Source       proc.Source
+			LastUpdated  time.Time
+			EntriesCount int
+		}
+		var sources []sourceItem
+
+		feedConf := s.Conf.Feeds[feedName]
+		for _, s := range feedConf.Sources {
+			item := sourceItem{
+				Source:       s,
+				LastUpdated:  items[0].DT,
+				EntriesCount: 0,
+			}
+
+			// fixme: should be a better way?
+			for _, i := range items {
+				if strings.Contains(s.URL, i.Channel) {
+					if item.EntriesCount == 0 {
+						item.LastUpdated = i.DT
+					}
+					item.EntriesCount++
+				}
+			}
+			sources = append(sources, item)
+
+		}
+
+		tmplData := struct {
+			Sources []sourceItem
+		}{
+			Sources: sources,
+		}
+
+		res := bytes.NewBuffer(nil)
+		err = templates.ExecuteTemplate(res, "sources.tmpl", &tmplData)
 		return res.Bytes(), err
 	})
 

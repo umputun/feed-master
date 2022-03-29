@@ -8,7 +8,6 @@
     <link href="/static/styles.css" rel="stylesheet"/>
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-    <link rel="alternate" type="application/rss+xml" title="{{.Name}}" href="{{.RSSLink}}" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="/static/bootstrap.bundle.min.js"></script>
 </head>
@@ -24,45 +23,22 @@
         </div>
         <div>
             <span class="ump-feed-master-name">Feed Master</span>
-            <span class="ump-feed-master-info">{{.Description}} <a href="{{.Link}}" class="ump-feed-master-header-link">«{{.Name}}»</a></span>
+            <span class="ump-feed-master-info">Feeds</span>
         </div>
-    </div>
-    <div class="ump-feed-master-header__meta">
-        <a href="{{.RSSLink}}" class="ump-feed-master-header-link">RSS</a>, <a href="{{.SourcesLink}}" class="ump-feed-master-header-link"> {{.Feeds}} feeds</a>, {{.LastUpdate.Format "02 Jan 2006 15:04:05 MST"}}
     </div>
 </header>
 
 <main class="ump-feed-master">
-    {{range .Items}}
-    {{if .Junk}}
-    <div class="ump-feed-master__data-row junk-row">
-    {{else}}
+    {{range .Sources}}
     <div class="ump-feed-master__data-row">
-    {{end}}
-        <div class="ump-feed-master__data-row-player-cell">
-            <a href="{{.Enclosure.URL}}" target="_blank">
-                <i class="fas fa-volume-up"></i>
-            </a>
-        </div>
         <div class="ump-feed-master__data-row-info-cell">
             <div>
-                <a href="{{.Link}}"
-                   target="_blank"><span class="ump-feed-master-program-name">{{.Title}}</span>
-                    <i class="fas fa-info-circle"
-                       data-toggle="tooltip"
-                       title="{{.Description}}">
-                    </i>
+                <a href="{{.Source.URL}}"
+                   target="_blank"><span class="ump-feed-master-program-name">{{.Source.Name}}</span>
                 </a>
             </div>
-            <div class="ump-feed-master-timestamp-cell">
-                {{if .Junk}}
-                <i class="fas fa-exclamation-circle"
-                   data-toggle="tooltip"
-                   title="Junk - excluded from target rss feed">
-                </i>
-                {{end}}
-                {{.DT.Format "02 Jan 15:04"}}</div>
         </div>
+        <div class="ump-feed-master-timestamp-cell">{{.EntriesCount}} entries, last updated {{.LastUpdated.Format "02 Jan 2006 15:04"}}</div>
     </div>
     {{end}}
 </main>

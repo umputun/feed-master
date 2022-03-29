@@ -5,6 +5,7 @@ package proc
 import (
 	"context"
 	"regexp"
+	"strings"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
@@ -57,20 +58,23 @@ type Conf struct {
 	} `yaml:"youtube"`
 }
 
+// Source defines config section for source
+type Source struct {
+	Name string `yaml:"name"`
+	URL  string `yaml:"url"`
+}
+
 // Feed defines config section for a feed~
 type Feed struct {
-	Title           string `yaml:"title"`
-	Description     string `yaml:"description"`
-	Link            string `yaml:"link"`
-	Image           string `yaml:"image"`
-	Language        string `yaml:"language"`
-	TelegramChannel string `yaml:"telegram_channel"`
-	Filter          Filter `yaml:"filter"`
-	Sources         []struct {
-		Name string `yaml:"name"`
-		URL  string `yaml:"url"`
-	} `yaml:"sources"`
-	ExtendDateTitle string `yaml:"ext_date"`
+	Title           string   `yaml:"title"`
+	Description     string   `yaml:"description"`
+	Link            string   `yaml:"link"`
+	Image           string   `yaml:"image"`
+	Language        string   `yaml:"language"`
+	TelegramChannel string   `yaml:"telegram_channel"`
+	Filter          Filter   `yaml:"filter"`
+	Sources         []Source `yaml:"sources"`
+	ExtendDateTitle string   `yaml:"ext_date"`
 }
 
 // Filter defines feed section for a feed filter~
@@ -140,6 +144,10 @@ func (p *Processor) feed(name, url, telegramChannel string, max int, filter Filt
 			item.Junk = true
 			log.Printf("[INFO] filtered %s (%s), %s %s", item.GUID, item.PubDate, name, item.Title)
 		}
+		// fixme: better way to get channel ID from item? need to map item to channel
+		splitted := strings.Split(item.GUID, "::")
+		channel := splitted[0]
+		item.Channel = channel
 
 		created, err := p.Store.Save(name, item)
 		if err != nil {
