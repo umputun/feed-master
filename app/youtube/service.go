@@ -159,6 +159,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 		allEntries   int
 		allProcessed int
 		allAdded     int
+		allRemoved   int
 	)
 
 	for _, feedInfo := range s.Feeds {
@@ -227,8 +228,11 @@ func (s *Service) procChannels(ctx context.Context) error {
 		allProcessed += processed
 
 		if changed { // save rss feed to fs if there are new entries
-			if err := s.removeOld(feedInfo); err != nil {
+			removed, err := s.removeOld(feedInfo)
+			if err != nil {
 				log.Printf("[WARN] failed to remove old entries for %s: %v", feedInfo.Name, err)
+			} else {
+				allRemoved += removed
 			}
 			rss, rssErr := s.RSSFeed(feedInfo)
 			if rssErr != nil {
@@ -241,27 +245,29 @@ func (s *Service) procChannels(ctx context.Context) error {
 		}
 	}
 
-	log.Printf("[INFO] all channels processed - channels: %d, entries: %d, processed: %d, updated: %d",
-		len(s.Feeds), allEntries, allProcessed, allAdded)
+	log.Printf("[INFO] all channels processed - channels: %d, entries: %d, processed: %d, updated: %d, removed: %d",
+		len(s.Feeds), allEntries, allProcessed, allAdded, allRemoved)
+
 	return nil
 }
 
 // removeOld deletes old entries from store and corresponding files
-func (s *Service) removeOld(fi FeedInfo) error {
+func (s *Service) removeOld(fi FeedInfo) (int, error) {
+	removed := 0
 	keep := s.keep(fi)
 	files, err := s.Store.RemoveOld(fi.ID, keep+1)
 	if err != nil {
-		return errors.Wrapf(err, "failed to remove old meta data for %s", fi.ID)
+		return 0, errors.Wrapf(err, "failed to remove old meta data for %s", fi.ID)
 	}
 	for _, f := range files {
 		if e := os.Remove(f); e != nil {
 			log.Printf("[WARN] failed to remove file %s: %s", f, e)
 			continue
 		}
-
+		removed++
 		log.Printf("[INFO] removed %s for %s (%s)", f, fi.ID, fi.Name)
 	}
-	return nil
+	return removed, nil
 }
 
 func (s *Service) keep(fi FeedInfo) int {
