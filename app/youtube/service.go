@@ -190,7 +190,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] can't get processed status for %s, %+v", entry.VideoID, feedInfo)
 			}
 			if procErr == nil && found {
-				allStats.skipped++
+				allStats.dups++
 				processed++
 				log.Printf("[INFO] skipping already processed entry %s at %s, %+v",
 					entry.VideoID, procTS.Format(time.RFC3339), feedInfo)
@@ -289,9 +289,10 @@ type stats struct {
 	removed   int
 	ignored   int
 	skipped   int
+	dups      int
 }
 
 func (st stats) String() string {
-	return fmt.Sprintf("entries: %d, processed: %d, updated: %d, removed: %d, ignored: %d, skipped: %d",
-		st.entries, st.processed, st.added, st.removed, st.ignored, st.skipped)
+	return fmt.Sprintf("entries: %d, processed: %d, updated: %d, removed: %d, ignored: %d, skipped: %d, dups: %d",
+		st.entries, st.processed, st.added, st.removed, st.ignored, st.skipped, st.dups)
 }
