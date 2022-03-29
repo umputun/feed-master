@@ -109,7 +109,8 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 
 		var fileSize int
 		if fileInfo, fiErr := os.Stat(entry.File); fiErr != nil {
-			log.Printf("[WARN] failed to get file size for %s: %v", entry.File, fiErr)
+			log.Printf("[WARN] failed to get file size for %s (%s %s): %v",
+				entry.File, entry.VideoID, entry.Title, fiErr)
 		} else {
 			fileSize = int(fileInfo.Size())
 		}
@@ -261,7 +262,7 @@ func (s *Service) removeOld(fi FeedInfo) (int, error) {
 	}
 	for _, f := range files {
 		if e := os.Remove(f); e != nil {
-			log.Printf("[WARN] failed to remove file %s: %s", f, e)
+			log.Printf("[WARN] failed to remove file %s: %v", f, e)
 			continue
 		}
 		removed++
