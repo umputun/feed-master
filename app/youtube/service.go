@@ -156,12 +156,7 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 
 func (s *Service) procChannels(ctx context.Context) error {
 
-	var (
-		allEntries   int
-		allProcessed int
-		allAdded     int
-		allRemoved   int
-	)
+	var allStats stats
 
 	for _, feedInfo := range s.Feeds {
 		entries, err := s.ChannelService.Get(ctx, feedInfo.ID, feedInfo.Type)
@@ -172,7 +167,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 		log.Printf("[INFO] got %d entries for %s, limit to %d", len(entries), feedInfo.Name, s.keep(feedInfo))
 		changed, processed := false, 0
 		for i, entry := range entries {
-			allEntries++
+			allStats.entries++
 			if processed >= s.keep(feedInfo) {
 				break
 			}
@@ -183,6 +178,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				return errors.Wrapf(exErr, "failed to check if entry %s exists", entry.VideoID)
 			}
 			if exists {
+				allStats.skipped++
 				processed++
 				continue
 			}
@@ -194,6 +190,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] can't get processed status for %s, %+v", entry.VideoID, feedInfo)
 			}
 			if procErr == nil && found {
+				allStats.skipped++
 				processed++
 				log.Printf("[INFO] skipping already processed entry %s at %s, %+v",
 					entry.VideoID, procTS.Format(time.RFC3339), feedInfo)
@@ -203,6 +200,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 			log.Printf("[INFO] new entry [%d] %s, %s, %s", i+1, entry.VideoID, entry.Title, feedInfo.Name)
 			file, downErr := s.Downloader.Get(ctx, entry.VideoID, s.makeFileName(entry))
 			if downErr != nil {
+				allStats.ignored++
 				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, downErr)
 				continue
 			}
@@ -223,17 +221,17 @@ func (s *Service) procChannels(ctx context.Context) error {
 			if procErr = s.Store.SetProcessed(entry); procErr != nil {
 				log.Printf("[WARN] failed to set processed status for %s: %v", entry.VideoID, procErr)
 			}
-			allAdded++
+			allStats.added++
 			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, feedInfo)
 		}
-		allProcessed += processed
+		allStats.processed += processed
 
 		if changed { // save rss feed to fs if there are new entries
 			removed, err := s.removeOld(feedInfo)
 			if err != nil {
 				log.Printf("[WARN] failed to remove old entries for %s: %v", feedInfo.Name, err)
 			} else {
-				allRemoved += removed
+				allStats.removed += removed
 			}
 			rss, rssErr := s.RSSFeed(feedInfo)
 			if rssErr != nil {
@@ -246,8 +244,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 		}
 	}
 
-	log.Printf("[INFO] all channels processed - channels: %d, entries: %d, processed: %d, updated: %d, removed: %d",
-		len(s.Feeds), allEntries, allProcessed, allAdded, allRemoved)
+	log.Printf("[INFO] all channels processed - channels: %d, %s", len(s.Feeds), allStats.String())
 
 	return nil
 }
@@ -285,4 +282,18 @@ func (s *Service) makeFileName(entry ytfeed.Entry) string {
 		return uuid.New().String()
 	}
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+type stats struct {
+	entries   int
+	processed int
+	added     int
+	removed   int
+	ignored   int
+	skipped   int
+}
+
+func (st stats) String() string {
+	return fmt.Sprintf("entries: %d, processed: %d, updated: %d, removed: %d, ignored: %d, skipped: %d",
+		st.entries, st.processed, st.added, st.removed, st.ignored, st.skipped)
 }
