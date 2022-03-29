@@ -33,7 +33,6 @@ type Service struct {
 	RSSFileStore   RSSFileStore
 	KeepPerChannel int
 	RootURL        string
-	processed      map[string]bool
 }
 
 // FeedInfo contains channel or feed ID, readable name and other per-feed info
@@ -61,6 +60,8 @@ type StoreService interface {
 	Load(channelID string, max int) ([]ytfeed.Entry, error)
 	Exist(entry ytfeed.Entry) (bool, error)
 	RemoveOld(channelID string, keep int) ([]string, error)
+	SetProcessed(entry ytfeed.Entry) error
+	CheckProcessed(entry ytfeed.Entry) (found bool, ts time.Time, err error)
 }
 
 // Do is a blocking function that downloads audio from youtube channels and updates metadata
@@ -71,7 +72,6 @@ func (s *Service) Do(ctx context.Context) error {
 		log.Printf("[INFO] youtube feed %+v", f)
 	}
 
-	s.processed = make(map[string]bool)
 	tick := time.NewTicker(s.CheckDuration)
 	defer tick.Stop()
 
@@ -179,9 +179,14 @@ func (s *Service) procChannels(ctx context.Context) error {
 
 			// check if we already processed this entry.
 			// this is needed to avoid infinite get/remove loop when the original feed is updated in place
-			if _, ok := s.processed[entry.UID()]; ok {
+			found, procTS, procErr := s.Store.CheckProcessed(entry)
+			if procErr != nil {
+				log.Printf("[WARN] can't get processed status for %s, %+v", entry.VideoID, feedInfo)
+			}
+			if procErr == nil && found {
 				processed++
-				log.Printf("[INFO] skipping already processed entry %s, %+v", entry.VideoID, feedInfo)
+				log.Printf("[INFO] skipping already processed entry %s at %s, %+v",
+					entry.VideoID, procTS.Format(time.RFC3339), feedInfo)
 				continue
 			}
 
@@ -205,9 +210,10 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] attempt to save dup entry %+v", entry)
 			}
 			changed = true
-			s.processed[entry.UID()] = true // track processed entries
-			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v, total processed: %d",
-				entry.VideoID, entry.Title, file, feedInfo, len(s.processed))
+			if procErr = s.Store.SetProcessed(entry); procErr != nil {
+				log.Printf("[WARN] failed to set processed status for %s: %v", entry.VideoID, procErr)
+			}
+			log.Printf("[INFO] saved %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, feedInfo)
 		}
 
 		if changed { // save rss feed to fs if there are new entries

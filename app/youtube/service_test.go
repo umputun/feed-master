@@ -3,14 +3,16 @@ package youtube
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
+	"github.com/umputun/feed-master/app/youtube/store"
+	bolt "go.etcd.io/bbolt"
 
 	"github.com/umputun/feed-master/app/youtube/mocks"
 )
@@ -20,9 +22,9 @@ func TestService_Do(t *testing.T) {
 	chans := &mocks.ChannelServiceMock{
 		GetFunc: func(ctx context.Context, chanID string, feedType ytfeed.Type) ([]ytfeed.Entry, error) {
 			return []ytfeed.Entry{
-				{ChannelID: chanID, VideoID: "vid1", Title: "title1"},
-				{ChannelID: chanID, VideoID: "vid2", Title: "title2"},
-				{ChannelID: chanID, VideoID: "vid2", Title: "title2"}, // duplicate
+				{ChannelID: chanID, VideoID: "vid1", Title: "title1", Published: time.Now()},
+				{ChannelID: chanID, VideoID: "vid2", Title: "title2", Published: time.Now()},
+				{ChannelID: chanID, VideoID: "vid2", Title: "title2", Published: time.Now()}, // duplicate
 			}, nil
 		},
 	}
@@ -31,28 +33,13 @@ func TestService_Do(t *testing.T) {
 			return "/tmp/" + fname + ".mp3", nil
 		},
 	}
-	store := &mocks.StoreServiceMock{
-		ExistFunc: func(entry ytfeed.Entry) (bool, error) {
-			if entry.VideoID == "vid2" {
-				return true, nil
-			}
-			return false, nil
-		},
-		SaveFunc: func(entry ytfeed.Entry) (bool, error) {
-			return true, nil
-		},
 
-		RemoveOldFunc: func(channelID string, keep int) ([]string, error) {
-			return []string{"/tmp/blah.mp3"}, nil
-		},
-		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
-			return []ytfeed.Entry{
-				{ChannelID: channelID, VideoID: "vid1", Title: "title1"},
-				{ChannelID: channelID, VideoID: "vid2", Title: "title2"},
-			}, nil
-		},
-	}
+	tmpfile := filepath.Join(os.TempDir(), "test.db")
+	defer os.Remove(tmpfile)
 
+	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+	require.NoError(t, err)
+	boltStore := &store.BoltDB{DB: db}
 	svc := Service{
 		Feeds: []FeedInfo{
 			{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel},
@@ -60,7 +47,7 @@ func TestService_Do(t *testing.T) {
 		},
 		Downloader:     downloader,
 		ChannelService: chans,
-		Store:          store,
+		Store:          boltStore,
 		CheckDuration:  time.Millisecond * 500,
 		KeepPerChannel: 10,
 		RSSFileStore:   RSSFileStore{Enabled: true, Location: "/tmp"},
@@ -69,7 +56,7 @@ func TestService_Do(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*900)
 	defer cancel()
 
-	err := svc.Do(ctx)
+	err = svc.Do(ctx)
 	assert.EqualError(t, err, "context deadline exceeded")
 
 	require.Equal(t, 4, len(chans.GetCalls()))
@@ -80,23 +67,21 @@ func TestService_Do(t *testing.T) {
 	assert.Equal(t, "channel1", chans.GetCalls()[2].ChanID)
 	assert.Equal(t, "channel2", chans.GetCalls()[3].ChanID)
 
-	require.Equal(t, 12, len(store.ExistCalls()))
-	require.Equal(t, "channel1", store.ExistCalls()[0].Entry.ChannelID)
-	require.Equal(t, "channel1", store.ExistCalls()[1].Entry.ChannelID)
-	require.Equal(t, "channel1", store.ExistCalls()[2].Entry.ChannelID)
-	require.Equal(t, "channel2", store.ExistCalls()[3].Entry.ChannelID)
-	require.Equal(t, "channel2", store.ExistCalls()[4].Entry.ChannelID)
+	res, err := boltStore.Load("channel1", 10)
+	require.NoError(t, err)
+	assert.Equal(t, 2, len(res), "two entries for channel1, skipped duplicate")
+	assert.Equal(t, "vid2", res[0].VideoID)
+	assert.Equal(t, "vid1", res[1].VideoID)
 
-	require.Equal(t, 2, len(downloader.GetCalls()))
+	res, err = boltStore.Load("channel2", 10)
+	require.NoError(t, err)
+	assert.Equal(t, 2, len(res), "two entries for channel1, skipped duplicate")
+	assert.Equal(t, "vid2", res[0].VideoID)
+	assert.Equal(t, "vid1", res[1].VideoID)
+
+	require.Equal(t, 4, len(downloader.GetCalls()))
 	require.Equal(t, "vid1", downloader.GetCalls()[0].ID)
 	require.True(t, downloader.GetCalls()[0].Fname != "")
-
-	require.Equal(t, 2, len(store.SaveCalls()))
-	require.Equal(t, "channel1", store.SaveCalls()[0].Entry.ChannelID)
-	require.Equal(t, "vid1", store.SaveCalls()[0].Entry.VideoID)
-	require.Equal(t, "name1: title1", store.SaveCalls()[0].Entry.Title)
-	require.True(t, strings.HasPrefix(store.SaveCalls()[0].Entry.File, "/tmp/"))
-	require.True(t, strings.HasSuffix(store.SaveCalls()[0].Entry.File, ".mp3"))
 
 	rssData, err := os.ReadFile("/tmp/channel1.xml")
 	require.NoError(t, err)
@@ -113,7 +98,7 @@ func TestService_Do(t *testing.T) {
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
 func TestService_RSSFeed(t *testing.T) {
-	store := &mocks.StoreServiceMock{
+	storeSvc := &mocks.StoreServiceMock{
 		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
 			res := []ytfeed.Entry{
 				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: "/tmp/file1.mp3"},
@@ -131,7 +116,7 @@ func TestService_RSSFeed(t *testing.T) {
 			{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel},
 			{ID: "channel2", Name: "name2", Type: ytfeed.FTPlaylist},
 		},
-		Store:          store,
+		Store:          storeSvc,
 		RootURL:        "http://localhost:8080/yt",
 		KeepPerChannel: 10,
 	}
@@ -151,7 +136,7 @@ func TestService_RSSFeed(t *testing.T) {
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
 func TestService_RSSFeedPlayList(t *testing.T) {
-	store := &mocks.StoreServiceMock{
+	storeSvc := &mocks.StoreServiceMock{
 		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
 			res := []ytfeed.Entry{
 				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: "/tmp/file1.mp3"},
@@ -169,7 +154,7 @@ func TestService_RSSFeedPlayList(t *testing.T) {
 			{ID: "channel1", Name: "name1", Type: ytfeed.FTPlaylist},
 			{ID: "channel2", Name: "name2", Type: ytfeed.FTPlaylist},
 		},
-		Store:          store,
+		Store:          storeSvc,
 		RootURL:        "http://localhost:8080/yt",
 		KeepPerChannel: 10,
 	}
