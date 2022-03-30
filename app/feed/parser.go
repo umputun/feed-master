@@ -18,16 +18,16 @@ import (
 
 // Rss2 feed
 type Rss2 struct {
-	XMLName       xml.Name `xml:"rss"`
-	Version       string   `xml:"version,attr"`
-	NsItunes      string   `xml:"xmlns:itunes,attr"`
-	NsMedia       string         `xml:"xmlns:media,attr"`
-	Title         string   `xml:"channel>title"`
-	Language      string   `xml:"channel>language"`
-	Link          string   `xml:"channel>link"`
-	Description   string   `xml:"channel>description"`
-	PubDate       string   `xml:"channel>pubDate"`
-	LastBuildDate string   `xml:"channel>lastBuildDate"`
+	XMLName        xml.Name       `xml:"rss"`
+	Version        string         `xml:"version,attr"`
+	NsItunes       string         `xml:"xmlns:itunes,attr"`
+	NsMedia        string         `xml:"xmlns:media,attr"`
+	Title          string         `xml:"channel>title"`
+	Language       string         `xml:"channel>language"`
+	Link           string         `xml:"channel>link"`
+	Description    string         `xml:"channel>description"`
+	PubDate        string         `xml:"channel>pubDate"`
+	LastBuildDate  string         `xml:"channel>lastBuildDate"`
 	ItunesImage    ItunesImg      `xml:"channel>itunes:image"`
 	MediaThumbnail MediaThumbnail `xml:"channel>media:thumbnail"`
 
