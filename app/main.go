@@ -94,17 +94,17 @@ func main() {
 		fd := ytfeed.Feed{Client: &http.Client{Timeout: 10 * time.Second},
 			ChannelBaseURL: conf.YouTube.BaseChanURL, PlaylistBaseURL: conf.YouTube.BasePlaylistURL}
 
-		foreignBkts := []string{}
-		for k := range conf.Feeds {
-			foreignBkts = append(foreignBkts, k)
+		channels := []string{}
+		for _, c := range conf.YouTube.Channels {
+			channels = append(channels, c.ID)
 		}
-		log.Printf("[DEBUG] foreign buckets for youtube store: %s", strings.Join(foreignBkts, ", "))
+		log.Printf("[DEBUG] buckets for youtube store: %s", strings.Join(channels, ", "))
 
 		ytSvc = youtube.Service{
 			Feeds:          conf.YouTube.Channels,
 			Downloader:     dwnl,
 			ChannelService: &fd,
-			Store:          &store.BoltDB{DB: db, ForeignBkts: foreignBkts},
+			Store:          &store.BoltDB{DB: db, Channels: channels},
 			CheckDuration:  conf.YouTube.UpdateInterval,
 			KeepPerChannel: conf.YouTube.MaxItems,
 			RootURL:        conf.YouTube.BaseURL,

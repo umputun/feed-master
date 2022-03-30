@@ -2,7 +2,6 @@
 package store
 
 import (
-	"bytes"
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
@@ -22,7 +21,7 @@ var processedBkt = []byte("processed")
 // BoltDB store for metadata related to downloaded YouTube audio.
 type BoltDB struct {
 	*bolt.DB
-	ForeignBkts []string // buckets created by other services and should be ignored
+	Channels []string // the list of configured channels ids
 }
 
 // Save to bolt, skip if found
@@ -116,12 +115,8 @@ func (s *BoltDB) Load(channelID string, max int) ([]feed.Entry, error) {
 
 // Last returns last entry across all channels
 func (s *BoltDB) Last() (feed.Entry, error) {
-	channels, err := s.Channels()
-	if err != nil {
-		return feed.Entry{}, errors.Wrap(err, "can't get channels list")
-	}
 	entries := []feed.Entry{}
-	for _, channel := range channels {
+	for _, channel := range s.Channels {
 		last, err := s.Load(channel, 1)
 		if err != nil {
 			return feed.Entry{}, errors.Wrapf(err, "can't load last entry for %s", channel)
@@ -137,25 +132,6 @@ func (s *BoltDB) Last() (feed.Entry, error) {
 		return entries[i].Published.After(entries[j].Published)
 	})
 	return entries[0], nil
-}
-
-// Channels returns list of channels (buckets)
-func (s *BoltDB) Channels() (result []string, err error) {
-	err = s.View(func(tx *bolt.Tx) error {
-		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error { // nolint
-			if bytes.Equal(name, processedBkt) {
-				return nil // skip processed bucket
-			}
-			for _, foreign := range s.ForeignBkts {
-				if bytes.Equal(name, []byte(foreign)) {
-					return nil // skip foreign bucket
-				}
-			}
-			result = append(result, string(name))
-			return nil
-		})
-	})
-	return result, err
 }
 
 // RemoveOld removes old entries from bolt and returns the list of removed entry.File
