@@ -67,10 +67,8 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 // GET /feeds - renders page with list of feeds
 func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 	data, err := s.cache.Get("feeds", func() (interface{}, error) {
-		feeds, err := s.Store.Buckets()
-		if err != nil {
-			return nil, err
-		}
+
+		feeds := s.feeds()
 
 		type feedItem struct {
 			proc.Feed
@@ -103,7 +101,7 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 		}
 
 		res := bytes.NewBuffer(nil)
-		err = templates.ExecuteTemplate(res, "feeds.tmpl", &tmplData)
+		err := templates.ExecuteTemplate(res, "feeds.tmpl", &tmplData)
 		return res.Bytes(), err
 	})
 

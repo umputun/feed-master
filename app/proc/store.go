@@ -116,14 +116,3 @@ func (b BoltDB) removeOld(fmFeed string, keep int) (int, error) {
 	})
 	return deleted, err
 }
-
-// Buckets returns list of buckets
-func (b BoltDB) Buckets() (result []string, err error) {
-	err = b.DB.View(func(tx *bolt.Tx) error {
-		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error { // nolint
-			result = append(result, string(name))
-			return nil
-		})
-	})
-	return result, err
-}

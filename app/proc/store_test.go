@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/umputun/feed-master/app/feed"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/umputun/feed-master/app/feed"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -131,25 +132,6 @@ func TestLoadChackMax(t *testing.T) {
 			assert.Equal(t, tc.count, len(items))
 		})
 	}
-}
-
-func TestBuckets(t *testing.T) {
-	tmpfile, _ := ioutil.TempFile("", "")
-	defer os.Remove(tmpfile.Name())
-	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
-	require.NoError(t, err)
-	bdb := &BoltDB{DB: db}
-
-	got, err := bdb.Buckets()
-	assert.NoError(t, err)
-	assert.Equal(t, 0, len(got))
-
-	_, err = bdb.Save("radio-t", feed.Item{PubDate: pubDate})
-	require.NoError(t, err)
-
-	got, err = bdb.Buckets()
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(got))
 }
 
 func TestRemoveOldIfNotExistsBucket(t *testing.T) {

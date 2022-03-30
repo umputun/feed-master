@@ -22,10 +22,10 @@ import (
 	log "github.com/go-pkgz/lgr"
 	"github.com/go-pkgz/rest"
 	"github.com/go-pkgz/rest/logger"
-	"github.com/umputun/feed-master/app/youtube"
 
 	"github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/proc"
+	"github.com/umputun/feed-master/app/youtube"
 )
 
 // Server provides HTTP API
@@ -203,12 +203,8 @@ func (s *Server) getImageHeadCtrl(w http.ResponseWriter, r *http.Request) {
 
 // GET /list - returns feed's image
 func (s *Server) getListCtrl(w http.ResponseWriter, r *http.Request) {
-	buckets, err := s.Store.Buckets()
-	if err != nil {
-		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to read list")
-		return
-	}
-	render.JSON(w, r, buckets)
+	feeds := s.feeds()
+	render.JSON(w, r, feeds)
 }
 
 // GET /yt/rss/{channel} - returns rss for given youtube channel
@@ -223,4 +219,12 @@ func (s *Server) getYoutubeFeedCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
 	_, _ = fmt.Fprintf(w, "%s", res)
+}
+
+func (s *Server) feeds() []string {
+	feeds := make([]string, 0, len(s.Conf.Feeds))
+	for k := range s.Conf.Feeds {
+		feeds = append(feeds, k)
+	}
+	return feeds
 }
