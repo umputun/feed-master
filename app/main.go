@@ -98,6 +98,7 @@ func main() {
 		for k := range conf.Feeds {
 			foreignBkts = append(foreignBkts, k)
 		}
+		log.Printf("[DEBUG] foreign buckets for youtube store: %s", strings.Join(foreignBkts, ", "))
 
 		ytSvc = youtube.Service{
 			Feeds:          conf.YouTube.Channels,
