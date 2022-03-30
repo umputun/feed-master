@@ -22,6 +22,7 @@ var processedBkt = []byte("processed")
 // BoltDB store for metadata related to downloaded YouTube audio.
 type BoltDB struct {
 	*bolt.DB
+	ForeignBkts []string // buckets created by other services and should be ignored
 }
 
 // Save to bolt, skip if found
@@ -144,6 +145,11 @@ func (s *BoltDB) Channels() (result []string, err error) {
 		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error { // nolint
 			if bytes.Equal(name, processedBkt) {
 				return nil // skip processed bucket
+			}
+			for _, foreign := range s.ForeignBkts {
+				if bytes.Equal(name, []byte(foreign)) {
+					return nil // skip foreign bucket
+				}
 			}
 			result = append(result, string(name))
 			return nil

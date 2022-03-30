@@ -93,11 +93,17 @@ func main() {
 		dwnl := ytfeed.NewDownloader(conf.YouTube.DlTemplate, outWr, errWr, opts.YtLocation)
 		fd := ytfeed.Feed{Client: &http.Client{Timeout: 10 * time.Second},
 			ChannelBaseURL: conf.YouTube.BaseChanURL, PlaylistBaseURL: conf.YouTube.BasePlaylistURL}
+
+		foreignBkts := []string{}
+		for k := range conf.Feeds {
+			foreignBkts = append(foreignBkts, k)
+		}
+
 		ytSvc = youtube.Service{
 			Feeds:          conf.YouTube.Channels,
 			Downloader:     dwnl,
 			ChannelService: &fd,
-			Store:          &store.BoltDB{DB: db},
+			Store:          &store.BoltDB{DB: db, ForeignBkts: foreignBkts},
 			CheckDuration:  conf.YouTube.UpdateInterval,
 			KeepPerChannel: conf.YouTube.MaxItems,
 			RootURL:        conf.YouTube.BaseURL,
