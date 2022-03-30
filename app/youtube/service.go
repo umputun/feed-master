@@ -175,6 +175,8 @@ func (s *Service) procChannels(ctx context.Context) error {
 			}
 
 			// check if entry already exists in store
+			// this method won't work after migration to locally altered published ts but have to stay for now
+			// to avoid false-positives on old entries what never got set with SetProcessed
 			exists, exErr := s.Store.Exist(entry)
 			if err != nil {
 				return errors.Wrapf(exErr, "failed to check if entry %s exists", entry.VideoID)
@@ -186,15 +188,16 @@ func (s *Service) procChannels(ctx context.Context) error {
 			}
 
 			// check if we already processed this entry.
-			// this is needed to avoid infinite get/remove loop when the original feed is updated in place
+			// this is needed to avoid infinite get/remove loop when the original feed is updated in place.
+			// after migration to locally altered published ts, it is also the primary way to detect already processed entries
 			found, procTS, procErr := s.Store.CheckProcessed(entry)
 			if procErr != nil {
 				log.Printf("[WARN] can't get processed status for %s, %+v", entry.VideoID, feedInfo)
 			}
 			if procErr == nil && found {
-				allStats.dups++
+				allStats.skipped++
 				processed++
-				log.Printf("[INFO] skipping already processed entry %s at %s, %+v",
+				log.Printf("[DEBUG] skipping already processed entry %s at %s, %+v",
 					entry.VideoID, procTS.Format(time.RFC3339), feedInfo)
 				continue
 			}
@@ -208,7 +211,10 @@ func (s *Service) procChannels(ctx context.Context) error {
 			}
 			processed++
 			log.Printf("[INFO] downloaded %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, feedInfo)
+
 			entry.File = file
+			entry.Published = time.Now() // set published to prevent possible out-of-order entries
+
 			if !strings.Contains(entry.Title, feedInfo.Name) { // if title doesn't contains channel name add it
 				entry.Title = feedInfo.Name + ": " + entry.Title
 			}
@@ -295,10 +301,9 @@ type stats struct {
 	removed   int
 	ignored   int
 	skipped   int
-	dups      int
 }
 
 func (st stats) String() string {
-	return fmt.Sprintf("entries: %d, processed: %d, updated: %d, removed: %d, ignored: %d, skipped: %d, dups: %d",
-		st.entries, st.processed, st.added, st.removed, st.ignored, st.skipped, st.dups)
+	return fmt.Sprintf("entries: %d, processed: %d, updated: %d, removed: %d, ignored: %d, skipped: %d",
+		st.entries, st.processed, st.added, st.removed, st.ignored, st.skipped)
 }
