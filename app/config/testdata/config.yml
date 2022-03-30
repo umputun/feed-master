@@ -1,0 +1,37 @@
+feeds:
+  filtered:
+    description: filtered
+    filter:
+      title: ^filterme*
+    sources:
+      -
+        name: mmm1
+        url: "https://filtered.feed"
+    title: "filtered 1"
+  first:
+    sources:
+      -
+        name: nnn1
+        url: "http://aa.com/u1"
+      -
+        name: nnn2
+        url: "http://aa.com/u2"
+    title: "blah 1"
+  second:
+    description: "some 2"
+    sources:
+      -
+        name: mmm1
+        url: "https://bbb.com/u1"
+    title: "blah 2"
+system:
+  update: 600s
+
+youtube:
+  dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}.tmp
+  base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id="
+  base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id="
+  rss_location: ./var/rss
+  channels:
+  - {id: id1, name: name1, type: playlist}
+  - {id: id2, name: name2, lang: ru-ru, type: channel}

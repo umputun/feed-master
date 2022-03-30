@@ -23,6 +23,7 @@ import (
 	"github.com/go-pkgz/rest"
 	"github.com/go-pkgz/rest/logger"
 
+	"github.com/umputun/feed-master/app/config"
 	"github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/proc"
 	"github.com/umputun/feed-master/app/youtube"
@@ -31,7 +32,7 @@ import (
 // Server provides HTTP API
 type Server struct {
 	Version    string
-	Conf       proc.Conf
+	Conf       config.Conf
 	Store      *proc.BoltDB
 	YoutubeSvc YoutubeSvc
 	httpServer *http.Server
