@@ -99,7 +99,7 @@ func (s *BoltDB) Load(channelID string, max int) ([]feed.Entry, error) {
 		for k, v := c.Last(); k != nil; k, v = c.Prev() {
 			var item feed.Entry
 			if err := json.Unmarshal(v, &item); err != nil {
-				log.Printf("[WARN] failed to unmarshal, %v", err)
+				log.Printf("[WARN] failed to unmarshal %q %v", string(v), err)
 				continue
 			}
 			if len(result) >= max {
@@ -141,6 +141,9 @@ func (s *BoltDB) Last() (feed.Entry, error) {
 func (s *BoltDB) Channels() (result []string, err error) {
 	err = s.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error { // nolint
+			if string(name) == string(processedBkt) {
+				return nil // skip processed bucket
+			}
 			result = append(result, string(name))
 			return nil
 		})
