@@ -4,8 +4,6 @@ package feed
 // based on http://siongui.github.io/2015/03/03/go-parse-web-feed-rss-atom/
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/xml"
 	"fmt"
 	"html/template"
@@ -88,13 +86,16 @@ func Parse(uri string) (result Rss2, err error) {
 		}
 	}()
 
-	var b bytes.Buffer
-	bwriter := bufio.NewWriter(&b)
-	if _, err = io.Copy(bwriter, resp.Body); err != nil {
-		return result, err
+	if resp.StatusCode != http.StatusOK {
+		return result, fmt.Errorf("non-200 status code %s, url: %ss", resp.Status, uri)
 	}
 
-	result, err = parseFeedContent(b.Bytes())
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return result, errors.Wrapf(err, "failed to read body, url: %s", uri)
+	}
+
+	result, err = parseFeedContent(body)
 	if err != nil {
 		return Rss2{}, errors.Wrap(err, "parsing error")
 	}
