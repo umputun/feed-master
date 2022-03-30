@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
@@ -109,6 +110,31 @@ func (s *BoltDB) Load(channelID string, max int) ([]feed.Entry, error) {
 		return nil
 	})
 	return result, err
+}
+
+// Last returns last entry across all channels
+func (s *BoltDB) Last() (feed.Entry, error) {
+	channels, err := s.Channels()
+	if err != nil {
+		return feed.Entry{}, errors.Wrap(err, "can't get channels list")
+	}
+	entries := []feed.Entry{}
+	for _, channel := range channels {
+		last, err := s.Load(channel, 1)
+		if err != nil {
+			return feed.Entry{}, errors.Wrapf(err, "can't load last entry for %s", channel)
+		}
+		if len(last) > 0 {
+			entries = append(entries, last[0])
+		}
+	}
+	if len(entries) == 0 {
+		return feed.Entry{}, errors.New("no entries")
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Published.After(entries[j].Published)
+	})
+	return entries[0], nil
 }
 
 // Channels returns list of channels (buckets)

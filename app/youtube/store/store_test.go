@@ -239,3 +239,56 @@ func TestBoltDB_SetProcessed(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, found)
 }
+
+func TestBoltDB_Last(t *testing.T) {
+	tmpfile := filepath.Join(os.TempDir(), "test.db")
+	defer os.Remove(tmpfile)
+
+	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+	require.NoError(t, err)
+
+	s := BoltDB{DB: db}
+	_, err = s.Last()
+	assert.EqualError(t, err, "no entries")
+
+	{
+		entry := feed.Entry{
+			ChannelID: "chan1",
+			VideoID:   "vid1",
+			Title:     "title1",
+			Published: time.Date(2022, time.March, 21, 16, 45, 22, 0, time.UTC),
+			File:      "f1",
+		}
+		created, e := s.Save(entry)
+		require.NoError(t, e)
+		assert.True(t, created)
+	}
+	{
+		entry := feed.Entry{
+			ChannelID: "chan1",
+			VideoID:   "vid2",
+			Title:     "title2",
+			Published: time.Date(2022, time.March, 21, 17, 45, 22, 0, time.UTC),
+			File:      "f2",
+		}
+		created, e := s.Save(entry)
+		require.NoError(t, e)
+		assert.True(t, created)
+	}
+	{
+		entry := feed.Entry{
+			ChannelID: "chan2",
+			VideoID:   "vid3",
+			Title:     "title3",
+			Published: time.Date(2022, time.March, 21, 17, 46, 22, 0, time.UTC),
+			File:      "f3",
+		}
+		created, e := s.Save(entry)
+		require.NoError(t, e)
+		assert.True(t, created)
+	}
+
+	res, err := s.Last()
+	require.NoError(t, err)
+	assert.Equal(t, "vid3", res.VideoID)
+}

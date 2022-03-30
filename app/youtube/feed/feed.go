@@ -4,6 +4,7 @@ package feed
 import (
 	"context"
 	"encoding/xml"
+	"fmt"
 	"html/template"
 	"net/http"
 	"sort"
@@ -107,4 +108,9 @@ type Entry struct {
 // UID returns the unique identifier of the entry.
 func (e *Entry) UID() string {
 	return e.ChannelID + ":" + e.VideoID
+}
+
+func (e *Entry) String() string {
+	return fmt.Sprintf("{ChannelID:%s, VideoID:%s, Title:%q, Published:%s, Author:%s, File:%s}",
+		e.ChannelID, e.VideoID, e.Title, e.Published, e.Author.Name, e.File)
 }

@@ -10,9 +10,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	bolt "go.etcd.io/bbolt"
+
 	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
 	"github.com/umputun/feed-master/app/youtube/store"
-	bolt "go.etcd.io/bbolt"
 
 	"github.com/umputun/feed-master/app/youtube/mocks"
 )
@@ -93,7 +94,6 @@ func TestService_Do(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, string(rssData), "<guid>channel2::vid1</guid>")
 	assert.Contains(t, string(rssData), "<guid>channel2::vid2</guid>")
-
 }
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
