@@ -190,15 +190,13 @@ func (s *Service) procChannels(ctx context.Context) error {
 			// check if we already processed this entry.
 			// this is needed to avoid infinite get/remove loop when the original feed is updated in place.
 			// after migration to locally altered published ts, it is also the primary way to detect already processed entries
-			found, procTS, procErr := s.Store.CheckProcessed(entry)
+			found, _, procErr := s.Store.CheckProcessed(entry)
 			if procErr != nil {
 				log.Printf("[WARN] can't get processed status for %s, %+v", entry.VideoID, feedInfo)
 			}
 			if procErr == nil && found {
 				allStats.skipped++
 				processed++
-				log.Printf("[DEBUG] skipping already processed entry %s at %s, %+v",
-					entry.VideoID, procTS.Format(time.RFC3339), feedInfo)
 				continue
 			}
 
