@@ -2,6 +2,7 @@
 package store
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
@@ -141,7 +142,7 @@ func (s *BoltDB) Last() (feed.Entry, error) {
 func (s *BoltDB) Channels() (result []string, err error) {
 	err = s.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, _ *bolt.Bucket) error { // nolint
-			if string(name) == string(processedBkt) {
+			if bytes.Equal(name, processedBkt) {
 				return nil // skip processed bucket
 			}
 			result = append(result, string(name))
