@@ -19,6 +19,9 @@ import (
 // 			CheckProcessedFunc: func(entry ytfeed.Entry) (bool, time.Time, error) {
 // 				panic("mock out the CheckProcessed method")
 // 			},
+// 			CountProcessedFunc: func() int {
+// 				panic("mock out the CountProcessed method")
+// 			},
 // 			ExistFunc: func(entry ytfeed.Entry) (bool, error) {
 // 				panic("mock out the Exist method")
 // 			},
@@ -44,6 +47,9 @@ type StoreServiceMock struct {
 	// CheckProcessedFunc mocks the CheckProcessed method.
 	CheckProcessedFunc func(entry ytfeed.Entry) (bool, time.Time, error)
 
+	// CountProcessedFunc mocks the CountProcessed method.
+	CountProcessedFunc func() int
+
 	// ExistFunc mocks the Exist method.
 	ExistFunc func(entry ytfeed.Entry) (bool, error)
 
@@ -65,6 +71,9 @@ type StoreServiceMock struct {
 		CheckProcessed []struct {
 			// Entry is the entry argument value.
 			Entry ytfeed.Entry
+		}
+		// CountProcessed holds details about calls to the CountProcessed method.
+		CountProcessed []struct {
 		}
 		// Exist holds details about calls to the Exist method.
 		Exist []struct {
@@ -97,6 +106,7 @@ type StoreServiceMock struct {
 		}
 	}
 	lockCheckProcessed sync.RWMutex
+	lockCountProcessed sync.RWMutex
 	lockExist          sync.RWMutex
 	lockLoad           sync.RWMutex
 	lockRemoveOld      sync.RWMutex
@@ -132,6 +142,32 @@ func (mock *StoreServiceMock) CheckProcessedCalls() []struct {
 	mock.lockCheckProcessed.RLock()
 	calls = mock.calls.CheckProcessed
 	mock.lockCheckProcessed.RUnlock()
+	return calls
+}
+
+// CountProcessed calls CountProcessedFunc.
+func (mock *StoreServiceMock) CountProcessed() int {
+	if mock.CountProcessedFunc == nil {
+		panic("StoreServiceMock.CountProcessedFunc: method is nil but StoreService.CountProcessed was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockCountProcessed.Lock()
+	mock.calls.CountProcessed = append(mock.calls.CountProcessed, callInfo)
+	mock.lockCountProcessed.Unlock()
+	return mock.CountProcessedFunc()
+}
+
+// CountProcessedCalls gets all the calls that were made to CountProcessed.
+// Check the length with:
+//     len(mockedStoreService.CountProcessedCalls())
+func (mock *StoreServiceMock) CountProcessedCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockCountProcessed.RLock()
+	calls = mock.calls.CountProcessed
+	mock.lockCountProcessed.RUnlock()
 	return calls
 }
 

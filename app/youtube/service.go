@@ -62,6 +62,7 @@ type StoreService interface {
 	RemoveOld(channelID string, keep int) ([]string, error)
 	SetProcessed(entry ytfeed.Entry) error
 	CheckProcessed(entry ytfeed.Entry) (found bool, ts time.Time, err error)
+	CountProcessed() (count int)
 }
 
 // Do is a blocking function that downloads audio from youtube channels and updates metadata
@@ -241,7 +242,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 		}
 	}
 
-	log.Printf("[INFO] all channels processed - channels: %d, %s", len(s.Feeds), allStats.String())
+	log.Printf("[INFO] all channels processed - channels: %d, %s, lifetime: %d", len(s.Feeds), allStats.String(), s.Store.CountProcessed())
 
 	return nil
 }

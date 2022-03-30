@@ -8,8 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/umputun/feed-master/app/youtube/feed"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/umputun/feed-master/app/youtube/feed"
 )
 
 func TestStore_SaveAndLoad(t *testing.T) {
@@ -220,6 +221,9 @@ func TestBoltDB_SetProcessed(t *testing.T) {
 		e := s.SetProcessed(entry)
 		require.NoError(t, e)
 	}
+
+	count := s.CountProcessed()
+	assert.Equal(t, 3, count)
 
 	found, ts, err := s.CheckProcessed(feed.Entry{ChannelID: "chan1", VideoID: "vid2"})
 	require.NoError(t, err)

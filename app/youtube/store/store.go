@@ -10,8 +10,9 @@ import (
 	log "github.com/go-pkgz/lgr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
-	"github.com/umputun/feed-master/app/youtube/feed"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/umputun/feed-master/app/youtube/feed"
 )
 
 var processedBkt = []byte("processed")
@@ -215,6 +216,21 @@ func (s *BoltDB) CheckProcessed(entry feed.Entry) (found bool, ts time.Time, err
 	})
 
 	return found, ts, err
+}
+
+// CountProcessed returns the number of processed entries stored in processedBkt
+func (s *BoltDB) CountProcessed() (count int) {
+
+	_ = s.DB.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(processedBkt)
+		if bucket == nil {
+			return nil
+		}
+
+		count = bucket.Stats().KeyN
+		return nil
+	})
+	return count
 }
 
 func (s *BoltDB) key(entry feed.Entry) ([]byte, error) {
