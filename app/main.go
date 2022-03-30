@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -14,8 +13,8 @@ import (
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/jessevdk/go-flags"
+	"github.com/umputun/feed-master/app/config"
 	bolt "go.etcd.io/bbolt"
-	"gopkg.in/yaml.v2"
 
 	"github.com/umputun/feed-master/app/api"
 	rssfeed "github.com/umputun/feed-master/app/feed"
@@ -58,14 +57,14 @@ func main() {
 	}
 	setupLog(opts.Dbg)
 
-	var conf = &proc.Conf{}
+	var conf = &config.Conf{}
 	if opts.Feed != "" { // single feed (no config) mode
-		conf = singleFeedConf(opts.Feed, opts.TelegramChannel, opts.UpdateInterval)
+		conf = config.SingleFeed(opts.Feed, opts.TelegramChannel, opts.UpdateInterval)
 	}
 
 	var err error
 	if opts.Feed == "" {
-		conf, err = loadConfig(opts.Conf)
+		conf, err = config.Load(opts.Conf)
 		if err != nil {
 			log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
 		}
@@ -129,19 +128,6 @@ func main() {
 	server.Run(8080)
 }
 
-func singleFeedConf(feedURL, ch string, updateInterval time.Duration) *proc.Conf {
-	conf := proc.Conf{}
-	f := proc.Feed{
-		TelegramChannel: ch,
-		Sources: []proc.Source{
-			{Name: "auto", URL: feedURL},
-		},
-	}
-	conf.Feeds = map[string]proc.Feed{"auto": f}
-	conf.System.UpdateInterval = updateInterval
-	return &conf
-}
-
 func makeBoltDB(dbFile string) (*bolt.DB, error) {
 	log.Printf("[INFO] bolt (persistent) store, %s", dbFile)
 	if dbFile == "" {
@@ -176,20 +162,6 @@ func makeTwitter(opts options) *proc.TwitterClient {
 	}
 
 	return proc.NewTwitterClient(twiAuth, twitterFmtFn)
-}
-
-func loadConfig(fname string) (res *proc.Conf, err error) {
-	res = &proc.Conf{}
-	data, err := ioutil.ReadFile(fname) // nolint
-	if err != nil {
-		return nil, err
-	}
-
-	if err := yaml.Unmarshal(data, res); err != nil {
-		return nil, err
-	}
-
-	return res, nil
 }
 
 func setupLog(dbg bool) {

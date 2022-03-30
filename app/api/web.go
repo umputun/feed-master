@@ -7,11 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/umputun/feed-master/app/proc"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-pkgz/rest"
+	"github.com/umputun/feed-master/app/config"
 
 	"github.com/umputun/feed-master/app/feed"
 )
@@ -71,7 +70,7 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 		feeds := s.feeds()
 
 		type feedItem struct {
-			proc.Feed
+			config.Feed
 			FeedURL     string
 			Sources     int
 			LastUpdated time.Time
@@ -125,7 +124,7 @@ func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 		feedConf := s.Conf.Feeds[feedName]
 
 		tmplData := struct {
-			Sources  []proc.Source
+			Sources  []config.Source
 			SrcCount int
 		}{
 			Sources:  feedConf.Sources,
