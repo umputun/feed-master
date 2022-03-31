@@ -211,7 +211,12 @@ func (s *Service) procChannels(ctx context.Context) error {
 			log.Printf("[INFO] downloaded %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, feedInfo)
 
 			entry.File = file
-			entry.Published = time.Now() // set published to prevent possible out-of-order entries
+
+			// only reset time if published not too while ago
+			// this is to avoid initial set of entries added with a new channel
+			if time.Since(entry.Published) < time.Hour*24 {
+				entry.Published = time.Now() // set published to prevent possible out-of-order entries
+			}
 
 			if !strings.Contains(entry.Title, feedInfo.Name) { // if title doesn't contains channel name add it
 				entry.Title = feedInfo.Name + ": " + entry.Title
