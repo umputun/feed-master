@@ -215,6 +215,8 @@ func (s *Service) procChannels(ctx context.Context) error {
 			// only reset time if published not too while ago
 			// this is to avoid initial set of entries added with a new channel
 			if time.Since(entry.Published) < time.Hour*24 {
+				log.Printf("[DEBUG] reset published time for %s, from %s to %s (%v)",
+					entry.VideoID, entry.Published, time.Now(), time.Since(entry.Published))
 				entry.Published = time.Now() // set published to prevent possible out-of-order entries
 			}
 
