@@ -90,6 +90,7 @@ type Entry struct {
 		Href string `xml:"href,attr"`
 	} `xml:"link"`
 	Published time.Time `xml:"published"`
+	Updated   time.Time `xml:"updated"`
 
 	Media struct {
 		Description template.HTML `xml:"description"`
@@ -111,6 +112,6 @@ func (e *Entry) UID() string {
 }
 
 func (e *Entry) String() string {
-	return fmt.Sprintf("{ChannelID:%s, VideoID:%s, Title:%q, Published:%s, Author:%s, File:%s}",
-		e.ChannelID, e.VideoID, e.Title, e.Published, e.Author.Name, e.File)
+	return fmt.Sprintf("{ChannelID:%s, VideoID:%s, Title:%q, Published:%s, Updated:%s, Author:%s, File:%s}",
+		e.ChannelID, e.VideoID, e.Title, e.Published, e.Updated, e.Author.Name, e.File)
 }

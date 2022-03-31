@@ -212,12 +212,14 @@ func (s *Service) procChannels(ctx context.Context) error {
 
 			entry.File = file
 
-			// only reset time if published not too while ago
+			// only reset time if updated not too while ago
 			// this is to avoid initial set of entries added with a new channel
-			if time.Since(entry.Published) < time.Hour*24 {
+			if time.Since(entry.Updated) < time.Hour*24 {
 				log.Printf("[DEBUG] reset published time for %s, from %s to %s (%v)",
-					entry.VideoID, entry.Published, time.Now(), time.Since(entry.Published))
-				entry.Published = time.Now() // set published to prevent possible out-of-order entries
+					entry.VideoID, entry.Published.Format(time.RFC3339), time.Now().Format(time.RFC3339), time.Since(entry.Published))
+				entry.Published = time.Now() // set updated to prevent possible out-of-order entries
+			} else {
+				log.Printf("[DEBUG] keep published time for %s, %s", entry.VideoID, entry.Published.Format(time.RFC3339))
 			}
 
 			if !strings.Contains(entry.Title, feedInfo.Name) { // if title doesn't contains channel name add it
