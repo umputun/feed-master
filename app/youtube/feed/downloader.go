@@ -56,7 +56,7 @@ func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, er
 
 	cmd := exec.CommandContext(ctx, "sh", "-c", b1.String()) // nolint
 	cmd.Stdin = os.Stdin
-	cmd.Stdout = d.logErrWriter
+	cmd.Stdout = d.logOutWriter
 	cmd.Stderr = d.logErrWriter
 	cmd.Dir = d.destination
 	log.Printf("[DEBUG] executing command: %s", b1.String())
