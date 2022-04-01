@@ -113,5 +113,7 @@ func (e *Entry) UID() string {
 
 func (e *Entry) String() string {
 	return fmt.Sprintf("{ChannelID:%s, VideoID:%s, Title:%q, Published:%s, Updated:%s, Author:%s, File:%s}",
-		e.ChannelID, e.VideoID, e.Title, e.Published, e.Updated, e.Author.Name, e.File)
+		e.ChannelID, e.VideoID, e.Title, e.Published.Format(time.RFC3339), e.Updated.Format(time.RFC3339),
+		e.Author.Name, e.File,
+	)
 }
