@@ -343,7 +343,7 @@ func (s *Service) makeFileName(entry ytfeed.Entry) string {
 
 // duration scans MP3 file from provided file and returns its duration in seconds, ignoring possible errors
 func (s *Service) duration(fname string) int {
-	fh, err := os.Open(fname)
+	fh, err := os.Open(fname) //nolint:gosec // this is not an inclusion as file was created by us
 	if err != nil {
 		log.Printf("[WARN] can't get duration, failed to open file %s: %v", fname, err)
 		return 0
