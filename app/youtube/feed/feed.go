@@ -108,7 +108,7 @@ type Entry struct {
 
 // UID returns the unique identifier of the entry.
 func (e *Entry) UID() string {
-	return e.ChannelID + ":" + e.VideoID
+	return e.ChannelID + "::" + e.VideoID
 }
 
 func (e *Entry) String() string {

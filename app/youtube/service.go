@@ -323,7 +323,7 @@ func (s *Service) keep(fi FeedInfo) int {
 
 func (s *Service) makeFileName(entry ytfeed.Entry) string {
 	h := sha1.New()
-	if _, err := h.Write([]byte(entry.ChannelID + "::" + entry.VideoID)); err != nil {
+	if _, err := h.Write([]byte(entry.UID())); err != nil {
 		return uuid.New().String()
 	}
 	return fmt.Sprintf("%x", h.Sum(nil))
