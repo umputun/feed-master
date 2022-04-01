@@ -21,7 +21,7 @@ type Item struct {
 	Enclosure Enclosure     `xml:"enclosure"`
 	GUID      string        `xml:"guid"`
 	Author    string        `xml:"author,omitempty"`
-
+	Duration  string        `xml:"itunes:duration,omitempty"`
 	// Internal
 	DT   time.Time `xml:"-"`
 	Junk bool      `xml:"-"`

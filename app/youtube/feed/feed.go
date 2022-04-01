@@ -103,7 +103,9 @@ type Entry struct {
 		Name string `xml:"name"`
 		URI  string `xml:"uri"`
 	} `xml:"author"`
-	File string
+
+	File     string
+	Duration int // seconds
 }
 
 // UID returns the unique identifier of the entry.
@@ -112,8 +114,10 @@ func (e *Entry) UID() string {
 }
 
 func (e *Entry) String() string {
-	return fmt.Sprintf("{ChannelID:%s, VideoID:%s, Title:%q, Published:%s, Updated:%s, Author:%s, File:%s}",
-		e.ChannelID, e.VideoID, e.Title, e.Published.Format(time.RFC3339), e.Updated.Format(time.RFC3339),
-		e.Author.Name, e.File,
+	tz, _ := time.LoadLocation("Local")
+
+	return fmt.Sprintf("{ChannelID:%s, VideoID:%s, Title:%q, Published:%s, Updated:%s, Author:%s, File:%s, Duration:%ds}",
+		e.ChannelID, e.VideoID, e.Title, e.Published.In(tz).Format(time.RFC3339), e.Updated.In(tz).Format(time.RFC3339),
+		e.Author.Name, e.File, e.Duration,
 	)
 }
