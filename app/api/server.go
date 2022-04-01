@@ -56,7 +56,7 @@ func (s *Server) Run(ctx context.Context, port int) {
 	go func() {
 		<-ctx.Done()
 		if s.httpServer != nil {
-			if clsErr := s.httpServer.Close(); err != nil {
+			if clsErr := s.httpServer.Close(); clsErr != nil {
 				log.Printf("[ERROR] failed to close proxy http server, %v", clsErr)
 			}
 		}
