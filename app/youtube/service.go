@@ -111,8 +111,7 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 
 		var fileSize int
 		if fileInfo, fiErr := os.Stat(entry.File); fiErr != nil {
-			log.Printf("[WARN] failed to get file size for %s (%s %s): %v",
-				entry.File, entry.VideoID, entry.Title, fiErr)
+			log.Printf("[WARN] failed to get file size for %s (%s %s): %v", entry.File, entry.VideoID, entry.Title, fiErr)
 		} else {
 			fileSize = int(fileInfo.Size())
 		}
@@ -156,6 +155,7 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 	return string(b), nil
 }
 
+// procChannels processes all channels, downloads audio, updates metadata and stores RSS
 func (s *Service) procChannels(ctx context.Context) error {
 
 	var allStats stats
@@ -169,38 +169,31 @@ func (s *Service) procChannels(ctx context.Context) error {
 		log.Printf("[INFO] got %d entries for %s, limit to %d", len(entries), feedInfo.Name, s.keep(feedInfo))
 		changed, processed := false, 0
 		for i, entry := range entries {
+
+			// exit right away if context is done
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+			}
+
 			allStats.entries++
 			if processed >= s.keep(feedInfo) {
 				break
 			}
 
-			// check if entry already exists in store
-			// this method won't work after migration to locally altered published ts but have to stay for now
-			// to avoid false-positives on old entries what never got set with SetProcessed
-			exists, exErr := s.Store.Exist(entry)
+			ok, err := s.isNew(entry, feedInfo)
 			if err != nil {
-				return errors.Wrapf(exErr, "failed to check if entry %s exists", entry.VideoID)
+				return errors.Wrapf(err, "failed to check if entry %s exists", entry.VideoID)
 			}
-			if exists {
-				allStats.skipped++
-				processed++
-				continue
-			}
-
-			// check if we already processed this entry.
-			// this is needed to avoid infinite get/remove loop when the original feed is updated in place.
-			// after migration to locally altered published ts, it is also the primary way to detect already processed entries
-			found, _, procErr := s.Store.CheckProcessed(entry)
-			if procErr != nil {
-				log.Printf("[WARN] can't get processed status for %s, %+v", entry.VideoID, feedInfo)
-			}
-			if procErr == nil && found {
+			if !ok {
 				allStats.skipped++
 				processed++
 				continue
 			}
 
 			log.Printf("[INFO] new entry [%d] %s, %s, %s", i+1, entry.VideoID, entry.Title, feedInfo.Name)
+
 			file, downErr := s.Downloader.Get(ctx, entry.VideoID, s.makeFileName(entry))
 			if downErr != nil {
 				allStats.ignored++
@@ -210,21 +203,8 @@ func (s *Service) procChannels(ctx context.Context) error {
 			processed++
 			log.Printf("[INFO] downloaded %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, feedInfo)
 
-			entry.File = file
+			entry = s.update(entry, file, feedInfo)
 
-			// only reset time if updated not too while ago
-			// this is to avoid initial set of entries added with a new channel
-			if time.Since(entry.Updated) < time.Hour*24 {
-				log.Printf("[DEBUG] reset published time for %s, from %s to %s (%v)",
-					entry.VideoID, entry.Published.Format(time.RFC3339), time.Now().Format(time.RFC3339), time.Since(entry.Published))
-				entry.Published = time.Now() // set updated to prevent possible out-of-order entries
-			} else {
-				log.Printf("[DEBUG] keep published time for %s, %s", entry.VideoID, entry.Published.Format(time.RFC3339))
-			}
-
-			if !strings.Contains(entry.Title, feedInfo.Name) { // if title doesn't contains channel name add it
-				entry.Title = feedInfo.Name + ": " + entry.Title
-			}
 			ok, saveErr := s.Store.Save(entry)
 			if saveErr != nil {
 				return errors.Wrapf(saveErr, "failed to save entry %+v", entry)
@@ -233,7 +213,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] attempt to save dup entry %+v", entry)
 			}
 			changed = true
-			if procErr = s.Store.SetProcessed(entry); procErr != nil {
+			if procErr := s.Store.SetProcessed(entry); procErr != nil {
 				log.Printf("[WARN] failed to set processed status for %s: %v", entry.VideoID, procErr)
 			}
 			allStats.added++
@@ -241,10 +221,11 @@ func (s *Service) procChannels(ctx context.Context) error {
 		}
 		allStats.processed += processed
 
-		if changed { // save rss feed to fs if there are new entries
+		if changed {
 			removed := s.removeOld(feedInfo)
 			allStats.removed += removed
 
+			// save rss feed to fs if there are new entries
 			rss, rssErr := s.RSSFeed(feedInfo)
 			if rssErr != nil {
 				log.Printf("[WARN] failed to generate rss for %s: %s", feedInfo.Name, rssErr)
@@ -263,6 +244,53 @@ func (s *Service) procChannels(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// isNew checks if entry already processed
+func (s *Service) isNew(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
+
+	// check if entry already exists in store
+	// this method won't work after migration to locally altered published ts but have to stay for now
+	// to avoid false-positives on old entries what never got set with SetProcessed
+	exists, exErr := s.Store.Exist(entry)
+	if err != nil {
+		return false, errors.Wrapf(exErr, "failed to check if entry %s exists", entry.VideoID)
+	}
+	if exists {
+		return false, nil
+	}
+
+	// check if we already processed this entry.
+	// this is needed to avoid infinite get/remove loop when the original feed is updated in place.
+	// after migration to locally altered published ts, it is also the primary way to detect already processed entries
+	found, _, procErr := s.Store.CheckProcessed(entry)
+	if procErr != nil {
+		log.Printf("[WARN] can't get processed status for %s, %+v", entry.VideoID, fi)
+	}
+	if procErr == nil && found {
+		return false, nil
+	}
+	return true, nil
+}
+
+// update sets entry file name and reset published ts
+func (s *Service) update(entry ytfeed.Entry, file string, fi FeedInfo) ytfeed.Entry {
+	entry.File = file
+
+	// only reset time if updated not too while ago
+	// this is to avoid initial set of entries added with a new channel
+	if time.Since(entry.Updated) < time.Hour*24 {
+		log.Printf("[DEBUG] reset published time for %s, from %s to %s (%v)",
+			entry.VideoID, entry.Published.Format(time.RFC3339), time.Now().Format(time.RFC3339), time.Since(entry.Published))
+		entry.Published = time.Now() // set updated to prevent possible out-of-order entries
+	} else {
+		log.Printf("[DEBUG] keep published time for %s, %s", entry.VideoID, entry.Published.Format(time.RFC3339))
+	}
+
+	if !strings.Contains(entry.Title, fi.Name) { // if title doesn't contains channel name add it
+		entry.Title = fi.Name + ": " + entry.Title
+	}
+	return entry
 }
 
 // removeOld deletes old entries from store and corresponding files
