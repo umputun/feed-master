@@ -1,0 +1,36 @@
+feeds:
+  yt-example:
+    title: Some cool channels
+    description: an example of youtube-based podcas
+    link: http://example.com
+    language: "ru-ru"
+    image: images/yt-example.png
+    sources:
+      - name: Точка
+        url: http://localhost:8080/yt/rss/PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd
+      - name: Живой Гвоздь
+        url: http://localhost:8080/yt/rss/UCWAIvx2yYLK_xTYD4F2mUNw
+      - name: Дилетант
+        url: http://localhost:8080/yt/rss/UCuIE7-5QzeAR6EdZXwDRwuQ
+
+
+youtube:
+  base_url: http://localhost:8080/yt/media
+  dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}}.tmp
+  base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id="
+  base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id="
+  update: 60s
+  max_per_channel: 3
+  files_location: ./var/yt
+  rss_location: ./var/rss
+  channels:
+  - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь", lang: "ru-ru"}
+  - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel", lang: "ru-ru"}
+  - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru"}
+
+system:
+  update: 1m
+  max_per_feed: 10
+  max_total: 50
+  max_keep: 1000
+  base_url: http://localhost:8080

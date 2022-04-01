@@ -47,8 +47,7 @@ func (s *BoltDB) Save(entry feed.Entry) (bool, error) {
 			return errors.Wrapf(jerr, "marshal entry %s", entry.VideoID)
 		}
 
-		log.Printf("[INFO] save %s - {ChannelID:%s, VideoID:%s, Title:%s, File:%s, Author:%s, Published:%s}",
-			string(key), entry.ChannelID, entry.VideoID, entry.Title, entry.File, entry.Author.Name, entry.Published)
+		log.Printf("[INFO] save %s - %s", string(key), entry.String())
 
 		e = bucket.Put(key, jdata)
 		if e != nil {
@@ -188,8 +187,7 @@ func (s *BoltDB) SetProcessed(entry feed.Entry) error {
 			return nil
 		}
 
-		log.Printf("[INFO] set processed %s - {ChannelID:%s, VideoID:%s, Title:%s, File:%s, Author:%s, Published:%s}",
-			string(key), entry.ChannelID, entry.VideoID, entry.Title, entry.File, entry.Author.Name, entry.Published)
+		log.Printf("[INFO] set processed %s - %s", string(key), entry.String())
 
 		e = bucket.Put(key, []byte(entry.Published.Format(time.RFC3339)))
 		if e != nil {

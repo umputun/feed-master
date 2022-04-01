@@ -19,6 +19,7 @@ import (
 // Rss2 feed
 type Rss2 struct {
 	XMLName       xml.Name `xml:"rss"`
+	NsItunes      string   `xml:"xmlns:itunes,attr"`
 	Version       string   `xml:"version,attr"`
 	Title         string   `xml:"channel>title"`
 	Language      string   `xml:"channel>language"`
@@ -94,7 +95,6 @@ func Parse(uri string) (result Rss2, err error) {
 	if err != nil {
 		return result, errors.Wrapf(err, "failed to read body, url: %s", uri)
 	}
-
 	result, err = parseFeedContent(body)
 	if err != nil {
 		return Rss2{}, errors.Wrap(err, "parsing error")
@@ -152,6 +152,7 @@ func parseFeedContent(content []byte) (Rss2, error) {
 				v.ItemList[i].Description = v.ItemList[i].Content
 			}
 		}
+		v.NsItunes = "http://www.itunes.com/dtds/podcast-1.0.dtd"
 		return v, nil
 	}
 

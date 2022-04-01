@@ -143,6 +143,7 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		Link:          s.Conf.Feeds[feedName].Link,
 		PubDate:       items[0].PubDate,
 		LastBuildDate: time.Now().Format(time.RFC822Z),
+		NsItunes:      "http://www.itunes.com/dtds/podcast-1.0.dtd",
 	}
 
 	// replace link to UI page
@@ -212,7 +213,15 @@ func (s *Server) getListCtrl(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getYoutubeFeedCtrl(w http.ResponseWriter, r *http.Request) {
 	channel := chi.URLParam(r, "channel")
 
-	res, err := s.YoutubeSvc.RSSFeed(youtube.FeedInfo{ID: channel})
+	fi := youtube.FeedInfo{ID: channel}
+	for _, f := range s.Conf.YouTube.Channels {
+		if f.ID == channel {
+			fi = f
+			break
+		}
+	}
+
+	res, err := s.YoutubeSvc.RSSFeed(fi)
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to read yt list")
 		return
