@@ -2,6 +2,7 @@
 package api
 
 import (
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -45,12 +46,21 @@ type YoutubeSvc interface {
 }
 
 // Run starts http server for API with all routes
-func (s *Server) Run(port int) {
+func (s *Server) Run(ctx context.Context, port int) {
 	var err error
 	if s.cache, err = lcw.NewExpirableCache(lcw.TTL(time.Minute*5), lcw.MaxCacheSize(10*1024*1024)); err != nil {
 		log.Printf("[PANIC] failed to make loading cache, %v", err)
 		return
 	}
+
+	go func() {
+		<-ctx.Done()
+		if s.httpServer != nil {
+			if err := s.httpServer.Close(); err != nil {
+				log.Printf("[ERROR] failed to close proxy http server, %v", err)
+			}
+		}
+	}()
 
 	router := chi.NewRouter()
 	router.Use(middleware.RealIP, rest.Recoverer(log.Default()))

@@ -125,7 +125,7 @@ func main() {
 		Store:      procStore,
 		YoutubeSvc: &ytSvc,
 	}
-	server.Run(8080)
+	server.Run(context.Background(), 8080)
 }
 
 func makeBoltDB(dbFile string) (*bolt.DB, error) {
