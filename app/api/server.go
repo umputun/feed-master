@@ -62,19 +62,23 @@ func (s *Server) Run(ctx context.Context, port int) {
 		}
 	}()
 
+	s.httpServer = &http.Server{
+		Addr:              fmt.Sprintf(":%d", port),
+		Handler:           s.router(),
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       30 * time.Second,
+	}
+	err = s.httpServer.ListenAndServe()
+	log.Printf("[WARN] http server terminated, %s", err)
+}
+
+func (s *Server) router() *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.RealIP, rest.Recoverer(log.Default()))
 	router.Use(middleware.Throttle(1000), middleware.Timeout(60*time.Second))
 	router.Use(rest.AppInfo("feed-master", "umputun", s.Version), rest.Ping)
 	router.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(5, nil)))
-
-	s.httpServer = &http.Server{
-		Addr:              fmt.Sprintf(":%d", port),
-		Handler:           router,
-		ReadHeaderTimeout: 5 * time.Second,
-		WriteTimeout:      30 * time.Second,
-		IdleTimeout:       30 * time.Second,
-	}
 
 	router.Group(func(rimg chi.Router) {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[DEBUG]"))
@@ -120,9 +124,7 @@ func (s *Server) Run(ctx context.Context, port int) {
 	} else {
 		log.Printf("[WARN] can't start static file server, %v", err)
 	}
-
-	err = s.httpServer.ListenAndServe()
-	log.Printf("[WARN] http server terminated, %s", err)
+	return router
 }
 
 // GET /rss/{name} - returns rss for given feeds set
