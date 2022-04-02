@@ -161,7 +161,7 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 		return "", errors.Wrap(err, "failed to marshal rss")
 	}
 
-	res := `<?xml version="1.0" encoding="UTF-8"?>` + "\n" + string(b)
+	res := string(b)
 	// this hack to avoid having different items for marshal and unmarshal due to "itunes" namespace
 	res = strings.Replace(res, "<duration>", "<itunes:duration>", -1)
 	res = strings.Replace(res, "</duration>", "</itunes:duration>", -1)
