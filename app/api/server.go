@@ -161,10 +161,7 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 
 	// replace link to UI page
 	if s.Conf.System.BaseURL != "" {
-		baseURL := s.Conf.System.BaseURL
-		if strings.HasSuffix(baseURL, "/") {
-			baseURL = strings.TrimSuffix(baseURL, "/")
-		}
+		baseURL := strings.TrimSuffix(s.Conf.System.BaseURL, "/")
 		rss.Link = baseURL + "/feed/" + feedName
 		imagesURL := baseURL + "/images/" + feedName
 		rss.ItunesImage = feed.ItunesImg{URL: imagesURL}
