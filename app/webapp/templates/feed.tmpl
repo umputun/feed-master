@@ -41,7 +41,7 @@
     {{end}}
         <div class="ump-feed-master__data-row-player-cell">
             <a href="{{.Enclosure.URL}}" target="_blank">
-                <i class="fas fa-volume-up"></i>
+                <i class="fas fa-volume-up" data-toggle="tooltip" title="{{.DurationFmt}}"></i>
             </a>
         </div>
         <div class="ump-feed-master__data-row-info-cell">
@@ -61,7 +61,8 @@
                    title="Junk - excluded from target rss feed">
                 </i>
                 {{end}}
-                {{.DT.Format "02 Jan 15:04"}}</div>
+                {{.DT.Format "02 Jan 15:04"}}
+            </div>
         </div>
     </div>
     {{end}}

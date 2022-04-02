@@ -23,8 +23,9 @@ type Item struct {
 	Author   string        `xml:"author,omitempty"`
 	Duration string        `xml:"duration,omitempty"`
 	// Internal
-	DT   time.Time `xml:"-"`
-	Junk bool      `xml:"-"`
+	DT          time.Time `xml:"-"`
+	Junk        bool      `xml:"-"`
+	DurationFmt string    `xml:"-"` // used for ui only in
 }
 
 // DownloadAudio return httpBody for Item's Enclosure.URL

@@ -10,8 +10,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-pkgz/rest"
-	"github.com/umputun/feed-master/app/config"
 
+	"github.com/umputun/feed-master/app/config"
 	"github.com/umputun/feed-master/app/feed"
 )
 
@@ -26,6 +26,19 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return nil, err
 		}
+
+		// fill formatted duration
+		for i, item := range items {
+			if item.Duration == "" {
+				continue
+			}
+			d, e := time.ParseDuration(item.Duration + "s")
+			if e != nil {
+				continue
+			}
+			items[i].DurationFmt = d.String()
+		}
+
 		tmplData := struct {
 			Items       []feed.Item
 			Name        string
