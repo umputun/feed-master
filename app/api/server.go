@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -79,20 +78,18 @@ func (s *Server) router() *chi.Mux {
 	router.Use(middleware.Throttle(1000), middleware.Timeout(60*time.Second))
 	router.Use(rest.AppInfo("feed-master", "umputun", s.Version), rest.Ping)
 	router.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(5, nil)))
-
 	router.Group(func(rimg chi.Router) {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[DEBUG]"))
-		rimg.Use(l.Handler)
+		rimg.Use(l.Handler, middleware.GetHead)
 		rimg.Get("/images/{name}", s.getImageCtrl)
 		rimg.Get("/image/{name}", s.getImageCtrl)
-		rimg.Head("/image/{name}", s.getImageHeadCtrl)
-		rimg.Head("/images/{name}", s.getImageHeadCtrl)
 	})
 
 	router.Group(func(rrss chi.Router) {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"))
-		rrss.Use(l.Handler)
+		rrss.Use(l.Handler, middleware.GetHead)
 		rrss.Get("/rss/{name}", s.getFeedCtrl)
+		rrss.Head("/rss/{name}", s.getFeedCtrl)
 		rrss.Get("/list", s.getListCtrl)
 		rrss.Get("/feed/{name}", s.getFeedPageCtrl)
 		rrss.Get("/feed/{name}/sources", s.getSourcesPageCtrl)
@@ -101,7 +98,7 @@ func (s *Server) router() *chi.Mux {
 
 	router.Route("/yt", func(r chi.Router) {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"))
-		r.Use(l.Handler)
+		r.Use(l.Handler, middleware.GetHead)
 		r.Get("/rss/{channel}", s.getYoutubeFeedCtrl)
 	})
 
@@ -204,26 +201,6 @@ func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(b); err != nil {
 		log.Printf("[WARN] failed to send image, %s", err)
 	}
-}
-
-// HEAD /image/{name}
-func (s *Server) getImageHeadCtrl(w http.ResponseWriter, r *http.Request) {
-	fm := chi.URLParam(r, "name")
-	fm = strings.TrimSuffix(fm, ".png")
-	feedConf, found := s.Conf.Feeds[fm]
-	if !found {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	info, err := os.Stat(feedConf.Image)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	w.Header().Set("Content-Type", "image/png")
-	w.Header().Set("Content-Length", strconv.Itoa(int(info.Size())))
-	w.WriteHeader(http.StatusOK)
 }
 
 // GET /list - returns feed's image
