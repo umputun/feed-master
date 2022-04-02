@@ -6,8 +6,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/umputun/feed-master/app/feed"
 	"gopkg.in/yaml.v2"
+
+	"github.com/umputun/feed-master/app/feed"
 
 	"github.com/umputun/feed-master/app/youtube"
 )
@@ -92,7 +93,7 @@ func Load(fname string) (res *Conf, err error) {
 	if err := yaml.Unmarshal(data, res); err != nil {
 		return nil, err
 	}
-
+	res.setDefaults()
 	return res, nil
 }
 
@@ -107,11 +108,12 @@ func SingleFeed(feedURL, ch string, updateInterval time.Duration) *Conf {
 	}
 	conf.Feeds = map[string]Feed{"auto": f}
 	conf.System.UpdateInterval = updateInterval
+	conf.setDefaults()
 	return &conf
 }
 
 // SetDefaults sets default values for config
-func SetDefaults(c *Conf) {
+func (c *Conf) setDefaults() {
 	if c.System.Concurrent == 0 {
 		c.System.Concurrent = 8
 	}
@@ -127,4 +129,39 @@ func SetDefaults(c *Conf) {
 	if c.System.UpdateInterval == 0 {
 		c.System.UpdateInterval = time.Minute * 5
 	}
+
+	// set youtube defaults from system part
+	if c.YouTube.UpdateInterval == 0 {
+		c.YouTube.UpdateInterval = c.System.UpdateInterval
+	}
+
+	for _, f := range c.YouTube.Channels {
+		if f.Keep == 0 {
+			f.Keep = c.System.MaxItems
+		}
+	}
+	if c.YouTube.BaseURL == "" {
+		c.YouTube.BaseURL = c.System.BaseURL + "/yt/media"
+	}
+
+	if c.YouTube.DlTemplate == "" {
+		c.YouTube.DlTemplate = `yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}}.tmp`
+	}
+
+	if c.YouTube.BaseChanURL == "" {
+		c.YouTube.BaseChanURL = "https://www.youtube.com/feeds/videos.xml?channel_id="
+	}
+
+	if c.YouTube.BasePlaylistURL == "" {
+		c.YouTube.BasePlaylistURL = "https://www.youtube.com/feeds/videos.xml?playlist_id="
+	}
+
+	if c.YouTube.FilesLocation == "" {
+		c.YouTube.FilesLocation = "var/yt"
+	}
+
+	if c.YouTube.RSSLocation == "" {
+		c.YouTube.RSSLocation = "var/rss"
+	}
+
 }

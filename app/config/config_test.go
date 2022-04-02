@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
 	rssfeed "github.com/umputun/feed-master/app/feed"
 	ytfdeed "github.com/umputun/feed-master/app/youtube"
 )
@@ -23,9 +24,9 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, []ytfdeed.FeedInfo{{Name: "name1", ID: "id1", Type: "playlist"},
 		{Name: "name2", ID: "id2", Type: "channel", Language: "ru-ru"}},
 		r.YouTube.Channels, "2 yt")
-	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.Filename}}.tmp", r.YouTube.DlTemplate)
-	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?channel_id=", r.YouTube.BaseChanURL)
-	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?playlist_id=", r.YouTube.BasePlaylistURL)
+	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.Filename}}.tmp", r.YouTube.DlTemplate)
+	assert.Equal(t, "https://www.youtube.com/videos.xml?channel_id=", r.YouTube.BaseChanURL)
+	assert.Equal(t, "https://www.youtube.com/videos.xml?playlist_id=", r.YouTube.BasePlaylistURL)
 	assert.Equal(t, "./var/rss", r.YouTube.RSSLocation)
 }
 
@@ -72,8 +73,7 @@ func TestSingleFeedConf(t *testing.T) {
 
 func TestSetDefault(t *testing.T) {
 	c := Conf{}
-
-	SetDefaults(&c)
+	c.setDefaults()
 
 	expectedConf := Conf{
 		System: struct {
@@ -86,7 +86,14 @@ func TestSetDefault(t *testing.T) {
 		}{UpdateInterval: time.Minute * 5, MaxItems: 5, MaxTotal: 100, MaxKeepInDB: 5000, Concurrent: 8, BaseURL: ""},
 	}
 
-	assert.EqualValues(t, expectedConf.System, c.System)
+	assert.Equal(t, expectedConf.System, c.System)
+	assert.Equal(t, time.Minute*5, c.YouTube.UpdateInterval)
+	assert.Equal(t, "/yt/media", c.YouTube.BaseURL)
+	assert.Equal(t, "var/yt", c.YouTube.FilesLocation)
+	assert.Equal(t, "var/rss", c.YouTube.RSSLocation)
+	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.FileName}}.tmp", c.YouTube.DlTemplate)
+	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?channel_id=", c.YouTube.BaseChanURL)
+	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?playlist_id=", c.YouTube.BasePlaylistURL)
 }
 
 func TestFilterAllCases(t *testing.T) {

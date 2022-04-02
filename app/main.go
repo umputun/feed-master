@@ -13,8 +13,9 @@ import (
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/jessevdk/go-flags"
-	"github.com/umputun/feed-master/app/config"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/umputun/feed-master/app/config"
 
 	"github.com/umputun/feed-master/app/api"
 	rssfeed "github.com/umputun/feed-master/app/feed"

@@ -34,7 +34,6 @@ type Processor struct {
 // Do activate loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent
 func (p *Processor) Do() {
 	log.Printf("[INFO] activate processor, feeds=%d, %+v", len(p.Conf.Feeds), p.Conf)
-	config.SetDefaults(p.Conf)
 
 	for {
 		swg := syncs.NewSizedGroup(p.Conf.System.Concurrent, syncs.Preemptive)
