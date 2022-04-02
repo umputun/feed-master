@@ -107,6 +107,7 @@ func TestService_RSSFeed(t *testing.T) {
 			res[0].Link.Href = "http://example.com/v1"
 			res[1].Link.Href = "http://example.com/v2"
 			res[0].Author.URI = "http://example.com/c1"
+			res[0].Media.Thumbnail.URL = "http://example.com/thumb.jpg"
 			return res, nil
 		},
 	}
@@ -132,6 +133,8 @@ func TestService_RSSFeed(t *testing.T) {
 	assert.Contains(t, res, `<link>http://example.com/v1</link>`)
 	assert.Contains(t, res, `<link>http://example.com/v2</link>`)
 	assert.Contains(t, res, `<link>http://example.com/c1</link>`)
+	assert.Contains(t, res, `<itunes:image href="http://example.com/thumb.jpg"></itunes:image>`)
+	assert.Contains(t, res, `<media:thumbnail url="http://example.com/thumb.jpg"></media:thumbnail>`)
 }
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
