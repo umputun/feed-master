@@ -135,7 +135,6 @@ func parseAtom(content []byte) (Rss2, error) {
 }
 
 func parseFeedContent(content []byte) (Rss2, error) {
-	log.Printf("!! %s", string(content))
 	v := Rss2{}
 	err := xml.Unmarshal(content, &v)
 	if err != nil {
