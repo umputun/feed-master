@@ -14,14 +14,14 @@ type Item struct {
 	Title       string        `xml:"title"`
 	Link        string        `xml:"link"`
 	Description template.HTML `xml:"description"`
+	Enclosure   Enclosure     `xml:"enclosure"`
+	GUID        string        `xml:"guid"`
 	// Optional
-	Content   template.HTML `xml:"encoded"`
-	PubDate   string        `xml:"pubDate"`
-	Comments  string        `xml:"comments"`
-	Enclosure Enclosure     `xml:"enclosure"`
-	GUID      string        `xml:"guid"`
-	Author    string        `xml:"author,omitempty"`
-	Duration  string        `xml:"itunes.duration,omitempty"`
+	Content  template.HTML `xml:"encoded,omitempty"`
+	PubDate  string        `xml:"pubDate,omitempty"`
+	Comments string        `xml:"comments,omitempty"`
+	Author   string        `xml:"author,omitempty"`
+	Duration string        `xml:"duration,omitempty"`
 	// Internal
 	DT   time.Time `xml:"-"`
 	Junk bool      `xml:"-"`

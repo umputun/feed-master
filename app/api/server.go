@@ -166,8 +166,14 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to marshal rss")
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
-	_, _ = fmt.Fprintf(w, "%s", string(b))
+	res := `<?xml version="1.0" encoding="UTF-8"?>` + "\n" + string(b)
+	// this hack to avoid having different items for marshal and unmarshal due to "itunes" namespace
+	res = strings.Replace(res, "<duration>", "<itunes:duration>", -1)
+	res = strings.Replace(res, "</duration>", "</itunes:duration>", -1)
+
+	_, _ = fmt.Fprintf(w, "%s", res)
 }
 
 // GET /image/{name}
@@ -238,6 +244,7 @@ func (s *Server) getYoutubeFeedCtrl(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
+	res = `<?xml version="1.0" encoding="UTF-8"?>` + "\n" + res
 	_, _ = fmt.Fprintf(w, "%s", res)
 }
 

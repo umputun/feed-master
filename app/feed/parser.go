@@ -19,8 +19,8 @@ import (
 // Rss2 feed
 type Rss2 struct {
 	XMLName       xml.Name `xml:"rss"`
-	NsItunes      string   `xml:"xmlns:itunes,attr"`
 	Version       string   `xml:"version,attr"`
+	NsItunes      string   `xml:"xmlns:itunes,attr"`
 	Title         string   `xml:"channel>title"`
 	Language      string   `xml:"channel>language"`
 	Link          string   `xml:"channel>link"`
@@ -147,12 +147,12 @@ func parseFeedContent(content []byte) (Rss2, error) {
 
 	if v.Version == "2.0" {
 		// RSS 2.0
+		v.NsItunes = "http://www.itunes.com/dtds/podcast-1.0.dtd"
 		for i := range v.ItemList {
 			if v.ItemList[i].Content != "" {
 				v.ItemList[i].Description = v.ItemList[i].Content
 			}
 		}
-		v.NsItunes = "http://www.itunes.com/dtds/podcast-1.0.dtd"
 		return v, nil
 	}
 

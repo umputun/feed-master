@@ -161,6 +161,11 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 		return "", errors.Wrap(err, "failed to marshal rss")
 	}
 
+	res := string(b)
+	// this hack to avoid having different items for marshal and unmarshal due to "itunes" namespace
+	res = strings.Replace(res, "<duration>", "<itunes:duration>", -1)
+	res = strings.Replace(res, "</duration>", "</itunes:duration>", -1)
+
 	return string(b), nil
 }
 
@@ -348,7 +353,7 @@ func (s *Service) duration(fname string) int {
 		log.Printf("[WARN] can't get duration, failed to open file %s: %v", fname, err)
 		return 0
 	}
-	defer fh.Close() //nolint
+	defer fh.Close() // nolint
 
 	d := mp3.NewDecoder(fh)
 	var f mp3.Frame
