@@ -164,12 +164,12 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		baseURL := s.Conf.System.BaseURL
 		rss.Link = baseURL + "/feed/" + feedName
 		if s.Conf.Feeds[feedName].Image != "" {
-			rss.ItunesImage = feed.ItunesImg{
-				URL: baseURL + "/" + s.Conf.Feeds[feedName].Image,
+			imagesURL := baseURL + "/" + s.Conf.Feeds[feedName].Image
+			if strings.HasPrefix(s.Conf.Feeds[feedName].Image, "/") || strings.HasSuffix(baseURL, "/") {
+				imagesURL = baseURL + s.Conf.Feeds[feedName].Image
 			}
-			rss.MediaThumbnail = feed.MediaThumbnail{
-				URL: baseURL + "/" + s.Conf.Feeds[feedName].Image,
-			}
+			rss.ItunesImage = feed.ItunesImg{URL: imagesURL}
+			rss.MediaThumbnail = feed.MediaThumbnail{URL: imagesURL}
 		}
 	}
 
