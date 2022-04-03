@@ -1,79 +1,4 @@
 feeds:
-  all-umputun:
-    title: Весь Umputun
-    description: Общий фид всех подкастов с участием Umputun
-    link: http://umputun.com
-    language: "ru-ru"
-    telegram_channel: udev_test
-    sources:
-      - name: Еженедельный подкаст от Umputun (UWP)
-        url: http://feeds.rucast.net/Umputun
-      - name: Радио-Т
-        url: http://feeds.rucast.net/radio-t
-      - name: Пираты Радио-Т
-        url: http://feeds.feedburner.com/pirate-radio-t
-
-  echo-msk:
-    title: Эхо Москвы
-    description: Правильный, комбинированный фид избранных передач
-    link: http://echo.msk.ru
-    language: "ru-ru"
-    image: images/echomsk.png
-    ext_date: yyyyddmm
-    sources:
-      - name: Владимир Кара-Мурза
-        url: http://www.echo.msk.ru/programs/graniweek/rss-audio.xml
-      - name: Народ против
-        url: http://www.echo.msk.ru/programs/opponent/rss-audio.xml
-      - name: Ганапольское
-        url: http://www.echo.msk.ru/programs/ganapolskoe_itogi/rss-audio.xml
-      - name: Без посредников
-        url: http://www.echo.msk.ru/programs/nomed/rss-audio.xml
-      - name: Точка
-        url: http://www.echo.msk.ru/programs/tochka/rss-audio.xml
-      - name: Кейс
-        url: http://www.echo.msk.ru/programs/keys/rss-audio.xml
-      - name: Блог-аут
-        url: http://www.echo.msk.ru/programs/blogout1/rss-audio.xml
-      - name: Альбац
-        url: http://www.echo.msk.ru/contributors/7/rss-audio.xml
-      - name: Код доступа
-        url: http://www.echo.msk.ru/programs/code/rss-audio.xml
-      - name: Цена Победы
-        url: http://www.echo.msk.ru/programs/victory/rss-audio.xml
-      - name: Все так
-        url: http://www.echo.msk.ru/programs/vsetak/rss-audio.xml
-      - name: Не так
-        url: http://www.echo.msk.ru/programs/netak/rss-audio.xml
-      - name: В круге Света
-        url: http://echo.msk.ru/programs/sorokina/rss-audio.xml
-      - name: Суть событий
-        url: http://www.echo.msk.ru/programs/sut/rss-audio.xml
-      - name: Попутчики
-        url: http://www.echo.msk.ru/programs/poputchiki/rss-audio.xml
-      - name: Русский бомбардир
-        url: http://www.echo.msk.ru/programs/orekh_osin/rss-audio.xml
-      - name: Дилентанты
-        url: http://echo.msk.ru/programs/Diletanti/rss-audio.xml
-      - name: Цена революции
-        url: http://echo.msk.ru/programs/cenapobedy/rss-audio.xml
-      - name: Особое мнение
-        url: http://echo.msk.ru/programs/personalno/rss-audio.xml
-      - name: Персонально ваш
-        url: http://echo.msk.ru/programs/personalnovash/rss-audio.xml
-      - name: Клинч
-        url: http://echo.msk.ru/programs/klinch/rss-audio.xml
-      - name: Выбор ясен
-        url: http://www.echo.msk.ru/programs/vyboryasen/rss-audio.xml
-      - name: Дифирамб
-        url: http://echo.msk.ru/programs/dithyramb/rss-audio.xml
-      - name: Один
-        url: http://echo.msk.ru/programs/odin/rss-audio.xml
-      - name: Сбитый фокус
-        url: http://echo.msk.ru/programs/focus/rss-audio.xml
-      - name: Большой дозор
-        url: http://echo.msk.ru/programs/dozor/rss-audio.xml
-
   yt-example:
     title: Some cool channels
     description: an example of youtube-based podcas
@@ -81,40 +6,22 @@ feeds:
     language: "ru-ru"
     image: images/yt-example.png
     sources:
-      - name: Точка
-        url: https://localhost:8080/yt/rss/PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd
-      - name: Живой Гвоздь
-        url: https://localhost:8080/yt/rss/UCWAIvx2yYLK_xTYD4F2mUNw
-      - name: Alexandr Plushev
-        url: https://localhost:8080/yt/rss/UCTVk323gzizpujtn2T_BL7w
-      - name: Дилетант
-        url: https://localhost:8080/yt/rss/UCuIE7-5QzeAR6EdZXwDRwuQ
-
-  echo-msk-filtered-example:
-    title: Example with filtering from the feed
-    description: filtered http://feeds.rucast.net/echomsk
-    link: http://echo.msk.ru
-    language: "ru-ru"
-    image: images/echomsk.png
-    sources:
-      - name: Правильный, фильтрованный, комбинированный фид избранных передач
-        url: http://feeds.rucast.net/echomsk
-    filter:
-      title: (Часть \d+)
+      - {name: "Точка", url: http://example.com/yt/rss/PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd}
+      - {name: "Живой Гвоздь", url: http://example.com/yt/rss/UCWAIvx2yYLK_xTYD4F2mUNw
+      - {name: "Дилетант", url: http://example.com/yt/rss/UCuIE7-5QzeAR6EdZXwDRwuQ
 
 
 youtube:
-  base_url: http://localhost:8080/yt/media
+  base_url: http://example.com/yt/media
   dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}}.tmp
   base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id="
   base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id="
   update: 60s
-  max_per_channel: 3
+  max_per_channel: 2
   files_location: ./var/yt
   rss_location: ./var/rss
   channels:
   - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь", lang: "ru-ru"}
-  - {id: UCTVk323gzizpujtn2T_BL7w, name: "Alexandr Plushev", lang: "ru-ru"}
   - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel", lang: "ru-ru"}
   - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru"}
 
@@ -123,4 +30,4 @@ system:
   max_per_feed: 10
   max_total: 50
   max_keep: 1000
-  base_url: http://localhost:8080
+  base_url: http://example.com
