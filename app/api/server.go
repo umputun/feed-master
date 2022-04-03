@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,23 +26,30 @@ import (
 
 	"github.com/umputun/feed-master/app/config"
 	"github.com/umputun/feed-master/app/feed"
-	"github.com/umputun/feed-master/app/proc"
 	"github.com/umputun/feed-master/app/youtube"
 )
 
 // Server provides HTTP API
 type Server struct {
-	Version    string
-	Conf       config.Conf
-	Store      *proc.BoltDB
-	YoutubeSvc YoutubeSvc
+	Version       string
+	Conf          config.Conf
+	Store         Store
+	YoutubeSvc    YoutubeSvc
+	TemplLocation string
+
 	httpServer *http.Server
 	cache      lcw.LoadingCache
+	templates  *template.Template
 }
 
 // YoutubeSvc provides access to youtube's audio rss
 type YoutubeSvc interface {
 	RSSFeed(cinfo youtube.FeedInfo) (string, error)
+}
+
+// Store provides access to feed data
+type Store interface {
+	Load(fmFeed string, max int, skipJunk bool) ([]feed.Item, error)
 }
 
 // Run starts http server for API with all routes
@@ -60,6 +68,12 @@ func (s *Server) Run(ctx context.Context, port int) {
 			}
 		}
 	}()
+
+	if s.TemplLocation == "" {
+		s.TemplLocation = "webapp/templates/*"
+	}
+	log.Printf("[DEBUG] loading templates from %s", s.TemplLocation)
+	s.templates = template.Must(template.ParseGlob(s.TemplLocation))
 
 	s.httpServer = &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),

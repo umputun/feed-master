@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"net/http"
 	"time"
 
@@ -14,8 +13,6 @@ import (
 	"github.com/umputun/feed-master/app/config"
 	"github.com/umputun/feed-master/app/feed"
 )
-
-var templates = template.Must(template.ParseGlob("webapp/templates/*"))
 
 // GET /feed/{name} - renders page with list of items
 func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +59,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 		}
 
 		res := bytes.NewBuffer(nil)
-		err = templates.ExecuteTemplate(res, "feed.tmpl", &tmplData)
+		err = s.templates.ExecuteTemplate(res, "feed.tmpl", &tmplData)
 		return res.Bytes(), err
 	})
 
@@ -113,7 +110,7 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 		}
 
 		res := bytes.NewBuffer(nil)
-		err := templates.ExecuteTemplate(res, "feeds.tmpl", &tmplData)
+		err := s.templates.ExecuteTemplate(res, "feeds.tmpl", &tmplData)
 		return res.Bytes(), err
 	})
 
@@ -145,7 +142,7 @@ func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 		}
 
 		res := bytes.NewBuffer(nil)
-		err := templates.ExecuteTemplate(res, "sources.tmpl", &tmplData)
+		err := s.templates.ExecuteTemplate(res, "sources.tmpl", &tmplData)
 		return res.Bytes(), err
 	})
 
@@ -165,7 +162,7 @@ func (s *Server) renderErrorPage(w http.ResponseWriter, r *http.Request, err err
 		Error  string
 	}{Status: errCode, Error: err.Error()}
 
-	if err := templates.ExecuteTemplate(w, "error.tmpl", &tmplData); err != nil {
+	if err := s.templates.ExecuteTemplate(w, "error.tmpl", &tmplData); err != nil {
 		render.Status(r, http.StatusInternalServerError)
 		render.JSON(w, r, rest.JSON{"error": err.Error()})
 		return

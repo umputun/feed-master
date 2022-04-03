@@ -26,6 +26,7 @@ import (
 )
 
 type options struct {
+	Port int    `short:"p" long:"port" description:"port to listen" default:"8080"`
 	DB   string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
 	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
 
@@ -42,8 +43,6 @@ type options struct {
 	TwitterAccessToken    string        `long:"access-token" env:"TWI_ACCESS_TOKEN" description:"twitter access token"`
 	TwitterAccessSecret   string        `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
 	TwitterTemplate       string        `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
-
-	YtLocation string `long:"yt-location" env:"YT_LOCATION" default:"var/yt" description:"path to youtube download location"`
 
 	Dbg bool `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
@@ -90,7 +89,7 @@ func main() {
 		log.Printf("[INFO] starting youtube processor for %d channels", len(conf.YouTube.Channels))
 		outWr := log.ToWriter(log.Default(), "DEBUG")
 		errWr := log.ToWriter(log.Default(), "INFO")
-		dwnl := ytfeed.NewDownloader(conf.YouTube.DlTemplate, outWr, errWr, opts.YtLocation)
+		dwnl := ytfeed.NewDownloader(conf.YouTube.DlTemplate, outWr, errWr, conf.YouTube.FilesLocation)
 		fd := ytfeed.Feed{Client: &http.Client{Timeout: 10 * time.Second},
 			ChannelBaseURL: conf.YouTube.BaseChanURL, PlaylistBaseURL: conf.YouTube.BasePlaylistURL}
 
@@ -126,7 +125,7 @@ func main() {
 		Store:      procStore,
 		YoutubeSvc: &ytSvc,
 	}
-	server.Run(context.Background(), 8080)
+	server.Run(context.Background(), opts.Port)
 }
 
 func makeBoltDB(dbFile string) (*bolt.DB, error) {
