@@ -1,13 +1,16 @@
 # Feed Master [![Build Status](https://github.com/umputun/feed-master/workflows/build/badge.svg)](https://github.com/umputun/feed-master/actions) [![Coverage Status](https://coveralls.io/repos/github/umputun/feed-master/badge.svg?branch=master)](https://coveralls.io/github/umputun/feed-master?branch=master) [![Docker Automated build](https://img.shields.io/docker/automated/umputun/feed-master)](https://hub.docker.com/r/umputun/feed-master)
 
-Pulls multiple podcast feeds (RSS) and republishes as a common feed, properly sorted and podcast-client friendly. Optionally posts the new items to telegram's channel.
+Feed-Master is a service that aggregates and publishes RSS feeds. It can pull multiple feeds from different sources and publish them to a single feed. The service normalizing all the feeds to make sure the combined feed is valid, compatible with podcast clients and compatible with RSS 2.0 specification. 
 
-In addition to combining multiple feeds from external sources, it also supports extracting audio from youtube channels and use it to make the final feed. The service uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to pull videos and [ffmpeg](https://www.ffmpeg.org/) for audio extraction.
+In addition to making RSS feeds, Feed-Master can also publish updates to both twitter and telegram. In case of telegram the actual mp3 audio file is published too. In case of twitter the mp3 audio file is published as a tweet with a link to the original audio file and with the episode info, like title and/or description.
+
+
+Feed-Master supports extracting audio from youtube channels and use it to make the final feed. The service uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to pull videos and [ffmpeg](https://www.ffmpeg.org/) for audio extraction. In this mode feed-master serves the audio files in addition to the generated RSS feed.
 
 ## Run in docker (short version)
 
 - Copy `docker-compose.yml` and adjust exposed port if needed
-- Create `etc/fm.yml` (sample provided in `_example`)
+- Create `etc/fm.yml` (samples provided in `_example`)
 - Start container with `docker-compose up -d feed-master`
 
 ### Application parameters
@@ -31,12 +34,15 @@ In addition to combining multiple feeds from external sources, it also supports 
 
 ## API
 
-- `GET /rss/{name}` - returns feed-set for given name
+- `GET /rss/{name}` - returns feed-set for given feed name
 - `GET /list` - returns list of feed-sets (json)
+- `GET /image/{name}` - returns image for given feed name
+- `GET /feed/{name}/sources` - returns list of sources for given feed name
+- `GET /yr/rss/{channel}` - return RSS feed for given youtube channel
 
 ## Web UI
 
-Web UI shows a list of items from generated RSS. It is available on `/feed/{name}`
+Web UI shows a list of items from generated RSS. It is available on `/feeds` or, for the particular output feed on `/feed/{name}`
 
 ## Telegram notifications
 
