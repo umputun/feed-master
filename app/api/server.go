@@ -197,8 +197,8 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		baseURL := strings.TrimSuffix(s.Conf.System.BaseURL, "/")
 		rss.Link = baseURL + "/feed/" + feedName
 		imagesURL := baseURL + "/images/" + feedName
-		rss.ItunesImage = feed.ItunesImg{URL: imagesURL}
-		rss.MediaThumbnail = feed.MediaThumbnail{URL: imagesURL}
+		rss.ItunesImage = &feed.ItunesImg{URL: imagesURL}
+		rss.MediaThumbnail = &feed.MediaThumbnail{URL: imagesURL}
 	}
 
 	b, err := xml.MarshalIndent(&rss, "", "  ")
