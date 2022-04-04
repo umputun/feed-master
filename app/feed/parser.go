@@ -18,30 +18,32 @@ import (
 
 // Rss2 feed
 type Rss2 struct {
-	XMLName        xml.Name       `xml:"rss"`
-	Version        string         `xml:"version,attr"`
-	NsItunes       string         `xml:"xmlns:itunes,attr"`
-	NsMedia        string         `xml:"xmlns:media,attr"`
-	Title          string         `xml:"channel>title"`
-	Language       string         `xml:"channel>language"`
-	Link           string         `xml:"channel>link"`
-	Description    string         `xml:"channel>description"`
-	PubDate        string         `xml:"channel>pubDate"`
-	LastBuildDate  string         `xml:"channel>lastBuildDate"`
-	ItunesImage    ItunesImg      `xml:"channel>itunes:image"`
-	MediaThumbnail MediaThumbnail `xml:"channel>media:thumbnail"`
+	XMLName        xml.Name        `xml:"rss"`
+	Version        string          `xml:"version,attr"`
+	NsItunes       string          `xml:"xmlns:itunes,attr"`
+	NsMedia        string          `xml:"xmlns:media,attr"`
+	Title          string          `xml:"channel>title"`
+	Language       string          `xml:"channel>language"`
+	Link           string          `xml:"channel>link"`
+	Description    string          `xml:"channel>description"`
+	PubDate        string          `xml:"channel>pubDate"`
+	LastBuildDate  string          `xml:"channel>lastBuildDate"`
+	ItunesImage    *ItunesImg      `xml:"channel>itunes:image"`
+	MediaThumbnail *MediaThumbnail `xml:"channel>media:thumbnail"`
 
 	ItemList []Item `xml:"channel>item"`
 }
 
 // ItunesImg image element for iTunes
 type ItunesImg struct {
-	URL string `xml:"href,attr"`
+	XMLName xml.Name `xml:"itunes:image,omitempty"`
+	URL     string   `xml:"href,attr"`
 }
 
 // MediaThumbnail image element for media
 type MediaThumbnail struct {
-	URL string `xml:"url,attr"`
+	XMLName xml.Name `xml:"media:thumbnail,omitempty"`
+	URL     string   `xml:"url,attr"`
 }
 
 // Enclosure element from item

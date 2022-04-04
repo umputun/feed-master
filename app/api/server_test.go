@@ -96,18 +96,21 @@ func TestServer_getFeedCtrl(t *testing.T) {
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	body, err := io.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
-	t.Logf("resp body: %s", string(body))
-	assert.Contains(t, string(body), "<title>feed1</title>")
-	assert.Contains(t, string(body), "<language>ru-ru</language>")
-	assert.Contains(t, string(body), " <description>this is feed1</description>")
+	body := string(respBody)
+	t.Logf("resp body: %s", body)
+	assert.Contains(t, body, "<title>feed1</title>")
+	assert.Contains(t, body, "<language>ru-ru</language>")
+	assert.Contains(t, body, " <description>this is feed1</description>")
 
-	assert.Contains(t, string(body), "<guid>guid1</guid>")
-	assert.Contains(t, string(body), "<title>title1</title>")
-	assert.Contains(t, string(body), "<link>http://example.com/link1</link>")
-	assert.Contains(t, string(body), "<description>some description1</description>")
-	assert.Contains(t, string(body), `<enclosure url="http://example.com/enclosure1" length="12345" type="audio/mpeg"></enclosure>`)
+	assert.Contains(t, body, "<guid>guid1</guid>")
+	assert.Contains(t, body, "<title>title1</title>")
+	assert.Contains(t, body, "<link>http://example.com/link1</link>")
+	assert.Contains(t, body, "<description>some description1</description>")
+	assert.Contains(t, body, `<enclosure url="http://example.com/enclosure1" length="12345" type="audio/mpeg"></enclosure>`)
+	assert.NotContains(t, body, `<itunes:image href=""></itunes:image>`)
+	assert.NotContains(t, body, `<media:thumbnail url=""></media:thumbnail>`)
 
 	assert.Equal(t, 1, len(store.LoadCalls()))
 	assert.Equal(t, "feed1", store.LoadCalls()[0].FmFeed)
@@ -169,15 +172,89 @@ func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	body, err := io.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
-	t.Logf("resp body: %s", string(body))
-	assert.Contains(t, string(body), "<title>feed1</title>")
-	assert.Contains(t, string(body), "<language>ru-ru</language>")
-	assert.Contains(t, string(body), " <description>this is feed1</description>")
+	body := string(respBody)
+	t.Logf("resp body: %s", body)
+	assert.Contains(t, body, "<title>feed1</title>")
+	assert.Contains(t, body, "<language>ru-ru</language>")
+	assert.Contains(t, body, " <description>this is feed1</description>")
 
-	assert.Contains(t, string(body), "<guid>guid1</guid>")
-	assert.Contains(t, string(body), "<title>title1 (2022-04-03)</title>")
+	assert.Contains(t, body, "<guid>guid1</guid>")
+	assert.Contains(t, body, "<title>title1 (2022-04-03)</title>")
+
+	assert.Equal(t, 1, len(store.LoadCalls()))
+	assert.Equal(t, "feed1", store.LoadCalls()[0].FmFeed)
+}
+
+func TestServer_getFeedCtrlFeedImage(t *testing.T) {
+
+	store := &mocks.StoreMock{
+		LoadFunc: func(fmFeed string, max int, skipJunk bool) ([]feed.Item, error) {
+			return []feed.Item{
+				{
+					GUID:        "guid1",
+					Title:       "title1",
+					Link:        "http://example.com/link1",
+					Description: "some description1",
+					Enclosure: feed.Enclosure{
+						URL:    "http://example.com/enclosure1",
+						Type:   "audio/mpeg",
+						Length: 12345,
+					},
+				},
+				{
+					GUID:        "guid2",
+					Title:       "title2",
+					Link:        "http://example.com/link2",
+					Description: "some description2",
+					Enclosure: feed.Enclosure{
+						URL:    "http://example.com/enclosure2",
+						Type:   "audio/mpeg",
+						Length: 12346,
+					},
+				},
+			}, nil
+		},
+	}
+
+	s := Server{
+		Version:       "1.0",
+		TemplLocation: "../webapp/templates/*",
+		Store:         store,
+		Conf: config.Conf{
+			Feeds: map[string]config.Feed{
+				"feed1": {
+					Title:       "feed1",
+					Language:    "ru-ru",
+					Description: "this is feed1",
+					Link:        "http://example.com/feed1",
+				},
+				"feed2": {
+					Title: "feed2",
+				},
+			},
+		},
+	}
+	s.Conf.System.BaseURL = "http://example.com"
+
+	ts := httptest.NewServer(s.router())
+	defer ts.Close()
+
+	resp, err := ts.Client().Get(ts.URL + "/rss/feed1")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	body := string(respBody)
+	t.Logf("resp body: %s", body)
+	assert.Contains(t, body, "<title>feed1</title>")
+
+	assert.Contains(t, body, "<guid>guid1</guid>")
+	assert.Contains(t, body, `<itunes:image href="http://example.com/images/feed1"></itunes:image>`)
+	assert.Contains(t, body, `<media:thumbnail url="http://example.com/images/feed1"></media:thumbnail>`)
 
 	assert.Equal(t, 1, len(store.LoadCalls()))
 	assert.Equal(t, "feed1", store.LoadCalls()[0].FmFeed)

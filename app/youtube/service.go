@@ -163,8 +163,8 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 	// set image from channel as rss thumbnail
 	// TODO: we may want to load it locally in case if youtube doesn't like such remote usage of images
 	if image := entries[0].Media.Thumbnail.URL; image != "" {
-		rss.ItunesImage.URL = image
-		rss.MediaThumbnail.URL = image
+		rss.ItunesImage = &rssfeed.ItunesImg{URL: image}
+		rss.MediaThumbnail = &rssfeed.MediaThumbnail{URL: image}
 	}
 
 	if fi.Type == ytfeed.FTPlaylist {
