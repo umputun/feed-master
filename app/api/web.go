@@ -83,6 +83,7 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 			config.Feed
 			FeedURL     string
 			Sources     int
+			SourcesLink string
 			LastUpdated time.Time
 		}
 		var feedItems []feedItem
@@ -96,6 +97,7 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 				Feed:        feedConf,
 				FeedURL:     s.Conf.System.BaseURL + "/feed/" + f,
 				Sources:     len(feedConf.Sources),
+				SourcesLink: s.Conf.System.BaseURL + "/feed/" + f + "/sources",
 				LastUpdated: items[0].DT,
 			}
 			feedItems = append(feedItems, item)
