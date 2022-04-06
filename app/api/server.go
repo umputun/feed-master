@@ -96,14 +96,14 @@ func (s *Server) router() *chi.Mux {
 	router.Use(rest.AppInfo("feed-master", "umputun", s.Version), rest.Ping)
 	router.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(5, nil)))
 	router.Group(func(rimg chi.Router) {
-		l := logger.New(logger.Log(log.Default()), logger.Prefix("[DEBUG]"))
+		l := logger.New(logger.Log(log.Default()), logger.Prefix("[DEBUG]"), logger.IPfn(logger.AnonymizeIP))
 		rimg.Use(l.Handler, middleware.GetHead)
 		rimg.Get("/images/{name}", s.getImageCtrl)
 		rimg.Get("/image/{name}", s.getImageCtrl)
 	})
 
 	router.Group(func(rrss chi.Router) {
-		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"))
+		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"), logger.IPfn(logger.AnonymizeIP))
 		rrss.Use(l.Handler, middleware.GetHead)
 		rrss.Get("/rss/{name}", s.getFeedCtrl)
 		rrss.Head("/rss/{name}", s.getFeedCtrl)
@@ -114,7 +114,7 @@ func (s *Server) router() *chi.Mux {
 	})
 
 	router.Route("/yt", func(r chi.Router) {
-		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"))
+		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"), logger.IPfn(logger.AnonymizeIP))
 		r.Use(l.Handler, middleware.GetHead)
 		r.Get("/rss/{channel}", s.getYoutubeFeedCtrl)
 	})
