@@ -253,6 +253,7 @@ func (s *Server) getYoutubeFeedCtrl(w http.ResponseWriter, r *http.Request) {
 
 // POST /yt/rss/generate - generates rss for all (each) youtube channels
 func (s *Server) regenerateRSSCtrl(w http.ResponseWriter, r *http.Request) {
+
 	for _, f := range s.Conf.YouTube.Channels {
 		res, err := s.YoutubeSvc.RSSFeed(youtube.FeedInfo{ID: f.ID})
 		if err != nil {
@@ -264,6 +265,7 @@ func (s *Server) regenerateRSSCtrl(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	rest.RenderJSON(w, rest.JSON{"status": "ok", "feeds": len(s.Conf.YouTube.Channels)})
 }
 
 func (s *Server) feeds() []string {
