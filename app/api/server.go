@@ -48,6 +48,7 @@ type Server struct {
 // YoutubeSvc provides access to youtube's audio rss
 type YoutubeSvc interface {
 	RSSFeed(cinfo youtube.FeedInfo) (string, error)
+	StoreRSS(chanID, rss string) error
 }
 
 // Store provides access to feed data
@@ -91,20 +92,20 @@ func (s *Server) Run(ctx context.Context, port int) {
 
 func (s *Server) router() *chi.Mux {
 	router := chi.NewRouter()
-	router.Use(middleware.RealIP, rest.Recoverer(log.Default()))
+	router.Use(middleware.RealIP, rest.Recoverer(log.Default()), middleware.GetHead)
 	router.Use(middleware.Throttle(1000), middleware.Timeout(60*time.Second))
 	router.Use(rest.AppInfo("feed-master", "umputun", s.Version), rest.Ping)
 	router.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(5, nil)))
 	router.Group(func(rimg chi.Router) {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[DEBUG]"), logger.IPfn(logger.AnonymizeIP))
-		rimg.Use(l.Handler, middleware.GetHead)
+		rimg.Use(l.Handler)
 		rimg.Get("/images/{name}", s.getImageCtrl)
 		rimg.Get("/image/{name}", s.getImageCtrl)
 	})
 
 	router.Group(func(rrss chi.Router) {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"), logger.IPfn(logger.AnonymizeIP))
-		rrss.Use(l.Handler, middleware.GetHead)
+		rrss.Use(l.Handler)
 		rrss.Get("/rss/{name}", s.getFeedCtrl)
 		rrss.Head("/rss/{name}", s.getFeedCtrl)
 		rrss.Get("/list", s.getListCtrl)
@@ -115,8 +116,9 @@ func (s *Server) router() *chi.Mux {
 
 	router.Route("/yt", func(r chi.Router) {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"), logger.IPfn(logger.AnonymizeIP))
-		r.Use(l.Handler, middleware.GetHead)
+		r.Use(l.Handler)
 		r.Get("/rss/{channel}", s.getYoutubeFeedCtrl)
+		r.Post("/rss/generate", s.regenerateRSSCtrl)
 	})
 
 	if s.Conf.YouTube.BaseURL != "" {
@@ -247,6 +249,21 @@ func (s *Server) getYoutubeFeedCtrl(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
 	res = `<?xml version="1.0" encoding="UTF-8"?>` + "\n" + res
 	_, _ = fmt.Fprintf(w, "%s", res)
+}
+
+// POST /yt/rss/generate - generates rss for all (each) youtube channels
+func (s *Server) regenerateRSSCtrl(w http.ResponseWriter, r *http.Request) {
+	for _, f := range s.Conf.YouTube.Channels {
+		res, err := s.YoutubeSvc.RSSFeed(youtube.FeedInfo{ID: f.ID})
+		if err != nil {
+			rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to read yt rss for "+f.ID)
+			return
+		}
+		if err := s.YoutubeSvc.StoreRSS(f.ID, res); err != nil {
+			rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to store yt rss for "+f.ID)
+			return
+		}
+	}
 }
 
 func (s *Server) feeds() []string {

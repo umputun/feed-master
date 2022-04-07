@@ -267,6 +267,11 @@ func (s *Service) procChannels(ctx context.Context) error {
 	return nil
 }
 
+// StoreRSS saves RSS feed to file
+func (s *Service) StoreRSS(chanID, rss string) error {
+	return s.RSSFileStore.Save(chanID, rss)
+}
+
 // isNew checks if entry already processed
 func (s *Service) isNew(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
 

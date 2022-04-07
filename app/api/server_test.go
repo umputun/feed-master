@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -16,6 +17,7 @@ import (
 	"github.com/umputun/feed-master/app/api/mocks"
 	"github.com/umputun/feed-master/app/config"
 	"github.com/umputun/feed-master/app/feed"
+	"github.com/umputun/feed-master/app/youtube"
 )
 
 func TestServer_Run(t *testing.T) {
@@ -178,4 +180,41 @@ func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
 
 	assert.Equal(t, 1, len(store.LoadCalls()))
 	assert.Equal(t, "feed1", store.LoadCalls()[0].FmFeed)
+}
+
+func TestServer_regenerateRSSCtrl(t *testing.T) {
+
+	yt := &mocks.YoutubeSvcMock{
+		RSSFeedFunc: func(cinfo youtube.FeedInfo) (string, error) {
+			return "blah", nil
+		},
+		StoreRSSFunc: func(chanID string, rss string) error {
+			return nil
+		},
+	}
+
+	s := Server{
+		Version:       "1.0",
+		TemplLocation: "../webapp/templates/*",
+		YoutubeSvc:    yt,
+		Conf:          config.Conf{},
+	}
+	s.Conf.YouTube.Channels = []youtube.FeedInfo{{ID: "chan1"}, {ID: "chan2"}}
+	ts := httptest.NewServer(s.router())
+	defer ts.Close()
+
+	resp, err := ts.Client().Post(ts.URL+"/yt/rss/generate", "text/json", bytes.NewBuffer(nil))
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	require.Equal(t, 2, len(yt.RSSFeedCalls()))
+	assert.Equal(t, "chan1", yt.RSSFeedCalls()[0].Cinfo.ID)
+	assert.Equal(t, "chan2", yt.RSSFeedCalls()[1].Cinfo.ID)
+
+	require.Equal(t, 2, len(yt.StoreRSSCalls()))
+	require.Equal(t, "chan1", yt.StoreRSSCalls()[0].ChanID)
+	require.Equal(t, "blah", yt.StoreRSSCalls()[0].Rss)
+	require.Equal(t, "chan2", yt.StoreRSSCalls()[1].ChanID)
+	require.Equal(t, "blah", yt.StoreRSSCalls()[1].Rss)
 }
