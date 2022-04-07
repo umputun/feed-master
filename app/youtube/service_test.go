@@ -126,6 +126,7 @@ func TestService_RSSFeed(t *testing.T) {
 	require.NoError(t, err)
 	t.Logf("%v", res)
 
+	assert.Contains(t, res, `<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/">`)
 	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/file1.mp3"`)
 	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/file1.mp3"`)
 	assert.Contains(t, res, `<guid>channel1::vid1</guid>`)
@@ -135,6 +136,7 @@ func TestService_RSSFeed(t *testing.T) {
 	assert.Contains(t, res, `<link>http://example.com/c1</link>`)
 	assert.Contains(t, res, `<itunes:image href="http://example.com/thumb.jpg"></itunes:image>`)
 	assert.Contains(t, res, `<media:thumbnail url="http://example.com/thumb.jpg"></media:thumbnail>`)
+
 }
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
