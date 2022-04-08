@@ -222,7 +222,15 @@ func (s *Service) procChannels(ctx context.Context) error {
 				continue
 			}
 			processed++
-			log.Printf("[INFO] downloaded %s (%s) to %s, channel: %+v", entry.VideoID, entry.Title, file, feedInfo)
+
+			fsize := 0
+			if fi, err := os.Stat(file); err == nil {
+				fsize = int(fi.Size())
+			} else {
+				log.Printf("[WARN] failed to get file size for %s: %v", file, err)
+			}
+
+			log.Printf("[INFO] downloaded %s (%s) to %s, size: %d, channel: %+v", entry.VideoID, entry.Title, file, fsize, feedInfo)
 
 			entry = s.update(entry, file, feedInfo)
 

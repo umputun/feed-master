@@ -58,6 +58,7 @@ type Store interface {
 
 // Run starts http server for API with all routes
 func (s *Server) Run(ctx context.Context, port int) {
+	log.Printf("[INFO] starting server on port %d", port)
 	var err error
 	if s.cache, err = lcw.NewExpirableCache(lcw.TTL(time.Minute*5), lcw.MaxCacheSize(10*1024*1024)); err != nil {
 		log.Printf("[PANIC] failed to make loading cache, %v", err)
