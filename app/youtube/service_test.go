@@ -35,6 +35,12 @@ func TestService_Do(t *testing.T) {
 		},
 	}
 
+	duration := &mocks.DurationServiceMock{
+		FileFunc: func(fname string) int {
+			return 1234
+		},
+	}
+
 	tmpfile := filepath.Join(os.TempDir(), "test.db")
 	defer os.Remove(tmpfile)
 
@@ -46,12 +52,13 @@ func TestService_Do(t *testing.T) {
 			{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel},
 			{ID: "channel2", Name: "name2", Type: ytfeed.FTPlaylist},
 		},
-		Downloader:     downloader,
-		ChannelService: chans,
-		Store:          boltStore,
-		CheckDuration:  time.Millisecond * 500,
-		KeepPerChannel: 10,
-		RSSFileStore:   RSSFileStore{Enabled: true, Location: "/tmp"},
+		Downloader:      downloader,
+		ChannelService:  chans,
+		Store:           boltStore,
+		CheckDuration:   time.Millisecond * 500,
+		KeepPerChannel:  10,
+		RSSFileStore:    RSSFileStore{Enabled: true, Location: "/tmp"},
+		DurationService: duration,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*900)
@@ -89,11 +96,19 @@ func TestService_Do(t *testing.T) {
 	t.Logf("%s", string(rssData))
 	assert.Contains(t, string(rssData), "<guid>channel1::vid1</guid>")
 	assert.Contains(t, string(rssData), "<guid>channel1::vid2</guid>")
+	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
 	rssData, err = os.ReadFile("/tmp/channel2.xml")
 	require.NoError(t, err)
 	assert.Contains(t, string(rssData), "<guid>channel2::vid1</guid>")
 	assert.Contains(t, string(rssData), "<guid>channel2::vid2</guid>")
+	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
+
+	require.Equal(t, 4, len(duration.FileCalls()))
+	assert.Equal(t, "/tmp/e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3", duration.FileCalls()[0].Fname)
+	assert.Equal(t, "/tmp/4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3", duration.FileCalls()[1].Fname)
+	assert.Equal(t, "/tmp/3be877c750abb87daee80c005fe87e7a3f824fed.mp3", duration.FileCalls()[2].Fname)
+	assert.Equal(t, "/tmp/648f79b3a05ececb8a37600aa0aee332f0374e01.mp3", duration.FileCalls()[3].Fname)
 }
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
@@ -210,6 +225,49 @@ func TestService_makeFileName(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			assert.Equal(t, tt.res, svc.makeFileName(tt.entry))
 		})
+	}
+
+}
+
+func TestService_update(t *testing.T) {
+
+	duration := &mocks.DurationServiceMock{
+		FileFunc: func(fname string) int {
+			return 1234
+		},
+	}
+
+	svc := Service{DurationService: duration}
+
+	{ // update with reset pub time
+		inpEntry := ytfeed.Entry{
+			ChannelID: "chan1",
+			VideoID:   "vid1",
+			Updated:   time.Now().Add(time.Minute * -1),
+			Published: time.Now().Add(time.Hour * -1),
+			Title:     "something",
+		}
+
+		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "feed1"})
+		t.Logf("%+v", res)
+		assert.Equal(t, 1234, res.Duration)
+		assert.True(t, time.Since(res.Published) < time.Second, "published time was reset")
+		assert.Equal(t, "feed1: something", res.Title)
+	}
+
+	{ // update with altering title for dedup
+		inpEntry := ytfeed.Entry{
+			ChannelID: "chan1",
+			VideoID:   "vid1",
+			Updated:   time.Now().Add(time.Minute * -1),
+			Published: time.Now().Add(time.Hour * -1),
+			Title:     `Сергей Пархоменко на канале “Живой Гвоздь” в программме “Персонально ваш”. 06.04.2022`,
+		}
+		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "Сергей Пархоменко"})
+		t.Logf("%+v", res)
+		assert.Equal(t, 1234, res.Duration)
+		assert.True(t, time.Since(res.Published) < time.Second, "published time was reset")
+		assert.Equal(t, "Сергей Пархоменко на канале “Живой Гвоздь” в программме “Персонально ваш”. 06.04.2022", res.Title)
 	}
 
 }

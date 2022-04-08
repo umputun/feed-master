@@ -1,23 +1,22 @@
 package proc
 
 import (
-	"bytes"
 	"html/template"
 	"strconv"
 	"strings"
 	"testing"
-	"testing/iotest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/umputun/feed-master/app/duration"
 	tb "gopkg.in/tucnak/telebot.v2"
 
 	"github.com/umputun/feed-master/app/feed"
 )
 
 func TestNewTelegramClientIfTokenEmpty(t *testing.T) {
-	client, err := NewTelegramClient("", "", 0)
+	client, err := NewTelegramClient("", "", 0, &duration.Service{})
 	assert.NoError(t, err)
 	assert.Nil(t, client.Bot)
 }
@@ -35,7 +34,7 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 		i := i
 		tt := tt
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			client, err := NewTelegramClient("", "", tt.timeout)
+			client, err := NewTelegramClient("", "", tt.timeout, &duration.Service{})
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected, client.Timeout)
 		})
@@ -43,7 +42,7 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 }
 
 func TestSendIfBotIsNil(t *testing.T) {
-	client, err := NewTelegramClient("", "", 0)
+	client, err := NewTelegramClient("", "", 0, &duration.Service{})
 	require.NoError(t, err)
 	err = client.Send("@channel", feed.Item{})
 	assert.NoError(t, err)
@@ -175,21 +174,4 @@ func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
 			assert.Equal(t, expected, got.Recipient())
 		})
 	}
-}
-
-func TestDurationBadReader(t *testing.T) {
-	r := iotest.ErrReader(bytes.ErrTooLarge)
-	client := TelegramClient{}
-	duration := client.duration(r)
-	assert.Zero(t, duration)
-}
-
-func TestDurationGoodContent(t *testing.T) {
-	// taken from https://github.com/mathiasbynens/small/blob/master/mp3.mp3
-	smallMP3File := []byte{54, 53, 53, 48, 55, 54, 51, 52, 48, 48, 51, 49, 56, 52, 51, 50, 48, 55, 54, 49, 54, 55, 49, 55, 49, 55, 55, 49, 53, 49, 49, 56, 51, 51, 49, 52, 51, 56, 50, 49, 50, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48}
-	reader := bytes.NewReader(smallMP3File)
-
-	client := TelegramClient{}
-	duration := client.duration(reader)
-	assert.Zero(t, duration)
 }

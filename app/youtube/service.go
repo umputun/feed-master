@@ -6,7 +6,6 @@ import (
 	"crypto/sha1"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"strings"
@@ -15,7 +14,6 @@ import (
 	log "github.com/go-pkgz/lgr"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/tcolgate/mp3"
 
 	rssfeed "github.com/umputun/feed-master/app/feed"
 	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
@@ -24,17 +22,19 @@ import (
 //go:generate moq -out mocks/downloader.go -pkg mocks -skip-ensure -fmt goimports . DownloaderService
 //go:generate moq -out mocks/channel.go -pkg mocks -skip-ensure -fmt goimports . ChannelService
 //go:generate moq -out mocks/store.go -pkg mocks -skip-ensure -fmt goimports . StoreService
+//go:generate moq -out mocks/duration.go -pkg mocks -skip-ensure -fmt goimports . DurationService
 
 // Service loads audio from youtube channels
 type Service struct {
-	Feeds          []FeedInfo
-	Downloader     DownloaderService
-	ChannelService ChannelService
-	Store          StoreService
-	CheckDuration  time.Duration
-	RSSFileStore   RSSFileStore
-	KeepPerChannel int
-	RootURL        string
+	Feeds           []FeedInfo
+	Downloader      DownloaderService
+	ChannelService  ChannelService
+	Store           StoreService
+	CheckDuration   time.Duration
+	RSSFileStore    RSSFileStore
+	DurationService DurationService
+	KeepPerChannel  int
+	RootURL         string
 }
 
 // FeedInfo contains channel or feed ID, readable name and other per-feed info
@@ -68,6 +68,11 @@ type StoreService interface {
 	CheckProcessed(entry ytfeed.Entry) (found bool, ts time.Time, err error)
 	CountProcessed() (count int)
 	Last() (ytfeed.Entry, error)
+}
+
+// DurationService is an interface for getting duration of audio file
+type DurationService interface {
+	File(fname string) int
 }
 
 // Do is a blocking function that downloads audio from youtube channels and updates metadata
@@ -343,7 +348,7 @@ func (s *Service) update(entry ytfeed.Entry, file string, fi FeedInfo) ytfeed.En
 		entry.Title = fi.Name + ": " + entry.Title
 	}
 
-	entry.Duration = s.duration(file)
+	entry.Duration = s.DurationService.File(file)
 
 	return entry
 }
@@ -382,31 +387,6 @@ func (s *Service) makeFileName(entry ytfeed.Entry) string {
 		return uuid.New().String()
 	}
 	return fmt.Sprintf("%x", h.Sum(nil))
-}
-
-// duration scans MP3 file from provided file and returns its duration in seconds, ignoring possible errors
-func (s *Service) duration(fname string) int {
-	fh, err := os.Open(fname) //nolint:gosec // this is not an inclusion as file was created by us
-	if err != nil {
-		log.Printf("[WARN] can't get duration, failed to open file %s: %v", fname, err)
-		return 0
-	}
-	defer fh.Close() // nolint
-
-	d := mp3.NewDecoder(fh)
-	var f mp3.Frame
-	var skipped int
-	var duration float64
-
-	for err == nil {
-		if err = d.Decode(&f, &skipped); err != nil && err != io.EOF {
-			log.Printf("[WARN] can't decode mp3 file %s: %v", fname, err)
-			return 0
-		}
-		duration += f.Duration().Seconds()
-	}
-
-	return int(duration)
 }
 
 type stats struct {

@@ -11,7 +11,7 @@ import (
 	log "github.com/go-pkgz/lgr"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/pkg/errors"
-	"github.com/tcolgate/mp3"
+	"github.com/umputun/feed-master/app/duration"
 	"golang.org/x/net/html"
 	tb "gopkg.in/tucnak/telebot.v2"
 
@@ -20,12 +20,13 @@ import (
 
 // TelegramClient client
 type TelegramClient struct {
-	Bot     *tb.Bot
-	Timeout time.Duration
+	Bot             *tb.Bot
+	Timeout         time.Duration
+	DurationService *duration.Service
 }
 
 // NewTelegramClient init telegram client
-func NewTelegramClient(token, apiURL string, timeout time.Duration) (*TelegramClient, error) {
+func NewTelegramClient(token, apiURL string, timeout time.Duration, durSvc *duration.Service) (*TelegramClient, error) {
 	if timeout == 0 {
 		timeout = time.Second * 60
 	}
@@ -47,8 +48,9 @@ func NewTelegramClient(token, apiURL string, timeout time.Duration) (*TelegramCl
 	}
 
 	result := TelegramClient{
-		Bot:     bot,
-		Timeout: timeout,
+		Bot:             bot,
+		Timeout:         timeout,
+		DurationService: durSvc,
 	}
 	return &result, err
 }
@@ -100,7 +102,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		Caption:   client.getMessageHTML(item, htmlMessageParams{TrimCaption: true}),
 		Title:     item.Title,
 		Performer: item.Author,
-		Duration:  client.duration(tee),
+		Duration:  client.DurationService.Reader(tee),
 	}
 
 	message, err := audio.Send(
@@ -150,23 +152,6 @@ func (client TelegramClient) getMessageHTML(item feed.Item, params htmlMessagePa
 	}
 
 	return header + description + footer
-}
-
-// duration scans MP3 file from provided io.Reader and returns it's duration in seconds, ignoring possible errors
-func (client TelegramClient) duration(r io.Reader) int {
-	d := mp3.NewDecoder(r)
-	var f mp3.Frame
-	var skipped int
-	var duration float64
-	var err error
-
-	for err == nil {
-		if err = d.Decode(&f, &skipped); err != nil && err != io.EOF {
-			return 0
-		}
-		duration += f.Duration().Seconds()
-	}
-	return int(duration)
 }
 
 type recipient struct {

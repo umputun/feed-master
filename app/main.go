@@ -13,6 +13,7 @@ import (
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/jessevdk/go-flags"
+	"github.com/umputun/feed-master/app/duration"
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/umputun/feed-master/app/config"
@@ -78,7 +79,8 @@ func main() {
 	}
 	procStore := &proc.BoltDB{DB: db}
 
-	telegramNotif, err := proc.NewTelegramClient(opts.TelegramToken, opts.TelegramServer, opts.TelegramTimeout)
+	telegramNotif, err := proc.NewTelegramClient(opts.TelegramToken, opts.TelegramServer, opts.TelegramTimeout,
+		&duration.Service{})
 	if err != nil {
 		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
 	}
@@ -113,6 +115,7 @@ func main() {
 				Location: conf.YouTube.RSSLocation,
 				Enabled:  conf.YouTube.RSSLocation != "",
 			},
+			DurationService: &duration.Service{},
 		}
 		go func() {
 			if err := ytSvc.Do(context.TODO()); err != nil {
