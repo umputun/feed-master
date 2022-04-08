@@ -9,6 +9,7 @@ import (
 	"github.com/tcolgate/mp3"
 )
 
+// Service provides duration of audio from file or reader
 type Service struct{}
 
 // File scans MP3 file from provided file and returns its duration in seconds, ignoring possible errors
