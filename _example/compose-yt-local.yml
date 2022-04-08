@@ -1,0 +1,23 @@
+version: "2.1"
+services:
+ feed-master:
+  image: umputun/feed-master:master
+  container_name: feed-master
+  hostname: feed-master
+  restart: unless-stopped
+
+  logging: &default_logging
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+  environment:
+    - DEBUG=true
+    - FM_DB=/srv/var/feed-master.bdb
+    - FM_CONF=/srv/etc/fm.yml
+  volumes:
+    - ./var:/srv/var # mapped location to save status
+    - ./etc/fm-yt-local.yml:/srv/etc/fm.yml:ro # mapped location for config
+  ports:
+    - "8080:8080"
