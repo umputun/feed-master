@@ -62,7 +62,9 @@ type StoreService interface {
 	Load(channelID string, max int) ([]ytfeed.Entry, error)
 	Exist(entry ytfeed.Entry) (bool, error)
 	RemoveOld(channelID string, keep int) ([]string, error)
+	Remove(entry ytfeed.Entry) error
 	SetProcessed(entry ytfeed.Entry) error
+	ResetProcessed(entry ytfeed.Entry) error
 	CheckProcessed(entry ytfeed.Entry) (found bool, ts time.Time, err error)
 	CountProcessed() (count int)
 	Last() (ytfeed.Entry, error)
@@ -278,6 +280,17 @@ func (s *Service) procChannels(ctx context.Context) error {
 // StoreRSS saves RSS feed to file
 func (s *Service) StoreRSS(chanID, rss string) error {
 	return s.RSSFileStore.Save(chanID, rss)
+}
+
+// RemoveEntry deleted entry from store. Doesn't removes file
+func (s *Service) RemoveEntry(entry ytfeed.Entry) error {
+	if err := s.Store.ResetProcessed(entry); err != nil {
+		return errors.Wrapf(err, "failed to reset processed entry %s", entry.VideoID)
+	}
+	if err := s.Store.Remove(entry); err != nil {
+		return errors.Wrapf(err, "failed to remove entry %s", entry.VideoID)
+	}
+	return nil
 }
 
 // isNew checks if entry already processed

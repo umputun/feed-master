@@ -170,6 +170,35 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 	return res, err
 }
 
+// Remove entry matched by vidoID and channelID
+func (s *BoltDB) Remove(entry feed.Entry) error {
+
+	err := s.DB.Update(func(tx *bolt.Tx) (e error) {
+		bucket := tx.Bucket([]byte(entry.ChannelID))
+		if bucket == nil {
+			return fmt.Errorf("no bucket for %s", entry.ChannelID)
+		}
+		c := bucket.Cursor()
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
+			var item feed.Entry
+			if err := json.Unmarshal(v, &item); err != nil {
+				log.Printf("[WARN] failed to unmarshal, %v", err)
+				continue
+			}
+			if item.VideoID == entry.VideoID {
+				if err := bucket.Delete(k); err != nil {
+					return errors.Wrapf(err, "failed to delete %s (%s)", string(k), item.VideoID)
+				}
+				log.Printf("[INFO] delete %s - %s", string(k), item.String())
+			}
+			return nil
+		}
+		return nil
+	})
+
+	return err
+}
+
 // SetProcessed sets processed status with ts for a given channel+video
 func (s *BoltDB) SetProcessed(entry feed.Entry) error {
 
@@ -192,6 +221,35 @@ func (s *BoltDB) SetProcessed(entry feed.Entry) error {
 		e = bucket.Put(key, []byte(entry.Published.Format(time.RFC3339)))
 		if e != nil {
 			return errors.Wrapf(e, "save processed %s", entry.VideoID)
+		}
+		return e
+	})
+
+	return err
+}
+
+// ResetProcessed resets processed status for a given channel+video
+func (s *BoltDB) ResetProcessed(entry feed.Entry) error {
+
+	key, keyErr := s.procKey(entry)
+	if keyErr != nil {
+		return errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
+	}
+
+	err := s.DB.Update(func(tx *bolt.Tx) error {
+		bucket, e := tx.CreateBucketIfNotExists(processedBkt)
+		if e != nil {
+			return errors.Wrapf(e, "create bucket %s", processedBkt)
+		}
+		if bucket.Get(key) == nil {
+			return nil
+		}
+
+		log.Printf("[INFO] reset processed %s - %s", string(key), entry.String())
+
+		e = bucket.Delete(key)
+		if e != nil {
+			return errors.Wrapf(e, "reset processed %s", entry.VideoID)
 		}
 		return e
 	})

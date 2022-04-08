@@ -44,6 +44,8 @@ type options struct {
 	TwitterAccessSecret   string        `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
 	TwitterTemplate       string        `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
 
+	AdminPasswd string `long:"admin-passwd" env:"ADMIN_PASSWD" description:"admin password for protected endpoints"`
+
 	Dbg bool `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
 
@@ -120,10 +122,11 @@ func main() {
 	}
 
 	server := api.Server{
-		Version:    revision,
-		Conf:       *conf,
-		Store:      procStore,
-		YoutubeSvc: &ytSvc,
+		Version:     revision,
+		Conf:        *conf,
+		Store:       procStore,
+		YoutubeSvc:  &ytSvc,
+		AdminPasswd: opts.AdminPasswd,
 	}
 	server.Run(context.Background(), opts.Port)
 }

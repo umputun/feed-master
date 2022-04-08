@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/umputun/feed-master/app/youtube"
+	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
 )
 
 // YoutubeSvcMock is a mock implementation of api.YoutubeSvc.
@@ -17,6 +18,9 @@ import (
 // 		mockedYoutubeSvc := &YoutubeSvcMock{
 // 			RSSFeedFunc: func(cinfo youtube.FeedInfo) (string, error) {
 // 				panic("mock out the RSSFeed method")
+// 			},
+// 			RemoveEntryFunc: func(entry ytfeed.Entry) error {
+// 				panic("mock out the RemoveEntry method")
 // 			},
 // 			StoreRSSFunc: func(chanID string, rss string) error {
 // 				panic("mock out the StoreRSS method")
@@ -31,6 +35,9 @@ type YoutubeSvcMock struct {
 	// RSSFeedFunc mocks the RSSFeed method.
 	RSSFeedFunc func(cinfo youtube.FeedInfo) (string, error)
 
+	// RemoveEntryFunc mocks the RemoveEntry method.
+	RemoveEntryFunc func(entry ytfeed.Entry) error
+
 	// StoreRSSFunc mocks the StoreRSS method.
 	StoreRSSFunc func(chanID string, rss string) error
 
@@ -41,6 +48,11 @@ type YoutubeSvcMock struct {
 			// Cinfo is the cinfo argument value.
 			Cinfo youtube.FeedInfo
 		}
+		// RemoveEntry holds details about calls to the RemoveEntry method.
+		RemoveEntry []struct {
+			// Entry is the entry argument value.
+			Entry ytfeed.Entry
+		}
 		// StoreRSS holds details about calls to the StoreRSS method.
 		StoreRSS []struct {
 			// ChanID is the chanID argument value.
@@ -49,8 +61,9 @@ type YoutubeSvcMock struct {
 			Rss string
 		}
 	}
-	lockRSSFeed  sync.RWMutex
-	lockStoreRSS sync.RWMutex
+	lockRSSFeed     sync.RWMutex
+	lockRemoveEntry sync.RWMutex
+	lockStoreRSS    sync.RWMutex
 }
 
 // RSSFeed calls RSSFeedFunc.
@@ -81,6 +94,37 @@ func (mock *YoutubeSvcMock) RSSFeedCalls() []struct {
 	mock.lockRSSFeed.RLock()
 	calls = mock.calls.RSSFeed
 	mock.lockRSSFeed.RUnlock()
+	return calls
+}
+
+// RemoveEntry calls RemoveEntryFunc.
+func (mock *YoutubeSvcMock) RemoveEntry(entry ytfeed.Entry) error {
+	if mock.RemoveEntryFunc == nil {
+		panic("YoutubeSvcMock.RemoveEntryFunc: method is nil but YoutubeSvc.RemoveEntry was just called")
+	}
+	callInfo := struct {
+		Entry ytfeed.Entry
+	}{
+		Entry: entry,
+	}
+	mock.lockRemoveEntry.Lock()
+	mock.calls.RemoveEntry = append(mock.calls.RemoveEntry, callInfo)
+	mock.lockRemoveEntry.Unlock()
+	return mock.RemoveEntryFunc(entry)
+}
+
+// RemoveEntryCalls gets all the calls that were made to RemoveEntry.
+// Check the length with:
+//     len(mockedYoutubeSvc.RemoveEntryCalls())
+func (mock *YoutubeSvcMock) RemoveEntryCalls() []struct {
+	Entry ytfeed.Entry
+} {
+	var calls []struct {
+		Entry ytfeed.Entry
+	}
+	mock.lockRemoveEntry.RLock()
+	calls = mock.calls.RemoveEntry
+	mock.lockRemoveEntry.RUnlock()
 	return calls
 }
 

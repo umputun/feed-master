@@ -63,6 +63,49 @@ func TestStore_SaveAndLoad(t *testing.T) {
 	assert.Equal(t, "vid2", res[0].VideoID)
 }
 
+func TestStore_Remove(t *testing.T) {
+	tmpfile := filepath.Join(os.TempDir(), "test.db")
+	defer os.Remove(tmpfile)
+
+	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+	require.NoError(t, err)
+
+	s := BoltDB{DB: db}
+
+	entry := feed.Entry{
+		ChannelID: "chan1",
+		VideoID:   "vid1",
+		Title:     "title1",
+		Published: time.Date(2022, time.March, 21, 16, 45, 22, 0, time.UTC),
+	}
+
+	created, err := s.Save(entry)
+	require.NoError(t, err)
+	assert.True(t, created)
+
+	entry2 := feed.Entry{
+		ChannelID: "chan1",
+		VideoID:   "vid2",
+		Title:     "title2",
+		Published: time.Date(2022, time.March, 21, 17, 45, 22, 0, time.UTC),
+	}
+	created, err = s.Save(entry2)
+	require.NoError(t, err)
+	assert.True(t, created)
+
+	res, err := s.Load("chan1", 100)
+	require.NoError(t, err)
+	assert.Equal(t, 2, len(res))
+	assert.Equal(t, "vid2", res[0].VideoID)
+
+	err = s.Remove(feed.Entry{ChannelID: "chan1", VideoID: "vid2"})
+	require.NoError(t, err)
+	res, err = s.Load("chan1", 10)
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(res))
+	assert.Equal(t, "vid1", res[0].VideoID)
+}
+
 func TestStore_Exist(t *testing.T) {
 	tmpfile := filepath.Join(os.TempDir(), "test.db")
 	defer os.Remove(tmpfile)
@@ -202,6 +245,13 @@ func TestBoltDB_SetProcessed(t *testing.T) {
 	found, _, err = s.CheckProcessed(feed.Entry{ChannelID: "chan1", VideoID: "vidXXX"})
 	require.NoError(t, err)
 	assert.False(t, found)
+
+	err = s.ResetProcessed(feed.Entry{ChannelID: "chan1", VideoID: "vid2"})
+	require.NoError(t, err)
+	found, _, err = s.CheckProcessed(feed.Entry{ChannelID: "chan1", VideoID: "vid2"})
+	require.NoError(t, err)
+	assert.False(t, found)
+
 }
 
 func TestBoltDB_Last(t *testing.T) {

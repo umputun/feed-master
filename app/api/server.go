@@ -3,6 +3,7 @@ package api
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ import (
 	"github.com/umputun/feed-master/app/config"
 	"github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/youtube"
+	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
 )
 
 //go:generate moq -out mocks/yt_service.go -pkg mocks -skip-ensure -fmt goimports . YoutubeSvc
@@ -39,6 +41,7 @@ type Server struct {
 	Store         Store
 	YoutubeSvc    YoutubeSvc
 	TemplLocation string
+	AdminPasswd   string
 
 	httpServer *http.Server
 	cache      lcw.LoadingCache
@@ -49,6 +52,7 @@ type Server struct {
 type YoutubeSvc interface {
 	RSSFeed(cinfo youtube.FeedInfo) (string, error)
 	StoreRSS(chanID, rss string) error
+	RemoveEntry(entry ytfeed.Entry) error
 }
 
 // Store provides access to feed data
@@ -116,10 +120,17 @@ func (s *Server) router() *chi.Mux {
 	})
 
 	router.Route("/yt", func(r chi.Router) {
+
+		auth := rest.BasicAuth(func(user, passwd string) bool {
+			return (subtle.ConstantTimeCompare([]byte(s.AdminPasswd), []byte(passwd)) +
+				subtle.ConstantTimeCompare([]byte("admin"), []byte(user))) == 2
+		})
+
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"), logger.IPfn(logger.AnonymizeIP))
 		r.Use(l.Handler)
 		r.Get("/rss/{channel}", s.getYoutubeFeedCtrl)
-		r.Post("/rss/generate", s.regenerateRSSCtrl)
+		r.With(auth).Post("/rss/generate", s.regenerateRSSCtrl)
+		r.With(auth).Delete("/entry/{channel}/{video}", s.removeEntryCtrl)
 	})
 
 	if s.Conf.YouTube.BaseURL != "" {
@@ -267,6 +278,16 @@ func (s *Server) regenerateRSSCtrl(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	rest.RenderJSON(w, rest.JSON{"status": "ok", "feeds": len(s.Conf.YouTube.Channels)})
+}
+
+// DELETE /yt/entry/{channel}/{video} - deletes entry from youtube channel and videID
+func (s *Server) removeEntryCtrl(w http.ResponseWriter, r *http.Request) {
+	err := s.YoutubeSvc.RemoveEntry(ytfeed.Entry{ChannelID: chi.URLParam(r, "channel"), VideoID: chi.URLParam(r, "video")})
+	if err != nil {
+		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to remove entry")
+		return
+	}
+	rest.RenderJSON(w, rest.JSON{"status": "ok", "removed": chi.URLParam(r, "video")})
 }
 
 func (s *Server) feeds() []string {

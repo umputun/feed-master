@@ -18,6 +18,7 @@ import (
 	"github.com/umputun/feed-master/app/config"
 	"github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/youtube"
+	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
 )
 
 func TestServer_Run(t *testing.T) {
@@ -198,15 +199,31 @@ func TestServer_regenerateRSSCtrl(t *testing.T) {
 		TemplLocation: "../webapp/templates/*",
 		YoutubeSvc:    yt,
 		Conf:          config.Conf{},
+		AdminPasswd:   "123456",
 	}
 	s.Conf.YouTube.Channels = []youtube.FeedInfo{{ID: "chan1"}, {ID: "chan2"}}
 	ts := httptest.NewServer(s.router())
 	defer ts.Close()
 
-	resp, err := ts.Client().Post(ts.URL+"/yt/rss/generate", "text/json", bytes.NewBuffer(nil))
-	require.NoError(t, err)
-	defer resp.Body.Close()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	{
+		req, err := http.NewRequest("POST", ts.URL+"/yt/rss/generate", bytes.NewBuffer(nil))
+		require.NoError(t, err)
+		req.SetBasicAuth("admin", "bad")
+		resp, err := ts.Client().Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	}
+
+	{
+		req, err := http.NewRequest("POST", ts.URL+"/yt/rss/generate", bytes.NewBuffer(nil))
+		require.NoError(t, err)
+		req.SetBasicAuth("admin", "123456")
+		resp, err := ts.Client().Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	}
 
 	require.Equal(t, 2, len(yt.RSSFeedCalls()))
 	assert.Equal(t, "chan1", yt.RSSFeedCalls()[0].Cinfo.ID)
@@ -217,4 +234,47 @@ func TestServer_regenerateRSSCtrl(t *testing.T) {
 	require.Equal(t, "blah", yt.StoreRSSCalls()[0].Rss)
 	require.Equal(t, "chan2", yt.StoreRSSCalls()[1].ChanID)
 	require.Equal(t, "blah", yt.StoreRSSCalls()[1].Rss)
+}
+
+func TestServer_removeEntryCtrl(t *testing.T) {
+	yt := &mocks.YoutubeSvcMock{
+		RemoveEntryFunc: func(entry ytfeed.Entry) error {
+			return nil
+		},
+	}
+
+	s := Server{
+		Version:       "1.0",
+		TemplLocation: "../webapp/templates/*",
+		YoutubeSvc:    yt,
+		Conf:          config.Conf{},
+		AdminPasswd:   "123456",
+	}
+
+	ts := httptest.NewServer(s.router())
+	defer ts.Close()
+
+	{
+		req, err := http.NewRequest("DELETE", ts.URL+"/yt/entry/chan1/vid1", bytes.NewBuffer(nil))
+		require.NoError(t, err)
+		req.SetBasicAuth("admin", "bad")
+		resp, err := ts.Client().Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	}
+
+	{
+		req, err := http.NewRequest("DELETE", ts.URL+"/yt/entry/chan1/vid1", bytes.NewBuffer(nil))
+		require.NoError(t, err)
+		req.SetBasicAuth("admin", "123456")
+		resp, err := ts.Client().Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	}
+
+	require.Equal(t, 1, len(yt.RemoveEntryCalls()))
+	require.Equal(t, "chan1", yt.RemoveEntryCalls()[0].Entry.ChannelID)
+	require.Equal(t, "vid1", yt.RemoveEntryCalls()[0].Entry.VideoID)
 }

@@ -31,8 +31,14 @@ import (
 // 			LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
 // 				panic("mock out the Load method")
 // 			},
+// 			RemoveFunc: func(entry ytfeed.Entry) error {
+// 				panic("mock out the Remove method")
+// 			},
 // 			RemoveOldFunc: func(channelID string, keep int) ([]string, error) {
 // 				panic("mock out the RemoveOld method")
+// 			},
+// 			ResetProcessedFunc: func(entry ytfeed.Entry) error {
+// 				panic("mock out the ResetProcessed method")
 // 			},
 // 			SaveFunc: func(entry ytfeed.Entry) (bool, error) {
 // 				panic("mock out the Save method")
@@ -62,8 +68,14 @@ type StoreServiceMock struct {
 	// LoadFunc mocks the Load method.
 	LoadFunc func(channelID string, max int) ([]ytfeed.Entry, error)
 
+	// RemoveFunc mocks the Remove method.
+	RemoveFunc func(entry ytfeed.Entry) error
+
 	// RemoveOldFunc mocks the RemoveOld method.
 	RemoveOldFunc func(channelID string, keep int) ([]string, error)
+
+	// ResetProcessedFunc mocks the ResetProcessed method.
+	ResetProcessedFunc func(entry ytfeed.Entry) error
 
 	// SaveFunc mocks the Save method.
 	SaveFunc func(entry ytfeed.Entry) (bool, error)
@@ -96,12 +108,22 @@ type StoreServiceMock struct {
 			// Max is the max argument value.
 			Max int
 		}
+		// Remove holds details about calls to the Remove method.
+		Remove []struct {
+			// Entry is the entry argument value.
+			Entry ytfeed.Entry
+		}
 		// RemoveOld holds details about calls to the RemoveOld method.
 		RemoveOld []struct {
 			// ChannelID is the channelID argument value.
 			ChannelID string
 			// Keep is the keep argument value.
 			Keep int
+		}
+		// ResetProcessed holds details about calls to the ResetProcessed method.
+		ResetProcessed []struct {
+			// Entry is the entry argument value.
+			Entry ytfeed.Entry
 		}
 		// Save holds details about calls to the Save method.
 		Save []struct {
@@ -119,7 +141,9 @@ type StoreServiceMock struct {
 	lockExist          sync.RWMutex
 	lockLast           sync.RWMutex
 	lockLoad           sync.RWMutex
+	lockRemove         sync.RWMutex
 	lockRemoveOld      sync.RWMutex
+	lockResetProcessed sync.RWMutex
 	lockSave           sync.RWMutex
 	lockSetProcessed   sync.RWMutex
 }
@@ -273,6 +297,37 @@ func (mock *StoreServiceMock) LoadCalls() []struct {
 	return calls
 }
 
+// Remove calls RemoveFunc.
+func (mock *StoreServiceMock) Remove(entry ytfeed.Entry) error {
+	if mock.RemoveFunc == nil {
+		panic("StoreServiceMock.RemoveFunc: method is nil but StoreService.Remove was just called")
+	}
+	callInfo := struct {
+		Entry ytfeed.Entry
+	}{
+		Entry: entry,
+	}
+	mock.lockRemove.Lock()
+	mock.calls.Remove = append(mock.calls.Remove, callInfo)
+	mock.lockRemove.Unlock()
+	return mock.RemoveFunc(entry)
+}
+
+// RemoveCalls gets all the calls that were made to Remove.
+// Check the length with:
+//     len(mockedStoreService.RemoveCalls())
+func (mock *StoreServiceMock) RemoveCalls() []struct {
+	Entry ytfeed.Entry
+} {
+	var calls []struct {
+		Entry ytfeed.Entry
+	}
+	mock.lockRemove.RLock()
+	calls = mock.calls.Remove
+	mock.lockRemove.RUnlock()
+	return calls
+}
+
 // RemoveOld calls RemoveOldFunc.
 func (mock *StoreServiceMock) RemoveOld(channelID string, keep int) ([]string, error) {
 	if mock.RemoveOldFunc == nil {
@@ -305,6 +360,37 @@ func (mock *StoreServiceMock) RemoveOldCalls() []struct {
 	mock.lockRemoveOld.RLock()
 	calls = mock.calls.RemoveOld
 	mock.lockRemoveOld.RUnlock()
+	return calls
+}
+
+// ResetProcessed calls ResetProcessedFunc.
+func (mock *StoreServiceMock) ResetProcessed(entry ytfeed.Entry) error {
+	if mock.ResetProcessedFunc == nil {
+		panic("StoreServiceMock.ResetProcessedFunc: method is nil but StoreService.ResetProcessed was just called")
+	}
+	callInfo := struct {
+		Entry ytfeed.Entry
+	}{
+		Entry: entry,
+	}
+	mock.lockResetProcessed.Lock()
+	mock.calls.ResetProcessed = append(mock.calls.ResetProcessed, callInfo)
+	mock.lockResetProcessed.Unlock()
+	return mock.ResetProcessedFunc(entry)
+}
+
+// ResetProcessedCalls gets all the calls that were made to ResetProcessed.
+// Check the length with:
+//     len(mockedStoreService.ResetProcessedCalls())
+func (mock *StoreServiceMock) ResetProcessedCalls() []struct {
+	Entry ytfeed.Entry
+} {
+	var calls []struct {
+		Entry ytfeed.Entry
+	}
+	mock.lockResetProcessed.RLock()
+	calls = mock.calls.ResetProcessed
+	mock.lockResetProcessed.RUnlock()
 	return calls
 }
 
