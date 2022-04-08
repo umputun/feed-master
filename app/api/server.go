@@ -139,7 +139,7 @@ func (s *Server) router() *chi.Mux {
 			log.Printf("[ERROR] failed to parse base url %s, %v", s.Conf.YouTube.BaseURL, parseErr)
 		}
 
-		if mkdirErr := os.MkdirAll(s.Conf.YouTube.FilesLocation, 0o755); mkdirErr != nil {
+		if mkdirErr := os.MkdirAll(s.Conf.YouTube.FilesLocation, 0o750); mkdirErr != nil {
 			log.Printf("[ERROR] failed to create directory %s, %v", s.Conf.YouTube.FilesLocation, mkdirErr)
 		}
 
