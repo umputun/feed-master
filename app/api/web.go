@@ -51,7 +51,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			Name:        s.Conf.Feeds[feedName].Title,
 			Description: s.Conf.Feeds[feedName].Description,
 			Link:        s.Conf.Feeds[feedName].Link,
-			LastUpdate:  items[0].DT,
+			LastUpdate:  items[0].DT.In(time.UTC),
 			Feeds:       len(s.Conf.Feeds[feedName].Sources),
 			Version:     s.Version,
 			RSSLink:     s.Conf.System.BaseURL + "/rss/" + feedName,
@@ -98,7 +98,7 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 				FeedURL:     s.Conf.System.BaseURL + "/feed/" + f,
 				Sources:     len(feedConf.Sources),
 				SourcesLink: s.Conf.System.BaseURL + "/feed/" + f + "/sources",
-				LastUpdated: items[0].DT,
+				LastUpdated: items[0].DT.In(time.UTC),
 			}
 			feedItems = append(feedItems, item)
 		}

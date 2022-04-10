@@ -134,7 +134,7 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 			Title:       entry.Title,
 			Description: entry.Media.Description,
 			Link:        entry.Link.Href,
-			PubDate:     entry.Published.Format(time.RFC822Z),
+			PubDate:     entry.Published.In(time.UTC).Format(time.RFC822Z),
 			GUID:        entry.ChannelID + "::" + entry.VideoID,
 			Author:      entry.Author.Name,
 			Enclosure: rssfeed.Enclosure{
