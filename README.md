@@ -99,6 +99,8 @@ In both configuration modes, user can specify a list of telegram and twitter acc
 
 ## API
 
+_See [requests.http](https://github.com/umputun/feed-master/blob/master/requests.http)_
+
 ### public endpoints
 
 - `GET /rss/{name}` - returns feed-set for given feed name
@@ -110,7 +112,7 @@ In both configuration modes, user can specify a list of telegram and twitter acc
 ### admin endpoints
 
 - `POST /yt/rss/generate` - regenerate RSS feed for all youtube channels
-- `DELETE /yt//entry/{channel}/{video}` - delete youtube entry from internal database and remove it from RSS feed
+- `DELETE /yt/entry/{channel}/{video}` - delete youtube entry from internal database and remove it from RSS feed
 
 ## Web UI
 

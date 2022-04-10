@@ -1,0 +1,29 @@
+# json
+
+### list of all feeds
+GET http://localhost:8080/list
+
+# html
+
+### all feeds html (list)
+GET http://localhost:8080/feeds
+
+### html for a specific (final) feed
+GET http://localhost:8080/feed/yt-example
+
+# RSS
+
+### get the final feed rss
+GET http://localhost:8080/rss/yt-example
+
+### rss for a yt feed from a specific channel
+GET http://localhost:8080/yt/rss/UCuIE7-5QzeAR6EdZXwDRwuQ
+
+### rss for a yt feed from a specific playlist
+GET http://localhost:8080/yt/rss/PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd
+
+# Admin
+
+### regenerate yt rss feeds, password: 123456 (--admin-passswd=123456)
+POST http://localhost:8080/yt/rss/generate
+Authorization: Basic YWRtaW46MTIzNDU2
