@@ -12,9 +12,11 @@ import (
 	"time"
 
 	log "github.com/go-pkgz/lgr"
+	"github.com/google/uuid"
 	"github.com/jessevdk/go-flags"
-	"github.com/umputun/feed-master/app/duration"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/umputun/feed-master/app/duration"
 
 	"github.com/umputun/feed-master/app/config"
 
@@ -122,6 +124,11 @@ func main() {
 				log.Printf("[ERROR] youtube processor failed: %v", err)
 			}
 		}()
+	}
+
+	if opts.AdminPasswd == "" {
+		log.Printf("[WARN] admin password is not set, protected endpoints are disabled")
+		opts.AdminPasswd = uuid.New().String() // generate random (uuid) password
 	}
 
 	server := api.Server{
