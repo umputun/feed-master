@@ -13,15 +13,80 @@ Feed-Master supports extracting audio from youtube channels and use it to make t
 - Create `etc/fm.yml` (samples provided in `_example`)
 - Start container with `docker-compose up -d feed-master`
 
-### Application parameters
+_example of docker-compose.yml available in [_example](https://github.com/umputun/feed-master/tree/master/_example)_
+
+## Main application parameters
+
+| Command line | Environment  | Default               | Description                           |
+|--------------|--------------|-----------------------|---------------------------------------|
+| db           | FM_DB        | `var/feed-master.bdb` | bolt db file                          |
+| conf         | FM_CONF      | `feed-master.yml`     | config file (yml)                     |
+| admin-passwd | ADMIN_PASSWD | `none` (disabled)     | admin password for protected endpoint |
+| dbg          | DEBUG        | `false`               | debug mode                            |
+
+
+## Configuration
+
+Usually, feed-master configuration is stored in `feed-master.yml` file. It is a yaml file with the following structure:
+
+```yaml
+feeds:
+  yt-example: # feed name, can be repeated for multiple source feeds
+    title: Some cool channels # feed title
+    description: an example of youtube-based podcas # feed description
+    link: http://localhost:8080/feed/yt-example # link to the source site
+    language: "ru-ru" # feed language
+    image: images/yt-example.png # feed image, used in generated RSS as podcast thumbnail
+    sources: # list of sources, each source is a name of and the source RSS feed
+      - {name: "Точка", url: http://localhost:8080/yt/rss/PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd}
+      - {name: "Живой Гвоздь", url: http://localhost:8080/yt/rss/UCWAIvx2yYLK_xTYD4F2mUNw}
+      - {name: "Дилетант", url: http://localhost:8080/yt/rss/UCuIE7-5QzeAR6EdZXwDRwuQ}
+
+
+youtube: # youtube configuration, optional
+  base_url: http://localhost:8080/yt/media # base url for youtube media
+  dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}}.tmp # template for youtube-dl
+  base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id=" # base url for youtube channel
+  base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id=" # base url for youtube playlist
+  update: 60s # update interval for youtube feeds
+  max_per_channel: 2 # max number of the latest videos per yt channel to download and process
+  files_location: ./var/yt # location for downloaded youtube files
+  rss_location: ./var/rss # location for generated youtube channel's RSS
+  channels: # list of youtube channels to download and process
+      # id: channel or playlist id, name: channel or playlist name, type: "channel" or "playlist", 
+      # lang: language of the channel, keep: override default keep value 
+      - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь", lang: "ru-ru"}
+      - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel", lang: "ru-ru", "keep": 10}
+      - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru"} 
+
+system: # system configuration
+  update: 1m # update interval for checking source feeds
+  max_per_feed: 10 # max items per feed to be processed and inclueded in the final RSS
+  max_total: 50 # max total items to be included in the final RSS
+  max_keep: 1000 # max items to be kept in the internal database 
+  base_url: http://localhost:8080 # base url for the generated RSS and media files
+```
+
+_see [examples](https://github.com/umputun/feed-master/tree/master/_example/etc) for more details._
+
+### Single-feed configuration
+
+For a very simple configuration, command-line only configuration is available. In this case only a single sopurce feed is allowed and yt processing is disabled.  The command-line configuration is the following:
 
 | Command line     | Environment         | Default                    | Description                               |
 |------------------|---------------------|----------------------------|-------------------------------------------|
-| db               | FM_DB               | `var/feed-master.bdb`      | bolt db file                              |
-| conf             | FM_CONF             | `feed-master.yml`          | config file (yml)                         |
 | feed             | FM_FEED             |                            | single feed, overrides config             |
 | update-interval  | UPDATE_INTERVAL     | `1m`                       | update interval, overrides config         |
 | telegram_chan    | TELEGRAM_CHAN       |                            | single telegram channel, overrides config |
+
+All this command-line mode is good for - process a single feed, send a telegram message and send a tweet on each new item.
+
+### Notifications
+
+In both configuration modes, user can specify a list of telegram and twitter accounts to be notified.
+
+| Command line     | Environment         | Default                    | Description                               |
+|------------------|---------------------|----------------------------|-------------------------------------------|
 | telegram_server  | TELEGRAM_SERVER     | `https://api.telegram.org` | telegram bot api server                   |
 | telegram_token   | TELEGRAM_TOKEN      |                            | telegram token                            |
 | telegram_timeout | TELEGRAM_TIMEOUT    | `1m`                       | telegram timeout                          |
@@ -30,21 +95,28 @@ Feed-Master supports extracting audio from youtube channels and use it to make t
 | access-token     | TWI_ACCESS_TOKEN    |                            | twitter access token                      |
 | access-secret    | TWI_ACCESS_SECRET   |                            | twitter access secret                     |
 | template         | TEMPLATE            | `{{.Title}} - {{.Link}}`   | twitter message template                  |
-| dbg              | DEBUG               | `false`                    | debug mode                                |
+
 
 ## API
+
+### public endpoints
 
 - `GET /rss/{name}` - returns feed-set for given feed name
 - `GET /list` - returns list of feed-sets (json)
 - `GET /image/{name}` - returns image for given feed name
 - `GET /feed/{name}/sources` - returns list of sources for given feed name
-- `GET /yr/rss/{channel}` - return RSS feed for given youtube channel
+- `GET /yt/rss/{channel}` - return RSS feed for given youtube channel
+
+### admin endpoints
+
+- `POST /yt/rss/generate` - regenerate RSS feed for all youtube channels
+- `DELETE /yt//entry/{channel}/{video}` - delete youtube entry from internal database and remove it from RSS feed
 
 ## Web UI
 
 Web UI shows a list of items from generated RSS. It is available on `/feeds` or, for the particular output feed on `/feed/{name}`
 
-## Telegram notifications
+## Telegram notifications details
 
 By default, (with only `TELEGRAM_TOKEN` provided) Telegram notifications will be sent using standard Bot API which has a limit of [50Mb](https://core.telegram.org/bots/api#sending-files) for audio file upload.
 
