@@ -133,6 +133,20 @@ func (s *BoltDB) Last() (feed.Entry, error) {
 	return entries[0], nil
 }
 
+// Count returns total number of entries across all channels
+func (s *BoltDB) Count() int {
+	var result int
+	for _, channel := range s.Channels {
+		entries, err := s.Load(channel, 100)
+		if err != nil {
+			log.Printf("[DEBUG] can't load entries for %s: %v", channel, err)
+			continue
+		}
+		result += len(entries)
+	}
+	return result
+}
+
 // RemoveOld removes old entries from bolt and returns the list of removed entry.File
 // the caller should delete the files
 // important: this method returns the list of removed keys even if there was an error

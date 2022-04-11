@@ -19,6 +19,9 @@ import (
 // 			CheckProcessedFunc: func(entry ytfeed.Entry) (bool, time.Time, error) {
 // 				panic("mock out the CheckProcessed method")
 // 			},
+// 			CountFunc: func() int {
+// 				panic("mock out the Count method")
+// 			},
 // 			CountProcessedFunc: func() int {
 // 				panic("mock out the CountProcessed method")
 // 			},
@@ -56,6 +59,9 @@ type StoreServiceMock struct {
 	// CheckProcessedFunc mocks the CheckProcessed method.
 	CheckProcessedFunc func(entry ytfeed.Entry) (bool, time.Time, error)
 
+	// CountFunc mocks the Count method.
+	CountFunc func() int
+
 	// CountProcessedFunc mocks the CountProcessed method.
 	CountProcessedFunc func() int
 
@@ -89,6 +95,9 @@ type StoreServiceMock struct {
 		CheckProcessed []struct {
 			// Entry is the entry argument value.
 			Entry ytfeed.Entry
+		}
+		// Count holds details about calls to the Count method.
+		Count []struct {
 		}
 		// CountProcessed holds details about calls to the CountProcessed method.
 		CountProcessed []struct {
@@ -137,6 +146,7 @@ type StoreServiceMock struct {
 		}
 	}
 	lockCheckProcessed sync.RWMutex
+	lockCount          sync.RWMutex
 	lockCountProcessed sync.RWMutex
 	lockExist          sync.RWMutex
 	lockLast           sync.RWMutex
@@ -176,6 +186,32 @@ func (mock *StoreServiceMock) CheckProcessedCalls() []struct {
 	mock.lockCheckProcessed.RLock()
 	calls = mock.calls.CheckProcessed
 	mock.lockCheckProcessed.RUnlock()
+	return calls
+}
+
+// Count calls CountFunc.
+func (mock *StoreServiceMock) Count() int {
+	if mock.CountFunc == nil {
+		panic("StoreServiceMock.CountFunc: method is nil but StoreService.Count was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockCount.Lock()
+	mock.calls.Count = append(mock.calls.Count, callInfo)
+	mock.lockCount.Unlock()
+	return mock.CountFunc()
+}
+
+// CountCalls gets all the calls that were made to Count.
+// Check the length with:
+//     len(mockedStoreService.CountCalls())
+func (mock *StoreServiceMock) CountCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockCount.RLock()
+	calls = mock.calls.Count
+	mock.lockCount.RUnlock()
 	return calls
 }
 
