@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -68,8 +69,6 @@ type StoreService interface {
 	CheckProcessed(entry ytfeed.Entry) (found bool, ts time.Time, err error)
 	CountProcessed() (count int)
 	Last() (ytfeed.Entry, error)
-	First() (ytfeed.Entry, error)
-	Count() int
 }
 
 // DurationService is an interface for getting duration of audio file
@@ -222,21 +221,21 @@ func (s *Service) procChannels(ctx context.Context) error {
 				continue
 			}
 
-			// got new entry, but with very old timestamp. skip it if we have already reached max capacity and this entry
-			// is older than the oldest one we have. Also mark it as processed as we don't want to process it again
-			if oldest, err := s.Store.First(); err == nil {
-				if entry.Published.Before(oldest.Published) && s.totalEntriesToKeep() < s.Store.Count() {
-					allStats.ignored++
-					log.Printf("[INFO] skipping entry %s as it is older than the oldest one we have %s",
-						entry.String(), oldest.String())
-					if procErr := s.Store.SetProcessed(entry); procErr != nil {
-						log.Printf("[WARN] failed to set processed status for %s: %v", entry.VideoID, procErr)
-					}
-					continue
+			// got new entry, but with very old timestamp. skip it if we have already reached max capacity
+			// (this is to eliminate the initial load) and this entry is older than the oldest one we have.
+			// Also marks it as processed as we don't want to process it again
+			oldestEntry := s.oldestEntry()
+			if entry.Published.Before(oldestEntry.Published) && s.countAllEntries() >= s.totalEntriesToKeep() {
+				allStats.ignored++
+				log.Printf("[INFO] skipping entry %s as it is older than the oldest one we have %s",
+					entry.String(), oldestEntry.String())
+				if procErr := s.Store.SetProcessed(entry); procErr != nil {
+					log.Printf("[WARN] failed to set processed status for %s: %v", entry.VideoID, procErr)
 				}
+				continue
 			}
 
-			log.Printf("[INFO] new entry [%d] %s, %s, %s", i+1, entry.VideoID, entry.Title, feedInfo.Name)
+			log.Printf("[INFO] new entry [%d] %s, %s, %s, %s", i+1, entry.VideoID, entry.Title, feedInfo.Name, entry.String())
 
 			file, downErr := s.Downloader.Get(ctx, entry.VideoID, s.makeFileName(entry))
 			if downErr != nil {
@@ -290,7 +289,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 	}
 
 	log.Printf("[INFO] all channels processed - channels: %d, %s, lifetime: %d, feed size: %d",
-		len(s.Feeds), allStats.String(), s.Store.CountProcessed(), s.Store.Count())
+		len(s.Feeds), allStats.String(), s.Store.CountProcessed(), s.countAllEntries())
 
 	if last, err := s.Store.Last(); err == nil {
 		log.Printf("[INFO] last entry: %s", last.String())
@@ -406,11 +405,40 @@ func (s *Service) makeFileName(entry ytfeed.Entry) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
+// totalEntriesToKeep returns total number of entries to keep, summing all channels' keep values
 func (s *Service) totalEntriesToKeep() (res int) {
 	for _, fi := range s.Feeds {
 		res += s.keep(fi)
 	}
 	return res
+}
+
+// countAllEntries returns total number of entries across all channels, respects keep settings
+func (s *Service) countAllEntries() int {
+	var result int
+	for _, fi := range s.Feeds {
+		if entries, err := s.Store.Load(fi.ID, s.keep(fi)); err == nil {
+			result += len(entries)
+		}
+	}
+	return result
+}
+
+// oldestEntry returns the oldest entry from all channels, respecting keep settings
+func (s *Service) oldestEntry() ytfeed.Entry {
+	entries := []ytfeed.Entry{}
+	for _, fi := range s.Feeds {
+		if recs, err := s.Store.Load(fi.ID, s.keep(fi)); err == nil {
+			entries = append(entries, recs...)
+		}
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Published.Before(entries[j].Published)
+	})
+	if len(entries) == 0 {
+		return ytfeed.Entry{}
+	}
+	return entries[0]
 }
 
 type stats struct {

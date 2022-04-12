@@ -271,3 +271,91 @@ func TestService_update(t *testing.T) {
 	}
 
 }
+
+func TestService_totalEntriesToKeep(t *testing.T) {
+	svc := Service{
+		Feeds: []FeedInfo{
+			{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel, Keep: 5},
+			{ID: "channel2", Name: "name2", Type: ytfeed.FTPlaylist},
+		},
+		RootURL:        "http://localhost:8080/yt",
+		KeepPerChannel: 10,
+	}
+
+	assert.Equal(t, 15, svc.totalEntriesToKeep())
+}
+
+func TestService_countAllEntries(t *testing.T) {
+
+	storeSvc := &mocks.StoreServiceMock{
+		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
+			switch channelID {
+			case "channel1":
+				return []ytfeed.Entry{{}, {}, {}}, nil
+			case "channel2":
+				return []ytfeed.Entry{{}, {}}, nil
+			default:
+				t.Fatalf("unexpected channelID: %s", channelID)
+			}
+			return nil, nil
+		},
+	}
+
+	svc := Service{
+		Feeds: []FeedInfo{
+			{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel, Keep: 5},
+			{ID: "channel2", Name: "name2", Type: ytfeed.FTPlaylist},
+		},
+		Store:          storeSvc,
+		KeepPerChannel: 10,
+	}
+
+	assert.Equal(t, 5, svc.countAllEntries())
+	assert.Equal(t, 2, len(storeSvc.LoadCalls()))
+	assert.Equal(t, 5, storeSvc.LoadCalls()[0].Max)
+	assert.Equal(t, 10, storeSvc.LoadCalls()[1].Max)
+}
+
+func TestService_oldestEntry(t *testing.T) {
+	dt := time.Date(2022, 4, 11, 11, 35, 17, 0, time.UTC)
+	storeSvc := &mocks.StoreServiceMock{
+		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
+			switch channelID {
+			case "channel1":
+				return []ytfeed.Entry{
+					{Title: "t1", Published: dt.Add(4 * time.Hour)},
+					{Title: "t2", Published: dt.Add(3 * time.Hour)},
+					{Title: "t3", Published: dt.Add(2 * time.Hour)},
+				}, nil
+			case "channel2":
+
+				return []ytfeed.Entry{
+					{Title: "t21", Published: dt.Add(5 * time.Hour)},
+					{Title: "t22", Published: dt.Add(2 * time.Hour)},
+					{Title: "t23", Published: dt.Add(1 * time.Hour)},
+				}, nil
+			default:
+				t.Fatalf("unexpected channelID: %s", channelID)
+			}
+			return nil, nil
+		},
+	}
+
+	{
+		svc := Service{
+			Feeds: []FeedInfo{
+				{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel, Keep: 5},
+				{ID: "channel2", Name: "name2", Type: ytfeed.FTPlaylist},
+			},
+			Store:          storeSvc,
+			KeepPerChannel: 10,
+		}
+
+		res := svc.oldestEntry()
+		assert.Equal(t, "t23", res.Title)
+	}
+
+	assert.Equal(t, 2, len(storeSvc.LoadCalls()))
+	assert.Equal(t, 5, storeSvc.LoadCalls()[0].Max)
+	assert.Equal(t, 10, storeSvc.LoadCalls()[1].Max)
+}

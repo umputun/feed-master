@@ -19,17 +19,11 @@ import (
 // 			CheckProcessedFunc: func(entry ytfeed.Entry) (bool, time.Time, error) {
 // 				panic("mock out the CheckProcessed method")
 // 			},
-// 			CountFunc: func() int {
-// 				panic("mock out the Count method")
-// 			},
 // 			CountProcessedFunc: func() int {
 // 				panic("mock out the CountProcessed method")
 // 			},
 // 			ExistFunc: func(entry ytfeed.Entry) (bool, error) {
 // 				panic("mock out the Exist method")
-// 			},
-// 			FirstFunc: func() (ytfeed.Entry, error) {
-// 				panic("mock out the First method")
 // 			},
 // 			LastFunc: func() (ytfeed.Entry, error) {
 // 				panic("mock out the Last method")
@@ -62,17 +56,11 @@ type StoreServiceMock struct {
 	// CheckProcessedFunc mocks the CheckProcessed method.
 	CheckProcessedFunc func(entry ytfeed.Entry) (bool, time.Time, error)
 
-	// CountFunc mocks the Count method.
-	CountFunc func() int
-
 	// CountProcessedFunc mocks the CountProcessed method.
 	CountProcessedFunc func() int
 
 	// ExistFunc mocks the Exist method.
 	ExistFunc func(entry ytfeed.Entry) (bool, error)
-
-	// FirstFunc mocks the First method.
-	FirstFunc func() (ytfeed.Entry, error)
 
 	// LastFunc mocks the Last method.
 	LastFunc func() (ytfeed.Entry, error)
@@ -102,9 +90,6 @@ type StoreServiceMock struct {
 			// Entry is the entry argument value.
 			Entry ytfeed.Entry
 		}
-		// Count holds details about calls to the Count method.
-		Count []struct {
-		}
 		// CountProcessed holds details about calls to the CountProcessed method.
 		CountProcessed []struct {
 		}
@@ -112,9 +97,6 @@ type StoreServiceMock struct {
 		Exist []struct {
 			// Entry is the entry argument value.
 			Entry ytfeed.Entry
-		}
-		// First holds details about calls to the First method.
-		First []struct {
 		}
 		// Last holds details about calls to the Last method.
 		Last []struct {
@@ -155,10 +137,8 @@ type StoreServiceMock struct {
 		}
 	}
 	lockCheckProcessed sync.RWMutex
-	lockCount          sync.RWMutex
 	lockCountProcessed sync.RWMutex
 	lockExist          sync.RWMutex
-	lockFirst          sync.RWMutex
 	lockLast           sync.RWMutex
 	lockLoad           sync.RWMutex
 	lockRemove         sync.RWMutex
@@ -196,32 +176,6 @@ func (mock *StoreServiceMock) CheckProcessedCalls() []struct {
 	mock.lockCheckProcessed.RLock()
 	calls = mock.calls.CheckProcessed
 	mock.lockCheckProcessed.RUnlock()
-	return calls
-}
-
-// Count calls CountFunc.
-func (mock *StoreServiceMock) Count() int {
-	if mock.CountFunc == nil {
-		panic("StoreServiceMock.CountFunc: method is nil but StoreService.Count was just called")
-	}
-	callInfo := struct {
-	}{}
-	mock.lockCount.Lock()
-	mock.calls.Count = append(mock.calls.Count, callInfo)
-	mock.lockCount.Unlock()
-	return mock.CountFunc()
-}
-
-// CountCalls gets all the calls that were made to Count.
-// Check the length with:
-//     len(mockedStoreService.CountCalls())
-func (mock *StoreServiceMock) CountCalls() []struct {
-} {
-	var calls []struct {
-	}
-	mock.lockCount.RLock()
-	calls = mock.calls.Count
-	mock.lockCount.RUnlock()
 	return calls
 }
 
@@ -279,32 +233,6 @@ func (mock *StoreServiceMock) ExistCalls() []struct {
 	mock.lockExist.RLock()
 	calls = mock.calls.Exist
 	mock.lockExist.RUnlock()
-	return calls
-}
-
-// First calls FirstFunc.
-func (mock *StoreServiceMock) First() (ytfeed.Entry, error) {
-	if mock.FirstFunc == nil {
-		panic("StoreServiceMock.FirstFunc: method is nil but StoreService.First was just called")
-	}
-	callInfo := struct {
-	}{}
-	mock.lockFirst.Lock()
-	mock.calls.First = append(mock.calls.First, callInfo)
-	mock.lockFirst.Unlock()
-	return mock.FirstFunc()
-}
-
-// FirstCalls gets all the calls that were made to First.
-// Check the length with:
-//     len(mockedStoreService.FirstCalls())
-func (mock *StoreServiceMock) FirstCalls() []struct {
-} {
-	var calls []struct {
-	}
-	mock.lockFirst.RLock()
-	calls = mock.calls.First
-	mock.lockFirst.RUnlock()
 	return calls
 }
 

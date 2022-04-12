@@ -133,41 +133,6 @@ func (s *BoltDB) Last() (feed.Entry, error) {
 	return entries[0], nil
 }
 
-// First returns (oldest) entry across all channels
-func (s *BoltDB) First() (feed.Entry, error) {
-	entries := []feed.Entry{}
-	for _, channel := range s.Channels {
-		recs, err := s.Load(channel, 100) // 100 is arbitrary, unlikely we will have more than 100 entries max anyway
-		if err != nil {
-			return feed.Entry{}, errors.Wrapf(err, "can't load entries for %s", channel)
-		}
-		if len(recs) > 0 {
-			entries = append(entries, recs[len(recs)-1])
-		}
-	}
-	if len(entries) == 0 {
-		return feed.Entry{}, errors.New("no entries")
-	}
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Published.Before(entries[j].Published)
-	})
-	return entries[0], nil
-}
-
-// Count returns total number of entries across all channels
-func (s *BoltDB) Count() int {
-	var result int
-	for _, channel := range s.Channels {
-		entries, err := s.Load(channel, 100)
-		if err != nil {
-			log.Printf("[DEBUG] can't load entries for %s: %v", channel, err)
-			continue
-		}
-		result += len(entries)
-	}
-	return result
-}
-
 // RemoveOld removes old entries from bolt and returns the list of removed entry.File
 // the caller should delete the files
 // important: this method returns the list of removed keys even if there was an error
