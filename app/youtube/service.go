@@ -68,7 +68,6 @@ type StoreService interface {
 	ResetProcessed(entry ytfeed.Entry) error
 	CheckProcessed(entry ytfeed.Entry) (found bool, ts time.Time, err error)
 	CountProcessed() (count int)
-	Last() (ytfeed.Entry, error)
 }
 
 // DurationService is an interface for getting duration of audio file
@@ -291,9 +290,8 @@ func (s *Service) procChannels(ctx context.Context) error {
 	log.Printf("[INFO] all channels processed - channels: %d, %s, lifetime: %d, feed size: %d",
 		len(s.Feeds), allStats.String(), s.Store.CountProcessed(), s.countAllEntries())
 
-	if last, err := s.Store.Last(); err == nil {
-		log.Printf("[INFO] last entry: %s", last.String())
-	}
+	newestEntry := s.newestEntry()
+	log.Printf("[INFO] last entry: %s", newestEntry.String())
 
 	return nil
 }
@@ -422,6 +420,23 @@ func (s *Service) countAllEntries() int {
 		}
 	}
 	return result
+}
+
+// newestEntry returns the newest entry across all channels, respects keep settings
+func (s *Service) newestEntry() ytfeed.Entry {
+	entries := []ytfeed.Entry{}
+	for _, fi := range s.Feeds {
+		if recs, err := s.Store.Load(fi.ID, 1); err == nil {
+			entries = append(entries, recs...)
+		}
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Published.After(entries[j].Published)
+	})
+	if len(entries) == 0 {
+		return ytfeed.Entry{}
+	}
+	return entries[0]
 }
 
 // oldestEntry returns the oldest entry from all channels, respecting keep settings

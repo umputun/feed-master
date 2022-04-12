@@ -25,9 +25,6 @@ import (
 // 			ExistFunc: func(entry ytfeed.Entry) (bool, error) {
 // 				panic("mock out the Exist method")
 // 			},
-// 			LastFunc: func() (ytfeed.Entry, error) {
-// 				panic("mock out the Last method")
-// 			},
 // 			LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
 // 				panic("mock out the Load method")
 // 			},
@@ -62,9 +59,6 @@ type StoreServiceMock struct {
 	// ExistFunc mocks the Exist method.
 	ExistFunc func(entry ytfeed.Entry) (bool, error)
 
-	// LastFunc mocks the Last method.
-	LastFunc func() (ytfeed.Entry, error)
-
 	// LoadFunc mocks the Load method.
 	LoadFunc func(channelID string, max int) ([]ytfeed.Entry, error)
 
@@ -97,9 +91,6 @@ type StoreServiceMock struct {
 		Exist []struct {
 			// Entry is the entry argument value.
 			Entry ytfeed.Entry
-		}
-		// Last holds details about calls to the Last method.
-		Last []struct {
 		}
 		// Load holds details about calls to the Load method.
 		Load []struct {
@@ -139,7 +130,6 @@ type StoreServiceMock struct {
 	lockCheckProcessed sync.RWMutex
 	lockCountProcessed sync.RWMutex
 	lockExist          sync.RWMutex
-	lockLast           sync.RWMutex
 	lockLoad           sync.RWMutex
 	lockRemove         sync.RWMutex
 	lockRemoveOld      sync.RWMutex
@@ -233,32 +223,6 @@ func (mock *StoreServiceMock) ExistCalls() []struct {
 	mock.lockExist.RLock()
 	calls = mock.calls.Exist
 	mock.lockExist.RUnlock()
-	return calls
-}
-
-// Last calls LastFunc.
-func (mock *StoreServiceMock) Last() (ytfeed.Entry, error) {
-	if mock.LastFunc == nil {
-		panic("StoreServiceMock.LastFunc: method is nil but StoreService.Last was just called")
-	}
-	callInfo := struct {
-	}{}
-	mock.lockLast.Lock()
-	mock.calls.Last = append(mock.calls.Last, callInfo)
-	mock.lockLast.Unlock()
-	return mock.LastFunc()
-}
-
-// LastCalls gets all the calls that were made to Last.
-// Check the length with:
-//     len(mockedStoreService.LastCalls())
-func (mock *StoreServiceMock) LastCalls() []struct {
-} {
-	var calls []struct {
-	}
-	mock.lockLast.RLock()
-	calls = mock.calls.Last
-	mock.lockLast.RUnlock()
 	return calls
 }
 
