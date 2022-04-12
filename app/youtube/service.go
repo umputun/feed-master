@@ -68,6 +68,7 @@ type StoreService interface {
 	CheckProcessed(entry ytfeed.Entry) (found bool, ts time.Time, err error)
 	CountProcessed() (count int)
 	Last() (ytfeed.Entry, error)
+	First() (ytfeed.Entry, error)
 	Count() int
 }
 
@@ -219,6 +220,20 @@ func (s *Service) procChannels(ctx context.Context) error {
 				allStats.skipped++
 				processed++
 				continue
+			}
+
+			// got new entry, but with very old timestamp. skip it if we have already reached max capacity and this entry
+			// is older than the oldest one we have. Also mark it as processed as we don't want to process it again
+			if oldest, err := s.Store.First(); err == nil {
+				if entry.Published.Before(oldest.Published) && s.totalEntriesToKeep() < s.Store.Count() {
+					allStats.ignored++
+					log.Printf("[INFO] skipping entry %s as it is older than the oldest one we have %s",
+						entry.String(), oldest.String())
+					if procErr := s.Store.SetProcessed(entry); procErr != nil {
+						log.Printf("[WARN] failed to set processed status for %s: %v", entry.VideoID, procErr)
+					}
+					continue
+				}
 			}
 
 			log.Printf("[INFO] new entry [%d] %s, %s, %s", i+1, entry.VideoID, entry.Title, feedInfo.Name)
@@ -389,6 +404,13 @@ func (s *Service) makeFileName(entry ytfeed.Entry) string {
 		return uuid.New().String()
 	}
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func (s *Service) totalEntriesToKeep() (res int) {
+	for _, fi := range s.Feeds {
+		res += s.keep(fi)
+	}
+	return res
 }
 
 type stats struct {

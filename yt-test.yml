@@ -12,6 +12,8 @@ feeds:
         url: http://localhost:8080/yt/rss/UCWAIvx2yYLK_xTYD4F2mUNw
       - name: Дилетант
         url: http://localhost:8080/yt/rss/UCuIE7-5QzeAR6EdZXwDRwuQ
+      - name: Сергей Асланян
+        url: http://localhost:8080/yt/rss/UCPemWOA2UiBwhTauetmz95w
 
 
 youtube:
@@ -27,6 +29,7 @@ youtube:
   - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь", lang: "ru-ru", keep: 5}
   - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel", lang: "ru-ru"}
   - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru"}
+  - {id: UCPemWOA2UiBwhTauetmz95w, name: "Сергей Асланян", type: "channel", lang: "ru-ru"}
 
 system:
   update: 1m
