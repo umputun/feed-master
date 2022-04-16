@@ -105,6 +105,7 @@ func TestServer_getFeedCtrl(t *testing.T) {
 	assert.Contains(t, body, "<language>ru-ru</language>")
 	assert.Contains(t, body, " <description>this is feed1</description>")
 	assert.Contains(t, body, "<itunes:author>Feed Master</itunes:author>")
+	assert.Contains(t, body, "<itunes:explicit>no</itunes:explicit>")
 	assert.Contains(t, body, "<guid>guid1</guid>")
 	assert.Contains(t, body, "<title>title1</title>")
 	assert.Contains(t, body, "<link>http://example.com/link1</link>")

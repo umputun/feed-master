@@ -180,17 +180,18 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rss := feed.Rss2{
-		Version:       "2.0",
-		ItemList:      items,
-		Title:         s.Conf.Feeds[feedName].Title,
-		Description:   s.Conf.Feeds[feedName].Description,
-		Language:      s.Conf.Feeds[feedName].Language,
-		Link:          s.Conf.Feeds[feedName].Link,
-		PubDate:       items[0].PubDate,
-		LastBuildDate: time.Now().Format(time.RFC822Z),
-		ItunesAuthor:  s.Conf.Feeds[feedName].Author,
-		NsItunes:      "http://www.itunes.com/dtds/podcast-1.0.dtd",
-		NsMedia:       "http://search.yahoo.com/mrss/",
+		Version:        "2.0",
+		ItemList:       items,
+		Title:          s.Conf.Feeds[feedName].Title,
+		Description:    s.Conf.Feeds[feedName].Description,
+		Language:       s.Conf.Feeds[feedName].Language,
+		Link:           s.Conf.Feeds[feedName].Link,
+		PubDate:        items[0].PubDate,
+		LastBuildDate:  time.Now().Format(time.RFC822Z),
+		ItunesAuthor:   s.Conf.Feeds[feedName].Author,
+		ItunesExplicit: "no",
+		NsItunes:       "http://www.itunes.com/dtds/podcast-1.0.dtd",
+		NsMedia:        "http://search.yahoo.com/mrss/",
 	}
 
 	// replace link to UI page
