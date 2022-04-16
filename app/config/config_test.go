@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	rssfeed "github.com/umputun/feed-master/app/feed"
 	ytfdeed "github.com/umputun/feed-master/app/youtube"
@@ -14,7 +15,10 @@ import (
 
 func TestLoad(t *testing.T) {
 	r, err := Load("testdata/config.yml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
+	r.setDefaults()
+
 	assert.Equal(t, 3, len(r.Feeds), "3 sets")
 	assert.Equal(t, 2, len(r.Feeds["first"].Sources), "2 feeds in first")
 	assert.Equal(t, 1, len(r.Feeds["second"].Sources), "1 feed in second")
@@ -28,6 +32,10 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "https://www.youtube.com/videos.xml?channel_id=", r.YouTube.BaseChanURL)
 	assert.Equal(t, "https://www.youtube.com/videos.xml?playlist_id=", r.YouTube.BasePlaylistURL)
 	assert.Equal(t, "./var/rss", r.YouTube.RSSLocation)
+
+	assert.Equal(t, "Feed Master", r.Feeds["first"].Author)
+	assert.Equal(t, "author 2", r.Feeds["second"].Author)
+
 }
 
 func TestLoadConfigNotFoundFile(t *testing.T) {

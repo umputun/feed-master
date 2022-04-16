@@ -24,6 +24,7 @@ feeds:
         name: mmm1
         url: "https://bbb.com/u1"
     title: "blah 2"
+    author: "author 2"
 system:
   update: 600s
 

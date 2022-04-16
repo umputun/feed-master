@@ -36,6 +36,7 @@ feeds:
     description: an example of youtube-based podcas # feed description
     link: http://localhost:8080/feed/yt-example # link to the source site
     language: "ru-ru" # feed language
+    author: "Someone" # feed author, default "Feed Master"
     image: images/yt-example.png # feed image, used in generated RSS as podcast thumbnail
     sources: # list of sources, each source is a name of and the source RSS feed
       - {name: "Точка", url: http://localhost:8080/yt/rss/PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd}

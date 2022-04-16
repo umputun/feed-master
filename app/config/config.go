@@ -55,6 +55,7 @@ type Feed struct {
 	Filter          Filter   `yaml:"filter"`
 	Sources         []Source `yaml:"sources"`
 	ExtendDateTitle string   `yaml:"ext_date"`
+	Author          string   `yaml:"author"`
 }
 
 // Filter defines feed section for a feed filter~
@@ -128,6 +129,14 @@ func (c *Conf) setDefaults() {
 	}
 	if c.System.UpdateInterval == 0 {
 		c.System.UpdateInterval = time.Minute * 5
+	}
+
+	// set default values for feeds
+	for k, f := range c.Feeds {
+		if f.Author == "" {
+			f.Author = "Feed Master"
+			c.Feeds[k] = f
+		}
 	}
 
 	// set youtube defaults from system part

@@ -81,6 +81,7 @@ func TestServer_getFeedCtrl(t *testing.T) {
 					Language:    "ru-ru",
 					Description: "this is feed1",
 					Link:        "http://example.com/feed1",
+					Author:      "Feed Master",
 				},
 				"feed2": {
 					Title: "feed2",
