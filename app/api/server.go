@@ -190,8 +190,12 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		LastBuildDate:  time.Now().Format(time.RFC822Z),
 		ItunesAuthor:   s.Conf.Feeds[feedName].Author,
 		ItunesExplicit: "no",
-		NsItunes:       "http://www.itunes.com/dtds/podcast-1.0.dtd",
-		NsMedia:        "http://search.yahoo.com/mrss/",
+		ItunesOwner: &feed.ItunesOwner{
+			Name:  "Feed Master",
+			Email: "umputun@feed-master.com",
+		},
+		NsItunes: "http://www.itunes.com/dtds/podcast-1.0.dtd",
+		NsMedia:  "http://search.yahoo.com/mrss/",
 	}
 
 	// replace link to UI page

@@ -32,6 +32,7 @@ type Rss2 struct {
 	MediaThumbnail *MediaThumbnail `xml:"channel>media:thumbnail"`
 	ItunesAuthor   string          `xml:"channel>itunes:author"`
 	ItunesExplicit string          `xml:"channel>itunes:explicit"`
+	ItunesOwner    *ItunesOwner    `xml:"channel>itunes:owner"`
 	ItemList       []Item          `xml:"channel>item"`
 }
 
@@ -39,6 +40,12 @@ type Rss2 struct {
 type ItunesImg struct {
 	XMLName xml.Name `xml:"itunes:image,omitempty"`
 	URL     string   `xml:"href,attr"`
+}
+
+// ItunesOwner owner element for iTunes
+type ItunesOwner struct {
+	Email string `xml:"itunes:email,omitempty"`
+	Name  string `xml:"itunes:name,omitempty"`
 }
 
 // MediaThumbnail image element for media
