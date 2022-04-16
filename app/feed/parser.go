@@ -30,8 +30,8 @@ type Rss2 struct {
 	LastBuildDate  string          `xml:"channel>lastBuildDate"`
 	ItunesImage    *ItunesImg      `xml:"channel>itunes:image"`
 	MediaThumbnail *MediaThumbnail `xml:"channel>media:thumbnail"`
-
-	ItemList []Item `xml:"channel>item"`
+	ItunesAuthor   string          `xml:"channel>itunes:author"`
+	ItemList       []Item          `xml:"channel>item"`
 }
 
 // ItunesImg image element for iTunes

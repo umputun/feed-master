@@ -188,6 +188,7 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		Link:          s.Conf.Feeds[feedName].Link,
 		PubDate:       items[0].PubDate,
 		LastBuildDate: time.Now().Format(time.RFC822Z),
+		ItunesAuthor:  "Feed Master",
 		NsItunes:      "http://www.itunes.com/dtds/podcast-1.0.dtd",
 		NsMedia:       "http://search.yahoo.com/mrss/",
 	}
