@@ -70,18 +70,6 @@ system: # system configuration
 
 _see [examples](https://github.com/umputun/feed-master/tree/master/_example/etc) for more details._
 
-### Single-feed configuration
-
-For a very simple configuration, command-line only configuration is available. In this case only a single sopurce feed is allowed and yt processing is disabled.  The command-line configuration is the following:
-
-| Command line     | Environment         | Default                    | Description                               |
-|------------------|---------------------|----------------------------|-------------------------------------------|
-| feed             | FM_FEED             |                            | single feed, overrides config             |
-| update-interval  | UPDATE_INTERVAL     | `1m`                       | update interval, overrides config         |
-| telegram_chan    | TELEGRAM_CHAN       |                            | single telegram channel, overrides config |
-
-All this command-line mode is good for - process a single feed, send a telegram message and send a tweet on each new item.
-
 ### Notifications
 
 In both configuration modes, user can specify a list of telegram and twitter accounts to be notified.

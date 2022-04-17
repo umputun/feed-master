@@ -33,8 +33,6 @@ type options struct {
 	DB   string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
 	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
 
-	// single feed overrides
-	Feed            string        `long:"feed" env:"FM_FEED" description:"single feed, overrides config"`
 	TelegramChannel string        `long:"telegram_chan" env:"TELEGRAM_CHAN" description:"single telegram channel, overrides config"`
 	UpdateInterval  time.Duration `long:"update-interval" env:"UPDATE_INTERVAL" default:"1m" description:"update interval, overrides config"`
 
@@ -63,16 +61,10 @@ func main() {
 	setupLog(opts.Dbg)
 
 	var conf = &config.Conf{}
-	if opts.Feed != "" { // single feed (no config) mode
-		conf = config.SingleFeed(opts.Feed, opts.TelegramChannel, opts.UpdateInterval)
-	}
-
 	var err error
-	if opts.Feed == "" {
-		conf, err = config.Load(opts.Conf)
-		if err != nil {
-			log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
-		}
+	conf, err = config.Load(opts.Conf)
+	if err != nil {
+		log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
 	}
 
 	db, err := makeBoltDB(opts.DB)

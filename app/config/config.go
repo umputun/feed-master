@@ -98,21 +98,6 @@ func Load(fname string) (res *Conf, err error) {
 	return res, nil
 }
 
-// SingleFeed returns single feed "fake" config for no-config mode
-func SingleFeed(feedURL, ch string, updateInterval time.Duration) *Conf {
-	conf := Conf{}
-	f := Feed{
-		TelegramChannel: ch,
-		Sources: []Source{
-			{Name: "auto", URL: feedURL},
-		},
-	}
-	conf.Feeds = map[string]Feed{"auto": f}
-	conf.System.UpdateInterval = updateInterval
-	conf.setDefaults()
-	return &conf
-}
-
 // SetDefaults sets default values for config
 func (c *Conf) setDefaults() {
 	if c.System.Concurrent == 0 {
