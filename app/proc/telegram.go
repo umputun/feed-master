@@ -15,7 +15,6 @@ import (
 	tb "gopkg.in/tucnak/telebot.v2"
 
 	"github.com/umputun/feed-master/app/duration"
-
 	"github.com/umputun/feed-master/app/feed"
 )
 

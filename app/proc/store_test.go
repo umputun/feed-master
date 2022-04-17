@@ -9,10 +9,10 @@ import (
 
 	bolt "go.etcd.io/bbolt"
 
-	"github.com/umputun/feed-master/app/feed"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/umputun/feed-master/app/feed"
 )
 
 const pubDate = "Mon, 02 Jan 2006 15:04:05 -0700"
