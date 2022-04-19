@@ -10,6 +10,8 @@ github.com/aymerick/douceur v0.2.0 h1:Mv+mAeH1Q+n9Fr+oyamOlAkUNPWPlA8PPGR0QAaYuP
 github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd30/FjWUq4=
 github.com/azr/backoff v0.0.0-20160115115103-53511d3c7330 h1:ekDALXAVvY/Ub1UtNta3inKQwZ/jMB/zpOtD8rAYh78=
 github.com/azr/backoff v0.0.0-20160115115103-53511d3c7330/go.mod h1:nH+k0SvAt3HeiYyOlJpLLv1HG1p7KWP7qU9QPp2/pCo=
+github.com/bogem/id3v2/v2 v2.1.2 h1:++1bbBfveCXdH8ep/Tuecua5BzHgljPL0c/msnAOO64=
+github.com/bogem/id3v2/v2 v2.1.2/go.mod h1:hVfgiLdvXyAPqnCc3+CbdEvAv7uOkYn6a/rVpHmABmg=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
@@ -40,8 +42,6 @@ github.com/go-pkgz/lcw v0.8.1 h1:Bpt2yYTE1J8hIhz8tjdm1WPOgH13eo5iTNsXyop7cMQ=
 github.com/go-pkgz/lcw v0.8.1/go.mod h1:Xw0/ZfApATgbjVPYRZO4XHdWyxAjErDWDWJ7TLlw1Vc=
 github.com/go-pkgz/lgr v0.10.4 h1:l7qyFjqEZgwRgaQQSEp6tve4A3OU80VrfzpvtEX8ngw=
 github.com/go-pkgz/lgr v0.10.4/go.mod h1:CD0s1z6EFpIUplV067gitF77tn25JItzwHNKAPqeCF0=
-github.com/go-pkgz/rest v1.13.0 h1:1larroBzcOYC5ySdrCLaXIEG1SGNnPborxm6uK+2RLQ=
-github.com/go-pkgz/rest v1.13.0/go.mod h1:KUWAqbDteYGS/CiXftomQsKjtEOifXsJ36Ka0skYbmk=
 github.com/go-pkgz/rest v1.14.0 h1:brDLCzIGoe0IiUZqRFpsiCVM9m3L88A7z62qS0V9Yfk=
 github.com/go-pkgz/rest v1.14.0/go.mod h1:KUWAqbDteYGS/CiXftomQsKjtEOifXsJ36Ka0skYbmk=
 github.com/go-pkgz/syncs v1.2.0 h1:aiizQFILlMZ4KtRNaYLcDffRbUQZH9fclsgr5KybWyY=
