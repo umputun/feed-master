@@ -11,10 +11,10 @@ import (
 	log "github.com/go-pkgz/lgr"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/pkg/errors"
-	"github.com/umputun/feed-master/app/duration"
 	"golang.org/x/net/html"
 	tb "gopkg.in/tucnak/telebot.v2"
 
+	"github.com/umputun/feed-master/app/duration"
 	"github.com/umputun/feed-master/app/feed"
 )
 
@@ -27,6 +27,7 @@ type TelegramClient struct {
 
 // NewTelegramClient init telegram client
 func NewTelegramClient(token, apiURL string, timeout time.Duration, durSvc *duration.Service) (*TelegramClient, error) {
+	log.Printf("[INFO] create telegram client for %s, timeout: %s", apiURL, timeout)
 	if timeout == 0 {
 		timeout = time.Second * 60
 	}

@@ -11,6 +11,9 @@ github.com/aymerick/douceur/parser
 # github.com/azr/backoff v0.0.0-20160115115103-53511d3c7330
 ## explicit
 github.com/azr/backoff
+# github.com/bogem/id3v2/v2 v2.1.2
+## explicit; go 1.13
+github.com/bogem/id3v2/v2
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
@@ -120,6 +123,16 @@ golang.org/x/net/html/atom
 ## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
+# golang.org/x/text v0.3.7
+## explicit; go 1.17
+golang.org/x/text/encoding
+golang.org/x/text/encoding/charmap
+golang.org/x/text/encoding/internal
+golang.org/x/text/encoding/internal/identifier
+golang.org/x/text/encoding/unicode
+golang.org/x/text/internal/utf8internal
+golang.org/x/text/runes
+golang.org/x/text/transform
 # golang.org/x/time v0.0.0-20220224211638-0e9765cccd65
 ## explicit
 golang.org/x/time/rate

@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-pkgz/lcw"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -74,6 +75,7 @@ func TestServer_getFeedCtrl(t *testing.T) {
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		Store:         store,
+		cache:         lcw.NewNopCache(),
 		Conf: config.Conf{
 			Feeds: map[string]config.Feed{
 				"feed1": {
@@ -106,6 +108,8 @@ func TestServer_getFeedCtrl(t *testing.T) {
 	assert.Contains(t, body, " <description>this is feed1</description>")
 	assert.Contains(t, body, "<itunes:author>Feed Master</itunes:author>")
 	assert.Contains(t, body, "<itunes:explicit>no</itunes:explicit>")
+	assert.Contains(t, body, "<itunes:email>umputun@feed-master.com</itunes:email>")
+	assert.Contains(t, body, "<itunes:name>Feed Master</itunes:name>")
 	assert.Contains(t, body, "<guid>guid1</guid>")
 	assert.Contains(t, body, "<title>title1</title>")
 	assert.Contains(t, body, "<link>http://example.com/link1</link>")
@@ -154,6 +158,7 @@ func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		Store:         store,
+		cache:         lcw.NewNopCache(),
 		Conf: config.Conf{
 			Feeds: map[string]config.Feed{
 				"feed1": {
@@ -224,6 +229,7 @@ func TestServer_getFeedCtrlFeedImage(t *testing.T) {
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		Store:         store,
+		cache:         lcw.NewNopCache(),
 		Conf: config.Conf{
 			Feeds: map[string]config.Feed{
 				"feed1": {
