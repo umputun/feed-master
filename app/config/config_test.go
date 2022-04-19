@@ -15,12 +15,13 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	os.Setenv("TELEGRAM_CHAN", "tg_channel")
-	os.Setenv("TELEGRAM_TOKEN", "tg_token")
-	os.Setenv("TWI_CONSUMER_KEY", "tw_key")
-	os.Setenv("TWI_CONSUMER_SECRET", "tw_secret")
-	os.Setenv("TWI_ACCESS_TOKEN", "tw_access_token")
-	os.Setenv("TWI_ACCESS_SECRET", "tw_access_secret")
+	assert.NoError(t, os.Setenv("TELEGRAM_CHAN", "tg_channel"))
+	assert.NoError(t, os.Setenv("TELEGRAM_CHAN", "tg_channel"))
+	assert.NoError(t, os.Setenv("TELEGRAM_TOKEN", "tg_token"))
+	assert.NoError(t, os.Setenv("TWI_CONSUMER_KEY", "tw_key"))
+	assert.NoError(t, os.Setenv("TWI_CONSUMER_SECRET", "tw_secret"))
+	assert.NoError(t, os.Setenv("TWI_ACCESS_TOKEN", "tw_access_token"))
+	assert.NoError(t, os.Setenv("TWI_ACCESS_SECRET", "tw_access_secret"))
 
 	r, err := Load("testdata/config.yml")
 	require.NoError(t, err)

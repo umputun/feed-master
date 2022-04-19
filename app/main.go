@@ -42,9 +42,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	var conf = &config.Conf{}
-	var err error
-	conf, err = config.Load(opts.Conf)
+	conf, err := config.Load(opts.Conf)
 	if err != nil {
 		log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
 	}
