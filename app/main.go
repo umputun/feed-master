@@ -29,25 +29,8 @@ import (
 )
 
 type options struct {
-	Port int    `short:"p" long:"port" description:"port to listen" default:"8080"`
-	DB   string `short:"c" long:"db" env:"FM_DB" default:"var/feed-master.bdb" description:"bolt db file"`
+	Port int    `short:"p" long:"port" env:"FM_PORT" description:"port to listen" default:"8080"`
 	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
-
-	TelegramChannel string        `long:"telegram_chan" env:"TELEGRAM_CHAN" description:"single telegram channel, overrides config"`
-	UpdateInterval  time.Duration `long:"update-interval" env:"UPDATE_INTERVAL" default:"1m" description:"update interval, overrides config"`
-
-	TelegramServer        string        `long:"telegram_server" env:"TELEGRAM_SERVER" default:"https://api.telegram.org" description:"telegram bot api server"`
-	TelegramToken         string        `long:"telegram_token" env:"TELEGRAM_TOKEN" description:"telegram token"`
-	TelegramTimeout       time.Duration `long:"telegram_timeout" env:"TELEGRAM_TIMEOUT" default:"1m" description:"telegram timeout"`
-	TwitterConsumerKey    string        `long:"consumer-key" env:"TWI_CONSUMER_KEY" description:"twitter consumer key"`
-	TwitterConsumerSecret string        `long:"consumer-secret" env:"TWI_CONSUMER_SECRET" description:"twitter consumer secret"`
-	TwitterAccessToken    string        `long:"access-token" env:"TWI_ACCESS_TOKEN" description:"twitter access token"`
-	TwitterAccessSecret   string        `long:"access-secret" env:"TWI_ACCESS_SECRET" description:"twitter access secret"`
-	TwitterTemplate       string        `long:"template" env:"TEMPLATE" default:"{{.Title}} - {{.Link}}" description:"twitter message template"`
-
-	AdminPasswd string `long:"admin-passwd" env:"ADMIN_PASSWD" description:"admin password for protected endpoints"`
-
-	Dbg bool `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
 
 var revision = "local"
@@ -58,7 +41,6 @@ func main() {
 	if _, err := flags.Parse(&opts); err != nil {
 		os.Exit(1)
 	}
-	setupLog(opts.Dbg)
 
 	var conf = &config.Conf{}
 	var err error
@@ -66,20 +48,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
 	}
+	setupLog(conf.System.Dbg)
 
-	db, err := makeBoltDB(opts.DB)
+	db, err := makeBoltDB(conf.System.DB)
 	if err != nil {
-		log.Fatalf("[ERROR] can't open db %s, %v", opts.DB, err)
+		log.Fatalf("[ERROR] can't open db %s, %v", conf.System.DB, err)
 	}
 	procStore := &proc.BoltDB{DB: db}
 
-	telegramNotif, err := proc.NewTelegramClient(opts.TelegramToken, opts.TelegramServer, opts.TelegramTimeout,
+	telegramNotif, err := proc.NewTelegramClient(conf.Telegram.Token, conf.Telegram.Server, conf.Telegram.Timeout,
 		&duration.Service{})
 	if err != nil {
-		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
+		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", conf.Telegram.Token, err)
 	}
 
-	p := &proc.Processor{Conf: conf, Store: procStore, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter(opts)}
+	p := &proc.Processor{Conf: conf, Store: procStore, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter(*conf)}
 	go p.Do()
 
 	var ytSvc youtube.Service
@@ -118,9 +101,9 @@ func main() {
 		}()
 	}
 
-	if opts.AdminPasswd == "" {
+	if conf.System.AdminPasswd == "" {
 		log.Printf("[WARN] admin password is not set, protected endpoints are disabled")
-		opts.AdminPasswd = uuid.New().String() // generate random (uuid) password
+		conf.System.AdminPasswd = uuid.New().String() // generate random (uuid) password
 	}
 
 	server := api.Server{
@@ -128,7 +111,7 @@ func main() {
 		Conf:        *conf,
 		Store:       procStore,
 		YoutubeSvc:  &ytSvc,
-		AdminPasswd: opts.AdminPasswd,
+		AdminPasswd: conf.System.AdminPasswd,
 	}
 	server.Run(context.Background(), opts.Port)
 }
@@ -149,10 +132,10 @@ func makeBoltDB(dbFile string) (*bolt.DB, error) {
 	return db, err
 }
 
-func makeTwitter(opts options) *proc.TwitterClient {
+func makeTwitter(conf config.Conf) *proc.TwitterClient {
 	twitterFmtFn := func(item rssfeed.Item) string {
 		b1 := bytes.Buffer{}
-		if err := template.Must(template.New("twi").Parse(opts.TwitterTemplate)).Execute(&b1, item); err != nil { // nolint
+		if err := template.Must(template.New("twi").Parse(conf.Twitter.Template)).Execute(&b1, item); err != nil { // nolint
 			// template failed to parse record, backup predefined format
 			return fmt.Sprintf("%s - %s", item.Title, item.Link)
 		}
@@ -160,10 +143,10 @@ func makeTwitter(opts options) *proc.TwitterClient {
 	}
 
 	twiAuth := proc.TwitterAuth{
-		ConsumerKey:    opts.TwitterConsumerKey,
-		ConsumerSecret: opts.TwitterConsumerSecret,
-		AccessToken:    opts.TwitterAccessToken,
-		AccessSecret:   opts.TwitterAccessSecret,
+		ConsumerKey:    conf.Twitter.ConsumerKey,
+		ConsumerSecret: conf.Twitter.ConsumerSecret,
+		AccessToken:    conf.Twitter.AccessToken,
+		AccessSecret:   conf.Twitter.AccessSecret,
 	}
 
 	return proc.NewTwitterClient(twiAuth, twitterFmtFn)

@@ -3,6 +3,7 @@ package config
 
 import (
 	"io/ioutil"
+	"os"
 	"regexp"
 	"time"
 
@@ -17,6 +18,9 @@ import (
 type Conf struct {
 	Feeds  map[string]Feed `yaml:"feeds"`
 	System struct {
+		DB             string        `yaml:"db"`
+		AdminPasswd    string        `yaml:"admin-passwd"`
+		Dbg            bool          `yaml:"debug"`
 		UpdateInterval time.Duration `yaml:"update"`
 		MaxItems       int           `yaml:"max_per_feed"`
 		MaxTotal       int           `yaml:"max_total"`
@@ -36,6 +40,21 @@ type Conf struct {
 		FilesLocation   string             `yaml:"files_location"`
 		RSSLocation     string             `yaml:"rss_location"`
 	} `yaml:"youtube"`
+
+	Telegram struct {
+		Server  string        `yaml:"server"`
+		Channel string        `yaml:"channel"`
+		Token   string        `yaml:"token"`
+		Timeout time.Duration `yaml:"timeout"`
+	} `yaml:"telegram"`
+
+	Twitter struct {
+		ConsumerKey    string `yaml:"consumer-key"`
+		ConsumerSecret string `yaml:"consumer-secret"`
+		AccessToken    string `yaml:"access-token"`
+		AccessSecret   string `yaml:"access-secret"`
+		Template       string `yaml:"template"`
+	} `yaml:"twitter"`
 }
 
 // Source defines config section for source
@@ -90,6 +109,8 @@ func Load(fname string) (res *Conf, err error) {
 	if err != nil {
 		return nil, err
 	}
+	// expand environment variables
+	data = []byte(os.ExpandEnv(string(data)))
 
 	if err := yaml.Unmarshal(data, res); err != nil {
 		return nil, err
@@ -114,6 +135,18 @@ func (c *Conf) setDefaults() {
 	}
 	if c.System.UpdateInterval == 0 {
 		c.System.UpdateInterval = time.Minute * 5
+	}
+	if c.Telegram.Server == "" {
+		c.Telegram.Server = "https://api.telegram.org"
+	}
+	if c.Telegram.Timeout == 0 {
+		c.Telegram.Timeout = time.Minute * 1
+	}
+	if c.Twitter.Template == "" {
+		c.Twitter.Template = "{{.Title}} - {{.Link}}"
+	}
+	if c.System.DB == "" {
+		c.System.DB = "var/feed-master.bdb"
 	}
 
 	// set default values for feeds

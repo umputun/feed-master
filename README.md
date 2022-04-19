@@ -17,12 +17,10 @@ _example of docker-compose.yml available in [_example](https://github.com/umputu
 
 ## Main application parameters
 
-| Command line | Environment  | Default               | Description                           |
-|--------------|--------------|-----------------------|---------------------------------------|
-| db           | FM_DB        | `var/feed-master.bdb` | bolt db file                          |
-| conf         | FM_CONF      | `feed-master.yml`     | config file (yml)                     |
-| admin-passwd | ADMIN_PASSWD | `none` (disabled)     | admin password for protected endpoint |
-| dbg          | DEBUG        | `false`               | debug mode                            |
+| Command line | Environment | Default           | Description       |
+|--------------|-------------|-------------------|-------------------|
+| port         | FM_PORT     | `8080`            | port to listen    |
+| conf         | FM_CONF     | `feed-master.yml` | config file (yml) |
 
 
 ## Configuration
@@ -66,25 +64,25 @@ system: # system configuration
   max_total: 50 # max total items to be included in the final RSS
   max_keep: 1000 # max items to be kept in the internal database 
   base_url: http://localhost:8080 # base url for the generated RSS and media files
+  db: ${FM_DB} # bolt db file, default "var/feed-master.bdb"
+  admin-passwd: ${ADMIN_PASSWD} # admin password for protected endpoint, default (disabled)
+  debug: ${DEBUG} # debug mode, default "false"
+
+telegram:
+  server: ${TELEGRAM_SERVER} # telegram server, default "https://api.telegram.org"
+  channel: ${TELEGRAM_CHAN} # telegram channel
+  token: ${TELEGRAM_TOKEN} # telegram token
+  timeout: ${TELEGRAM_TIMEOUT} # telegram timeout, default 1m
+
+twitter:
+  consumer-key: ${TWI_CONSUMER_KEY} # twitter consumer key
+  consumer-secret: ${TWI_CONSUMER_SECRET} # twitter consumer secret
+  access-token: ${TWI_ACCESS_TOKEN} # twitter access token
+  access-secret: ${TWI_ACCESS_SECRET} # twitter access secret
+  template: ${TEMPLATE} # twitter message template, default "{{.Title}} - {{.Link}}"
 ```
 
 _see [examples](https://github.com/umputun/feed-master/tree/master/_example/etc) for more details._
-
-### Notifications
-
-In both configuration modes, user can specify a list of telegram and twitter accounts to be notified.
-
-| Command line     | Environment         | Default                    | Description                               |
-|------------------|---------------------|----------------------------|-------------------------------------------|
-| telegram_server  | TELEGRAM_SERVER     | `https://api.telegram.org` | telegram bot api server                   |
-| telegram_token   | TELEGRAM_TOKEN      |                            | telegram token                            |
-| telegram_timeout | TELEGRAM_TIMEOUT    | `1m`                       | telegram timeout                          |
-| consumer-key     | TWI_CONSUMER_KEY    |                            | twitter consumer key                      |
-| consumer-secret  | TWI_CONSUMER_SECRET |                            | twitter consumer secret                   |
-| access-token     | TWI_ACCESS_TOKEN    |                            | twitter access token                      |
-| access-secret    | TWI_ACCESS_SECRET   |                            | twitter access secret                     |
-| template         | TEMPLATE            | `{{.Title}} - {{.Link}}`   | twitter message template                  |
-
 
 ## API
 
