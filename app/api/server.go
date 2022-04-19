@@ -106,6 +106,7 @@ func (s *Server) router() *chi.Mux {
 		rimg.Use(l.Handler)
 		rimg.Get("/images/{name}", s.getImageCtrl)
 		rimg.Get("/image/{name}", s.getImageCtrl)
+		rimg.Get("/image/{name}.png", s.getImageCtrl)
 	})
 
 	router.Group(func(rrss chi.Router) {
