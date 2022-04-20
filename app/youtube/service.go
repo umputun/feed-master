@@ -475,6 +475,7 @@ func (s *Service) updateMp3Tags(file string, entry ytfeed.Entry, fi FeedInfo) er
 	fh.SetAlbum(fi.Name)
 	fh.SetGenre("podcast")
 	fh.SetYear(entry.Published.Format("2006"))
+	fh.AddTextFrame(fh.CommonID("Recording time"), fh.DefaultEncoding(), entry.Published.Format("20060102T150405"))
 
 	if err = fh.Save(); err != nil {
 		return errors.Wrapf(err, "failed to close file %s", file)
