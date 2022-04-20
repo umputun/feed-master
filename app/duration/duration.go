@@ -34,6 +34,7 @@ func (s *Service) Reader(r io.Reader) int {
 
 	for err == nil {
 		if err = d.Decode(&f, &skipped); err != nil && err != io.EOF {
+			log.Printf("[WARN] can't get duration for provided stream: %v", err)
 			return 0
 		}
 		duration += f.Duration().Seconds()
