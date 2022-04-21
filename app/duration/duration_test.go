@@ -26,5 +26,5 @@ func TestService_Reader(t *testing.T) {
 	reader := bytes.NewReader(smallMP3File)
 
 	svc := Service{}
-	assert.Zero(t, svc.Reader(reader))
+	assert.Zero(t, svc.reader(reader))
 }
