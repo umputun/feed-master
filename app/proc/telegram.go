@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -168,7 +169,7 @@ type recipient struct {
 }
 
 func (r recipient) Recipient() string {
-	if !strings.HasPrefix(r.chatID, "@") {
+	if _, err := strconv.ParseInt(r.chatID, 10, 64); err != nil && !strings.HasPrefix(r.chatID, "@") {
 		return "@" + r.chatID
 	}
 
