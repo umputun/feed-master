@@ -64,7 +64,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 	}
 
 	message, err := client.sendAudio(channelID, item)
-	if err != nil && strings.HasSuffix(err.Error(), "Request Entity Too Large") {
+	if err != nil && strings.Contains(err.Error(), "Request Entity Too Large") {
 		message, err = client.sendText(channelID, item)
 	}
 
