@@ -80,6 +80,8 @@ For a very simple configuration, command-line only configuration is available. I
 | update-interval  | UPDATE_INTERVAL     | `1m`                       | update interval, overrides config         |
 | telegram_chan    | TELEGRAM_CHAN       |                            | single telegram channel, overrides config |
 
+Name of the channel or numeric ChatID could be used, [here](https://remark42.com/docs/configuration/telegram/#notifications-for-administrators) are the instructions on obtaining the ChatID. To be able to post messages to the channel, bot must be added as administrator with Post permission.
+
 All this command-line mode is good for - process a single feed, send a telegram message and send a tweet on each new item.
 
 ### Notifications
