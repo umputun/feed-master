@@ -1,10 +1,11 @@
 package proc
 
 import (
-	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -92,29 +93,36 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		return nil, err
 	}
 	defer httpBody.Close()
-
-	var httpBodyCopy bytes.Buffer
-	tee := io.TeeReader(httpBody, &httpBodyCopy)
+	// download audio to the temp file
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "feed-master-*.mp3")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(tmpFile.Name())
+	if _, err = io.Copy(tmpFile, httpBody); err != nil {
+		return nil, err
+	}
+	if err = tmpFile.Close(); err != nil {
+		return nil, err
+	}
 
 	audio := tb.Audio{
-		File:      tb.FromReader(&httpBodyCopy),
+		File:      tb.FromDisk(tmpFile.Name()),
 		FileName:  item.GetFilename(),
 		MIME:      "audio/mpeg",
 		Caption:   client.getMessageHTML(item, htmlMessageParams{TrimCaption: true}),
 		Title:     item.Title,
 		Performer: item.Author,
-		Duration:  client.DurationService.Reader(tee),
+		Duration:  client.DurationService.File(tmpFile.Name()),
 	}
 
-	message, err := audio.Send(
+	return audio.Send(
 		client.Bot,
 		recipient{chatID: channelID},
 		&tb.SendOptions{
 			ParseMode: tb.ModeHTML,
 		},
 	)
-
-	return message, err
 }
 
 // https://core.telegram.org/bots/api#html-style
