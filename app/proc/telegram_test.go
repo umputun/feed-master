@@ -9,8 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/umputun/feed-master/app/duration"
 	tb "gopkg.in/tucnak/telebot.v2"
+
+	"github.com/umputun/feed-master/app/duration"
 
 	"github.com/umputun/feed-master/app/feed"
 )
@@ -165,13 +166,19 @@ func TestGetMessageHTML(t *testing.T) {
 }
 
 func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
-	cases := []string{"channel", "@channel"}
-	expected := "@channel"
-
-	for i, channelID := range cases {
+	testData := []struct {
+		channel  string
+		expected string
+	}{
+		{channel: "channel", expected: "@channel"},
+		{channel: "@channel", expected: "@channel"},
+		{channel: "107401628", expected: "107401628"}, // numeric ChanID should be preserved
+		{channel: "-1001484738202", expected: "-1001484738202"},
+	}
+	for i, entry := range testData {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			got := recipient{chatID: channelID} // nolint
-			assert.Equal(t, expected, got.Recipient())
+			got := recipient{chatID: entry.channel} // nolint
+			assert.Equal(t, entry.expected, got.Recipient())
 		})
 	}
 }
