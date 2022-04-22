@@ -20,11 +20,11 @@ func (s *Service) File(fname string) int {
 		return 0
 	}
 	defer fh.Close() // nolint
-	return s.Reader(fh)
+	return s.reader(fh)
 }
 
-// Reader scans MP3 from provided file and returns its duration in seconds, ignoring possible errors
-func (s *Service) Reader(r io.Reader) int {
+// reader scans MP3 from provided file and returns its duration in seconds, ignoring possible errors
+func (s *Service) reader(r io.Reader) int {
 	d := mp3.NewDecoder(r)
 
 	var f mp3.Frame
@@ -34,6 +34,7 @@ func (s *Service) Reader(r io.Reader) int {
 
 	for err == nil {
 		if err = d.Decode(&f, &skipped); err != nil && err != io.EOF {
+			log.Printf("[WARN] can't get duration for provided stream: %v", err)
 			return 0
 		}
 		duration += f.Duration().Seconds()

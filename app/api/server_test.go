@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-pkgz/lcw"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -74,6 +75,7 @@ func TestServer_getFeedCtrl(t *testing.T) {
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		Store:         store,
+		cache:         lcw.NewNopCache(),
 		Conf: config.Conf{
 			Feeds: map[string]config.Feed{
 				"feed1": {
@@ -156,6 +158,7 @@ func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		Store:         store,
+		cache:         lcw.NewNopCache(),
 		Conf: config.Conf{
 			Feeds: map[string]config.Feed{
 				"feed1": {
@@ -226,6 +229,7 @@ func TestServer_getFeedCtrlFeedImage(t *testing.T) {
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		Store:         store,
+		cache:         lcw.NewNopCache(),
 		Conf: config.Conf{
 			Feeds: map[string]config.Feed{
 				"feed1": {

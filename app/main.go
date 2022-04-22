@@ -16,11 +16,9 @@ import (
 	"github.com/jessevdk/go-flags"
 	bolt "go.etcd.io/bbolt"
 
-	"github.com/umputun/feed-master/app/duration"
-
-	"github.com/umputun/feed-master/app/config"
-
 	"github.com/umputun/feed-master/app/api"
+	"github.com/umputun/feed-master/app/config"
+	"github.com/umputun/feed-master/app/duration"
 	rssfeed "github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/proc"
 	"github.com/umputun/feed-master/app/youtube"

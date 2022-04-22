@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bogem/id3v2/v2"
 	log "github.com/go-pkgz/lgr"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -242,6 +243,12 @@ func (s *Service) procChannels(ctx context.Context) error {
 				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, downErr)
 				continue
 			}
+
+			// update metadata
+			if tagsErr := s.updateMp3Tags(file, entry, feedInfo); tagsErr != nil {
+				log.Printf("[WARN] failed to update metadata for %s: %s", entry.VideoID, tagsErr)
+			}
+
 			processed++
 
 			fsize := 0
@@ -454,6 +461,26 @@ func (s *Service) oldestEntry() ytfeed.Entry {
 		return ytfeed.Entry{}
 	}
 	return entries[0]
+}
+
+func (s *Service) updateMp3Tags(file string, entry ytfeed.Entry, fi FeedInfo) error {
+	fh, err := id3v2.Open(file, id3v2.Options{Parse: false})
+	if err != nil {
+		return errors.Wrapf(err, "failed to open file %s", file)
+	}
+	defer fh.Close()
+
+	fh.SetTitle(entry.Title)
+	fh.SetArtist(entry.Author.Name)
+	fh.SetAlbum(fi.Name)
+	fh.SetGenre("podcast")
+	fh.SetYear(entry.Published.Format("2006"))
+	fh.AddTextFrame(fh.CommonID("Recording time"), fh.DefaultEncoding(), entry.Published.Format("20060102T150405"))
+
+	if err = fh.Save(); err != nil {
+		return errors.Wrapf(err, "failed to close file %s", file)
+	}
+	return nil
 }
 
 type stats struct {

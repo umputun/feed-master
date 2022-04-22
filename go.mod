@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/ChimeraCoder/anaconda v2.0.0+incompatible
+	github.com/bogem/id3v2/v2 v2.1.2
 	github.com/denisbrodbeck/striphtmltags v6.6.6+incompatible
 	github.com/didip/tollbooth/v6 v6.1.2
 	github.com/didip/tollbooth_chi v0.0.0-20200828173446-a7173453ea21
@@ -41,6 +42,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )

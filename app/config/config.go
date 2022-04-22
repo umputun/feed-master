@@ -10,7 +10,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/umputun/feed-master/app/feed"
-
 	"github.com/umputun/feed-master/app/youtube"
 )
 

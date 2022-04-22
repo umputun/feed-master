@@ -1,20 +1,21 @@
 package proc
 
 import (
-	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/pkg/errors"
-	"github.com/umputun/feed-master/app/duration"
 	"golang.org/x/net/html"
 	tb "gopkg.in/tucnak/telebot.v2"
 
+	"github.com/umputun/feed-master/app/duration"
 	"github.com/umputun/feed-master/app/feed"
 )
 
@@ -27,6 +28,7 @@ type TelegramClient struct {
 
 // NewTelegramClient init telegram client
 func NewTelegramClient(token, apiURL string, timeout time.Duration, durSvc *duration.Service) (*TelegramClient, error) {
+	log.Printf("[INFO] create telegram client for %s, timeout: %s", apiURL, timeout)
 	if timeout == 0 {
 		timeout = time.Second * 60
 	}
@@ -62,7 +64,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 	}
 
 	message, err := client.sendAudio(channelID, item)
-	if err != nil && strings.HasSuffix(err.Error(), "Request Entity Too Large") {
+	if err != nil && strings.Contains(err.Error(), "Request Entity Too Large") {
 		message, err = client.sendText(channelID, item)
 	}
 
@@ -91,29 +93,36 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		return nil, err
 	}
 	defer httpBody.Close()
-
-	var httpBodyCopy bytes.Buffer
-	tee := io.TeeReader(httpBody, &httpBodyCopy)
+	// download audio to the temp file
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "feed-master-*.mp3")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(tmpFile.Name())
+	if _, err := io.Copy(tmpFile, httpBody); err != nil {
+		return nil, err
+	}
+	if err := tmpFile.Close(); err != nil {
+		return nil, err
+	}
 
 	audio := tb.Audio{
-		File:      tb.FromReader(&httpBodyCopy),
+		File:      tb.FromDisk(tmpFile.Name()),
 		FileName:  item.GetFilename(),
 		MIME:      "audio/mpeg",
 		Caption:   client.getMessageHTML(item, htmlMessageParams{TrimCaption: true}),
 		Title:     item.Title,
 		Performer: item.Author,
-		Duration:  client.DurationService.Reader(tee),
+		Duration:  client.DurationService.File(tmpFile.Name()),
 	}
 
-	message, err := audio.Send(
+	return audio.Send(
 		client.Bot,
 		recipient{chatID: channelID},
 		&tb.SendOptions{
 			ParseMode: tb.ModeHTML,
 		},
 	)
-
-	return message, err
 }
 
 // https://core.telegram.org/bots/api#html-style

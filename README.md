@@ -84,6 +84,8 @@ twitter:
 
 _see [examples](https://github.com/umputun/feed-master/tree/master/_example/etc) for more details._
 
+All this command-line mode is good for - process a single feed, send a telegram message and send a tweet on each new item.
+
 ## API
 
 _See [requests.http](https://github.com/umputun/feed-master/blob/master/requests.http)_
