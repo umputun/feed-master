@@ -99,10 +99,10 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		return nil, err
 	}
 	defer os.Remove(tmpFile.Name())
-	if _, err = io.Copy(tmpFile, httpBody); err != nil {
+	if _, err := io.Copy(tmpFile, httpBody); err != nil {
 		return nil, err
 	}
-	if err = tmpFile.Close(); err != nil {
+	if err := tmpFile.Close(); err != nil {
 		return nil, err
 	}
 
