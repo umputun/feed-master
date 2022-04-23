@@ -45,6 +45,7 @@ func (item Item) DownloadAudio(timeout time.Duration) (io.ReadCloser, error) {
 			return errors.Wrapf(err, "can't download %s", item.Enclosure.URL)
 		}
 		if resp.StatusCode != http.StatusOK {
+			_ = resp.Body.Close()
 			return fmt.Errorf("incorrect status code %s for %s", resp.Status, item.Enclosure.URL)
 		}
 		res = resp.Body
