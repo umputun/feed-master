@@ -16,19 +16,32 @@ import (
 	"golang.org/x/net/html"
 	tb "gopkg.in/tucnak/telebot.v2"
 
-	"github.com/umputun/feed-master/app/duration"
 	"github.com/umputun/feed-master/app/feed"
 )
+
+//go:generate moq -out mocks/tg_sender.go -pkg mocks -skip-ensure -fmt goimports . TelegramSender
+//go:generate moq -out mocks/dutation.go -pkg mocks -skip-ensure -fmt goimports . DurationService
 
 // TelegramClient client
 type TelegramClient struct {
 	Bot             *tb.Bot
 	Timeout         time.Duration
-	DurationService *duration.Service
+	DurationService DurationService
+	TelegramSender  TelegramSender
+}
+
+// TelegramSender is the interface for sending messages to telegram
+type TelegramSender interface {
+	Send(tb.Audio, *tb.Bot, tb.Recipient, *tb.SendOptions) (*tb.Message, error)
+}
+
+// DurationService is the interface for reading duration from files
+type DurationService interface {
+	File(fname string) int
 }
 
 // NewTelegramClient init telegram client
-func NewTelegramClient(token, apiURL string, timeout time.Duration, durSvc *duration.Service) (*TelegramClient, error) {
+func NewTelegramClient(token, apiURL string, timeout time.Duration, ds DurationService, tgs TelegramSender) (*TelegramClient, error) {
 	log.Printf("[INFO] create telegram client for %s, timeout: %s", apiURL, timeout)
 	if timeout == 0 {
 		timeout = time.Second * 60
@@ -53,7 +66,8 @@ func NewTelegramClient(token, apiURL string, timeout time.Duration, durSvc *dura
 	result := TelegramClient{
 		Bot:             bot,
 		Timeout:         timeout,
-		DurationService: durSvc,
+		DurationService: ds,
+		TelegramSender:  tgs,
 	}
 	return &result, err
 }
@@ -100,11 +114,21 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		return nil, err
 	}
 	defer os.Remove(tmpFile.Name())
-	if _, err := io.Copy(tmpFile, httpBody); err != nil {
+
+	if _, err = io.Copy(tmpFile, httpBody); err != nil {
 		return nil, err
 	}
-	if err := tmpFile.Close(); err != nil {
-		return nil, err
+	if closeErr := tmpFile.Close(); closeErr != nil {
+		return nil, closeErr
+	}
+
+	var dur int
+	if item.Duration != "" { // item may have duration published, if not, try to get it from mp3 file
+		if dur, err = strconv.Atoi(item.Duration); err != nil {
+			dur = client.DurationService.File(tmpFile.Name())
+		}
+	} else {
+		dur = client.DurationService.File(tmpFile.Name())
 	}
 
 	audio := tb.Audio{
@@ -114,16 +138,10 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		Caption:   client.getMessageHTML(item, htmlMessageParams{TrimCaption: true}),
 		Title:     item.Title,
 		Performer: item.Author,
-		Duration:  client.DurationService.File(tmpFile.Name()),
+		Duration:  dur,
 	}
 
-	return audio.Send(
-		client.Bot,
-		recipient{chatID: channelID},
-		&tb.SendOptions{
-			ParseMode: tb.ModeHTML,
-		},
-	)
+	return client.TelegramSender.Send(audio, client.Bot, recipient{chatID: channelID}, &tb.SendOptions{ParseMode: tb.ModeHTML})
 }
 
 // https://core.telegram.org/bots/api#html-style
@@ -182,4 +200,12 @@ func CropText(inp string, max int) string {
 		return CleanText(inp, max)
 	}
 	return inp
+}
+
+// TelegramSenderImpl is a TelegramSender implementation that sends messages to Telegram for real
+type TelegramSenderImpl struct{}
+
+// Send sends a message to Telegram
+func (tg *TelegramSenderImpl) Send(audio tb.Audio, bot *tb.Bot, rcp tb.Recipient, opts *tb.SendOptions) (*tb.Message, error) {
+	return audio.Send(bot, rcp, opts)
 }
