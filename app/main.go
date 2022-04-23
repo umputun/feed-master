@@ -80,7 +80,7 @@ func main() {
 	procStore := &proc.BoltDB{DB: db}
 
 	telegramNotif, err := proc.NewTelegramClient(opts.TelegramToken, opts.TelegramServer, opts.TelegramTimeout,
-		&duration.Service{})
+		&duration.Service{}, &proc.TelegramSenderImpl{})
 	if err != nil {
 		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", opts.TelegramToken, err)
 	}
