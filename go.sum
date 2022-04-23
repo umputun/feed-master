@@ -42,6 +42,8 @@ github.com/go-pkgz/lcw v0.8.1 h1:Bpt2yYTE1J8hIhz8tjdm1WPOgH13eo5iTNsXyop7cMQ=
 github.com/go-pkgz/lcw v0.8.1/go.mod h1:Xw0/ZfApATgbjVPYRZO4XHdWyxAjErDWDWJ7TLlw1Vc=
 github.com/go-pkgz/lgr v0.10.4 h1:l7qyFjqEZgwRgaQQSEp6tve4A3OU80VrfzpvtEX8ngw=
 github.com/go-pkgz/lgr v0.10.4/go.mod h1:CD0s1z6EFpIUplV067gitF77tn25JItzwHNKAPqeCF0=
+github.com/go-pkgz/repeater v1.1.3 h1:q6+JQF14ESSy28Dd7F+wRelY4F+41HJ0LEy/szNnMiE=
+github.com/go-pkgz/repeater v1.1.3/go.mod h1:hVTavuO5x3Gxnu8zW7d6sQBfAneKV8X2FjU48kGfpKw=
 github.com/go-pkgz/rest v1.14.0 h1:brDLCzIGoe0IiUZqRFpsiCVM9m3L88A7z62qS0V9Yfk=
 github.com/go-pkgz/rest v1.14.0/go.mod h1:KUWAqbDteYGS/CiXftomQsKjtEOifXsJ36Ka0skYbmk=
 github.com/go-pkgz/syncs v1.2.0 h1:aiizQFILlMZ4KtRNaYLcDffRbUQZH9fclsgr5KybWyY=
@@ -87,6 +89,7 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
