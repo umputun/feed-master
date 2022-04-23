@@ -20,7 +20,7 @@ import (
 )
 
 //go:generate moq -out mocks/tg_sender.go -pkg mocks -skip-ensure -fmt goimports . TelegramSender
-//go:generate moq -out mocks/dutation.go -pkg mocks -skip-ensure -fmt goimports . DurationService
+//go:generate moq -out mocks/duration.go -pkg mocks -skip-ensure -fmt goimports . DurationService
 
 // TelegramClient client
 type TelegramClient struct {
