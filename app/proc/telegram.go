@@ -108,6 +108,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		return nil, err
 	}
 	defer httpBody.Close()
+
 	// download audio to the temp file
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "feed-master-*.mp3")
 	if err != nil {

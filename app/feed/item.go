@@ -1,6 +1,7 @@
 package feed
 
 import (
+	"fmt"
 	"html/template"
 	"io"
 	"net/http"
@@ -35,6 +36,9 @@ func (item Item) DownloadAudio(timeout time.Duration) (io.ReadCloser, error) {
 	resp, err := clientHTTP.Get(item.Enclosure.URL)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("incorrect status code %s for %s", resp.Status, item.Enclosure.URL)
 	}
 
 	return resp.Body, nil
