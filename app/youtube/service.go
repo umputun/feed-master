@@ -219,11 +219,11 @@ func (s *Service) procChannels(ctx context.Context) error {
 				break
 			}
 
-			isRelevant, err := s.isRelevant(entry, feedInfo)
+			isAllowed, err := s.isAllowed(entry, feedInfo)
 			if err != nil {
 				return errors.Wrapf(err, "failed to check if entry %s is relevant", entry.VideoID)
 			}
-			if !isRelevant {
+			if !isAllowed {
 				allStats.ignored++
 				continue
 			}
@@ -363,8 +363,8 @@ func (s *Service) isNew(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
 	return true, nil
 }
 
-// isRelevant checks if entry matches all filters for the channel feed
-func (s *Service) isRelevant(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
+// isAllowed checks if entry matches all filters for the channel feed
+func (s *Service) isAllowed(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
 	matchedIncludeFilter := true
 	if fi.Filter.Include != "" {
 		matchedIncludeFilter, err = regexp.MatchString(fi.Filter.Include, entry.Title)
