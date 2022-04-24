@@ -56,7 +56,7 @@ youtube: # youtube configuration, optional
   channels: # list of youtube channels to download and process
       # id: channel or playlist id, name: channel or playlist name, type: "channel" or "playlist", 
       # lang: language of the channel, keep: override default keep value
-      # filter: criteria to include and exclude videos
+      # filter: criteria to include and exclude videos, can be regex
       - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь", lang: "ru-ru"}
       - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel", lang: "ru-ru", "keep": 10}
       - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru", filter: {include: "ТОЧКА", exclude: "STAR'цы Live"}} 
