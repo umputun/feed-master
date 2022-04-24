@@ -41,7 +41,7 @@ func (p *Processor) Do() {
 			for _, src := range fm.Sources {
 				name, src, fm := name, src, fm
 				swg.Go(func(context.Context) {
-					p.feed(name, src.URL, fm.TelegramChannel, p.Conf.System.MaxItems, fm.Filter)
+					p.processFeed(name, src.URL, fm.TelegramChannel, p.Conf.System.MaxItems, fm.Filter)
 				})
 			}
 			// keep up to MaxKeepInDB items in bucket
@@ -59,7 +59,7 @@ func (p *Processor) Do() {
 	}
 }
 
-func (p *Processor) feed(name, url, telegramChannel string, max int, filter config.Filter) {
+func (p *Processor) processFeed(name, url, telegramChannel string, max int, filter config.Filter) {
 	rss, err := feed.Parse(url)
 	if err != nil {
 		log.Printf("[WARN] failed to parse %s, %v", url, err)
