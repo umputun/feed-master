@@ -55,10 +55,11 @@ youtube: # youtube configuration, optional
   rss_location: ./var/rss # location for generated youtube channel's RSS
   channels: # list of youtube channels to download and process
       # id: channel or playlist id, name: channel or playlist name, type: "channel" or "playlist", 
-      # lang: language of the channel, keep: override default keep value 
+      # lang: language of the channel, keep: override default keep value
+      # filter: criteria to include and exclude videos
       - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь", lang: "ru-ru"}
       - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel", lang: "ru-ru", "keep": 10}
-      - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru"} 
+      - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru", filter: {include: "ТОЧКА", exclude: "STAR'цы Live"}} 
 
 system: # system configuration
   update: 1m # update interval for checking source feeds

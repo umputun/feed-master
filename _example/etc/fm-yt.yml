@@ -23,7 +23,7 @@ youtube:
   channels:
   - {id: UCWAIvx2yYLK_xTYD4F2mUNw, name: "Живой Гвоздь", lang: "ru-ru"}
   - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel", lang: "ru-ru"}
-  - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru"}
+  - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru", filter: {include: "ТОЧКА", exclude: "STAR'цы Live"}}
 
 system:
   update: 1m
