@@ -34,15 +34,14 @@ type Item struct {
 }
 
 // DownloadAudio return httpBody for Item's Enclosure.URL
-func (item Item) DownloadAudio(timeout time.Duration) (io.ReadCloser, error) {
+func (item Item) DownloadAudio(timeout time.Duration) (res io.ReadCloser, err error) {
 	clientHTTP := &http.Client{Timeout: timeout}
 
-	var res io.ReadCloser
 	rp := repeater.NewDefault(10, time.Second)
-	err := rp.Do(context.Background(), func() error {
-		resp, err := clientHTTP.Get(item.Enclosure.URL)
-		if err != nil {
-			return errors.Wrapf(err, "can't download %s", item.Enclosure.URL)
+	err = rp.Do(context.Background(), func() error {
+		resp, e := clientHTTP.Get(item.Enclosure.URL)
+		if e != nil {
+			return errors.Wrapf(e, "can't download %s", item.Enclosure.URL)
 		}
 		if resp.StatusCode != http.StatusOK {
 			_ = resp.Body.Close()
