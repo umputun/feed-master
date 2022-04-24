@@ -224,6 +224,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				return errors.Wrapf(err, "failed to check if entry %s is relevant", entry.VideoID)
 			}
 			if !isAllowed {
+				log.Printf("[DEBUG] skipping filtered %s", entry.String())
 				allStats.ignored++
 				continue
 			}
@@ -381,10 +382,7 @@ func (s *Service) isAllowed(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error
 		}
 	}
 
-	if matchedIncludeFilter && !matchedExcludeFilter {
-		return true, nil
-	}
-	return false, nil
+	return matchedIncludeFilter && !matchedExcludeFilter, nil
 }
 
 // update sets entry file name and reset published ts
