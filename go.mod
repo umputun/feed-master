@@ -12,6 +12,7 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/go-pkgz/lcw v0.8.1
 	github.com/go-pkgz/lgr v0.10.4
+	github.com/go-pkgz/repeater v1.1.3
 	github.com/go-pkgz/rest v1.14.0
 	github.com/go-pkgz/syncs v1.2.0
 	github.com/google/uuid v1.3.0

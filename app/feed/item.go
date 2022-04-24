@@ -1,12 +1,16 @@
 package feed
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"io"
 	"net/http"
 	"path"
 	"time"
+
+	"github.com/go-pkgz/repeater"
+	"github.com/pkg/errors"
 )
 
 // Item for rss
@@ -33,15 +37,22 @@ type Item struct {
 func (item Item) DownloadAudio(timeout time.Duration) (io.ReadCloser, error) {
 	clientHTTP := &http.Client{Timeout: timeout}
 
-	resp, err := clientHTTP.Get(item.Enclosure.URL)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("incorrect status code %s for %s", resp.Status, item.Enclosure.URL)
-	}
+	var res io.ReadCloser
+	rp := repeater.NewDefault(10, time.Second)
+	err := rp.Do(context.Background(), func() error {
+		resp, err := clientHTTP.Get(item.Enclosure.URL)
+		if err != nil {
+			return errors.Wrapf(err, "can't download %s", item.Enclosure.URL)
+		}
+		if resp.StatusCode != http.StatusOK {
+			_ = resp.Body.Close()
+			return fmt.Errorf("incorrect status code %s for %s", resp.Status, item.Enclosure.URL)
+		}
+		res = resp.Body
+		return nil
+	})
 
-	return resp.Body, nil
+	return res, err
 }
 
 // GetFilename returns the filename for Item's Enclosure.URL
