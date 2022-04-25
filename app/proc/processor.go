@@ -13,6 +13,9 @@ import (
 	"github.com/umputun/feed-master/app/feed"
 )
 
+//go:generate moq -out mocks/telegram_notif.go -pkg mocks -skip-ensure -fmt goimports . TelegramNotif
+//go:generate moq -out mocks/twitter_notif.go -pkg mocks -skip-ensure -fmt goimports . TwitterNotif
+
 // TelegramNotif is interface to send messages to telegram
 type TelegramNotif interface {
 	Send(chanID string, item feed.Item) error
@@ -32,31 +35,33 @@ type Processor struct {
 }
 
 // Do activate loop of goroutine for each feed, concurrency limited by p.Conf.Concurrent
-func (p *Processor) Do() {
+func (p *Processor) Do(ctx context.Context) error {
 	log.Printf("[INFO] activate processor, feeds=%d, %+v", len(p.Conf.Feeds), p.Conf)
 
 	for {
-		swg := syncs.NewSizedGroup(p.Conf.System.Concurrent, syncs.Preemptive)
-		for name, fm := range p.Conf.Feeds {
-			for _, src := range fm.Sources {
-				name, src, fm := name, src, fm
-				swg.Go(func(context.Context) {
-					p.processFeed(name, src.URL, fm.TelegramChannel, p.Conf.System.MaxItems, fm.Filter)
-				})
-			}
-			// keep up to MaxKeepInDB items in bucket
-			if removed, err := p.Store.removeOld(name, p.Conf.System.MaxKeepInDB); err == nil {
-				if removed > 0 {
-					log.Printf("[DEBUG] removed %d from %s", removed, name)
-				}
-			} else {
-				log.Printf("[WARN] failed to remove, %v", err)
-			}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			p.processFeeds(ctx)
 		}
-		swg.Wait()
-		log.Printf("[DEBUG] refresh completed")
-		time.Sleep(p.Conf.System.UpdateInterval)
 	}
+}
+
+func (p *Processor) processFeeds(ctx context.Context) {
+	log.Printf("[DEBUG] refresh started")
+	swg := syncs.NewSizedGroup(p.Conf.System.Concurrent, syncs.Preemptive, syncs.Context(ctx))
+	for name, fm := range p.Conf.Feeds {
+		for _, src := range fm.Sources {
+			name, src, fm := name, src, fm
+			swg.Go(func(context.Context) {
+				p.processFeed(name, src.URL, fm.TelegramChannel, p.Conf.System.MaxItems, fm.Filter)
+			})
+		}
+	}
+	swg.Wait()
+	log.Printf("[DEBUG] refresh completed")
+	time.Sleep(p.Conf.System.UpdateInterval)
 }
 
 func (p *Processor) processFeed(name, url, telegramChannel string, max int, filter config.Filter) {
@@ -106,5 +111,14 @@ func (p *Processor) processFeed(name, url, telegramChannel string, max int, filt
 		if err := p.TwitterNotif.Send(item); err != nil {
 			log.Printf("[WARN] failed send twitter message, url=%s, %v", item.Enclosure.URL, err)
 		}
+	}
+
+	// keep up to MaxKeepInDB items in bucket
+	if removed, err := p.Store.removeOld(name, p.Conf.System.MaxKeepInDB); err == nil {
+		if removed > 0 {
+			log.Printf("[DEBUG] removed %d from %s", removed, name)
+		}
+	} else {
+		log.Printf("[WARN] failed to remove, %v", err)
 	}
 }
