@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-pkgz/rest"
@@ -37,25 +38,27 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 		}
 
 		tmplData := struct {
-			Items       []feed.Item
-			Name        string
-			Description string
-			Link        string
-			LastUpdate  time.Time
-			Feeds       int
-			Version     string
-			RSSLink     string
-			SourcesLink string
+			Items           []feed.Item
+			Name            string
+			Description     string
+			Link            string
+			LastUpdate      time.Time
+			SinceLastUpdate string
+			Feeds           int
+			Version         string
+			RSSLink         string
+			SourcesLink     string
 		}{
-			Items:       items,
-			Name:        s.Conf.Feeds[feedName].Title,
-			Description: s.Conf.Feeds[feedName].Description,
-			Link:        s.Conf.Feeds[feedName].Link,
-			LastUpdate:  items[0].DT.In(time.UTC),
-			Feeds:       len(s.Conf.Feeds[feedName].Sources),
-			Version:     s.Version,
-			RSSLink:     s.Conf.System.BaseURL + "/rss/" + feedName,
-			SourcesLink: s.Conf.System.BaseURL + "/feed/" + feedName + "/sources",
+			Items:           items,
+			Name:            s.Conf.Feeds[feedName].Title,
+			Description:     s.Conf.Feeds[feedName].Description,
+			Link:            s.Conf.Feeds[feedName].Link,
+			LastUpdate:      items[0].DT.In(time.UTC),
+			SinceLastUpdate: humanize.Time(items[0].DT),
+			Feeds:           len(s.Conf.Feeds[feedName].Sources),
+			Version:         s.Version,
+			RSSLink:         s.Conf.System.BaseURL + "/rss/" + feedName,
+			SourcesLink:     s.Conf.System.BaseURL + "/feed/" + feedName + "/sources",
 		}
 
 		res := bytes.NewBuffer(nil)

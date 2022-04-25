@@ -30,6 +30,9 @@ github.com/didip/tollbooth/v6/limiter
 # github.com/didip/tollbooth_chi v0.0.0-20200828173446-a7173453ea21
 ## explicit; go 1.14
 github.com/didip/tollbooth_chi
+# github.com/dustin/go-humanize v1.0.0
+## explicit
+github.com/dustin/go-humanize
 # github.com/dustin/go-jsonpointer v0.0.0-20160814072949-ba0abeacc3dc
 ## explicit
 github.com/dustin/go-jsonpointer

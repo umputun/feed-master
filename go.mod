@@ -8,6 +8,7 @@ require (
 	github.com/denisbrodbeck/striphtmltags v6.6.6+incompatible
 	github.com/didip/tollbooth/v6 v6.1.2
 	github.com/didip/tollbooth_chi v0.0.0-20200828173446-a7173453ea21
+	github.com/dustin/go-humanize v1.0.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/render v1.0.1
 	github.com/go-pkgz/lcw v0.8.1
