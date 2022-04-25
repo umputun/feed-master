@@ -1,10 +1,11 @@
 feeds:
   yt-example:
     title: Some cool channels
-    description: an example of youtube-based podcas
+    description: an example of youtube-based podcast
     link: http://example.com
     language: "ru-ru"
     image: images/yt-example.png
+    telegram_channel: udev_test
     sources:
       - name: Точка
         url: http://localhost:8080/yt/rss/PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd
