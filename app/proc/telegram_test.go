@@ -2,6 +2,10 @@ package proc
 
 import (
 	"html/template"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -9,14 +13,16 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/umputun/feed-master/app/duration"
 	tb "gopkg.in/tucnak/telebot.v2"
+
+	"github.com/umputun/feed-master/app/duration"
+	"github.com/umputun/feed-master/app/proc/mocks"
 
 	"github.com/umputun/feed-master/app/feed"
 )
 
 func TestNewTelegramClientIfTokenEmpty(t *testing.T) {
-	client, err := NewTelegramClient("", "", 0, &duration.Service{})
+	client, err := NewTelegramClient("", "", 0, &duration.Service{}, &TelegramSenderImpl{})
 	assert.NoError(t, err)
 	assert.Nil(t, client.Bot)
 }
@@ -34,7 +40,7 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 		i := i
 		tt := tt
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			client, err := NewTelegramClient("", "", tt.timeout, &duration.Service{})
+			client, err := NewTelegramClient("", "", tt.timeout, &duration.Service{}, &TelegramSenderImpl{})
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expected, client.Timeout)
 		})
@@ -42,7 +48,7 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 }
 
 func TestSendIfBotIsNil(t *testing.T) {
-	client, err := NewTelegramClient("", "", 0, &duration.Service{})
+	client, err := NewTelegramClient("", "", 0, &duration.Service{}, &TelegramSenderImpl{})
 	require.NoError(t, err)
 	err = client.Send("@channel", feed.Item{})
 	assert.NoError(t, err)
@@ -165,13 +171,58 @@ func TestGetMessageHTML(t *testing.T) {
 }
 
 func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
-	cases := []string{"channel", "@channel"}
-	expected := "@channel"
-
-	for i, channelID := range cases {
+	testData := []struct {
+		channel  string
+		expected string
+	}{
+		{channel: "channel", expected: "@channel"},
+		{channel: "@channel", expected: "@channel"},
+		{channel: "107401628", expected: "107401628"}, // numeric ChanID should be preserved
+		{channel: "-1001484738202", expected: "-1001484738202"},
+	}
+	for i, entry := range testData {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			got := recipient{chatID: channelID} // nolint
-			assert.Equal(t, expected, got.Recipient())
+			got := recipient{chatID: entry.channel} // nolint
+			assert.Equal(t, entry.expected, got.Recipient())
 		})
 	}
+}
+
+func TestTelegramClient_sendAudio(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Logf("req: %+v", r)
+		require.Equal(t, "GET", r.Method)
+		fh, err := os.Open("testdata/audio.mp3")
+		require.NoError(t, err)
+		defer fh.Close() //nolint
+		_, err = io.Copy(w, fh)
+		assert.NoError(t, err)
+	}))
+	defer ts.Close()
+
+	dur := &mocks.DurationServiceMock{
+		FileFunc: func(fname string) int {
+			return 12345
+		},
+	}
+
+	snd := &mocks.TelegramSenderMock{
+		SendFunc: func(audio tb.Audio, bot *tb.Bot, recipient tb.Recipient, sendOptions *tb.SendOptions) (*tb.Message, error) {
+			return nil, nil
+		},
+	}
+
+	client := TelegramClient{DurationService: dur, TelegramSender: snd}
+	_, err := client.sendAudio("chan1", feed.Item{Duration: "5678", Enclosure: feed.Enclosure{URL: ts.URL}})
+	require.NoError(t, err)
+
+	assert.Equal(t, 1, len(snd.SendCalls()))
+	assert.Equal(t, 0, len(dur.FileCalls()), "duration service is not used because item has duration")
+	assert.Equal(t, 5678, snd.SendCalls()[0].Audio.Duration)
+
+	_, err = client.sendAudio("chan2", feed.Item{Enclosure: feed.Enclosure{URL: ts.URL}})
+	require.NoError(t, err)
+	assert.Equal(t, 2, len(snd.SendCalls()))
+	assert.Equal(t, 1, len(dur.FileCalls()), "duration service used because item has no duration")
+	assert.Equal(t, 12345, snd.SendCalls()[1].Audio.Duration)
 }

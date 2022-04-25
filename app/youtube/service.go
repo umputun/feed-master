@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -46,6 +47,13 @@ type FeedInfo struct {
 	Type     ytfeed.Type `yaml:"type"`
 	Keep     int         `yaml:"keep"`
 	Language string      `yaml:"lang"`
+	Filter   FeedFilter  `yaml:"filter"`
+}
+
+// FeedFilter contains filter criteria for the feed
+type FeedFilter struct {
+	Include string `yaml:"include"`
+	Exclude string `yaml:"exclude"`
 }
 
 // DownloaderService is an interface for downloading audio from youtube
@@ -211,6 +219,16 @@ func (s *Service) procChannels(ctx context.Context) error {
 				break
 			}
 
+			isAllowed, err := s.isAllowed(entry, feedInfo)
+			if err != nil {
+				return errors.Wrapf(err, "failed to check if entry %s is relevant", entry.VideoID)
+			}
+			if !isAllowed {
+				log.Printf("[DEBUG] skipping filtered %s", entry.String())
+				allStats.ignored++
+				continue
+			}
+
 			ok, err := s.isNew(entry, feedInfo)
 			if err != nil {
 				return errors.Wrapf(err, "failed to check if entry %s exists", entry.VideoID)
@@ -344,6 +362,27 @@ func (s *Service) isNew(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+// isAllowed checks if entry matches all filters for the channel feed
+func (s *Service) isAllowed(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
+	matchedIncludeFilter := true
+	if fi.Filter.Include != "" {
+		matchedIncludeFilter, err = regexp.MatchString(fi.Filter.Include, entry.Title)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to check if entry %s matches include filter", entry.VideoID)
+		}
+	}
+
+	matchedExcludeFilter := false
+	if fi.Filter.Exclude != "" {
+		matchedExcludeFilter, err = regexp.MatchString(fi.Filter.Exclude, entry.Title)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to check if entry %s matches exclude filter", entry.VideoID)
+		}
+	}
+
+	return matchedIncludeFilter && !matchedExcludeFilter, nil
 }
 
 // update sets entry file name and reset published ts

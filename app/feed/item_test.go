@@ -45,7 +45,7 @@ func TestDownloadAudioIfRequestError(t *testing.T) {
 	got, err := item.DownloadAudio(time.Minute)
 
 	assert.Nil(t, got)
-	assert.EqualError(t, err, fmt.Sprintf("Get %q: EOF", ts.URL))
+	assert.EqualError(t, err, fmt.Sprintf("can't download %s: Get %q: EOF", ts.URL, ts.URL))
 }
 
 func TestDownloadAudio(t *testing.T) {

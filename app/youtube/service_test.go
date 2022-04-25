@@ -112,6 +112,100 @@ func TestService_Do(t *testing.T) {
 }
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
+func TestService_DoIsAllowedFilter(t *testing.T) {
+
+	chans := &mocks.ChannelServiceMock{
+		GetFunc: func(ctx context.Context, chanID string, feedType ytfeed.Type) ([]ytfeed.Entry, error) {
+			return []ytfeed.Entry{
+				{ChannelID: chanID, VideoID: "vid1", Title: "Prefix1: title1", Published: time.Now()},
+				{ChannelID: chanID, VideoID: "vid2", Title: "Prefix2: title2", Published: time.Now()},
+				{ChannelID: chanID, VideoID: "vid3", Title: "Prefix2: title3", Published: time.Now()},
+			}, nil
+		},
+	}
+	downloader := &mocks.DownloaderServiceMock{
+		GetFunc: func(ctx context.Context, id string, fname string) (string, error) {
+			return "/tmp/" + fname + ".mp3", nil
+		},
+	}
+
+	duration := &mocks.DurationServiceMock{
+		FileFunc: func(fname string) int {
+			return 1234
+		},
+	}
+
+	tmpfile := filepath.Join(os.TempDir(), "test.db")
+	defer os.Remove(tmpfile)
+
+	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+	require.NoError(t, err)
+	boltStore := &store.BoltDB{DB: db}
+	svc := Service{
+		Feeds: []FeedInfo{
+			{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel, Filter: FeedFilter{Include: "Prefix2", Exclude: "title3"}},
+			{ID: "channel2", Name: "name2", Type: ytfeed.FTChannel, Filter: FeedFilter{Include: "^\\w{7}:", Exclude: "\\w+3$"}},
+		},
+		Downloader:      downloader,
+		ChannelService:  chans,
+		Store:           boltStore,
+		CheckDuration:   time.Millisecond * 500,
+		KeepPerChannel:  10,
+		RSSFileStore:    RSSFileStore{Enabled: true, Location: "/tmp"},
+		DurationService: duration,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*900)
+	defer cancel()
+
+	err = svc.Do(ctx)
+	assert.EqualError(t, err, "context deadline exceeded")
+
+	require.Equal(t, 4, len(chans.GetCalls()))
+	assert.Equal(t, "channel1", chans.GetCalls()[0].ChanID)
+	assert.Equal(t, ytfeed.FTChannel, chans.GetCalls()[0].FeedType)
+	assert.Equal(t, "channel2", chans.GetCalls()[1].ChanID)
+	assert.Equal(t, ytfeed.FTChannel, chans.GetCalls()[1].FeedType)
+	assert.Equal(t, "channel1", chans.GetCalls()[2].ChanID)
+	assert.Equal(t, "channel2", chans.GetCalls()[3].ChanID)
+
+	res, err := boltStore.Load("channel1", 10)
+	require.NoError(t, err)
+	assert.Equal(t, 1, len(res), "one entry for channel1, skipped irrelevant ones")
+	assert.Equal(t, "vid2", res[0].VideoID)
+
+	res, err = boltStore.Load("channel2", 10)
+	require.NoError(t, err)
+	assert.Equal(t, 2, len(res), "two entries for channel2, skipped irrelevant one")
+	assert.Equal(t, "vid2", res[0].VideoID)
+	assert.Equal(t, "vid1", res[1].VideoID)
+
+	require.Equal(t, 3, len(downloader.GetCalls()))
+	require.Equal(t, "vid2", downloader.GetCalls()[0].ID)
+	require.Equal(t, "vid1", downloader.GetCalls()[1].ID)
+	require.Equal(t, "vid2", downloader.GetCalls()[2].ID)
+	require.True(t, downloader.GetCalls()[0].Fname != "")
+
+	rssData, err := os.ReadFile("/tmp/channel1.xml")
+	require.NoError(t, err)
+	t.Logf("%s", string(rssData))
+	assert.Contains(t, string(rssData), "<guid>channel1::vid2</guid>")
+	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
+
+	rssData, err = os.ReadFile("/tmp/channel2.xml")
+	require.NoError(t, err)
+	t.Logf("%s", string(rssData))
+	assert.Contains(t, string(rssData), "<guid>channel2::vid2</guid>")
+	assert.Contains(t, string(rssData), "<guid>channel2::vid1</guid>")
+	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
+
+	require.Equal(t, 3, len(duration.FileCalls()))
+	assert.Equal(t, "/tmp/4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3", duration.FileCalls()[0].Fname)
+	assert.Equal(t, "/tmp/3be877c750abb87daee80c005fe87e7a3f824fed.mp3", duration.FileCalls()[1].Fname)
+	assert.Equal(t, "/tmp/648f79b3a05ececb8a37600aa0aee332f0374e01.mp3", duration.FileCalls()[2].Fname)
+}
+
+// nolint:dupl // test if very similar to TestService_RSSFeed
 func TestService_RSSFeed(t *testing.T) {
 	storeSvc := &mocks.StoreServiceMock{
 		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
