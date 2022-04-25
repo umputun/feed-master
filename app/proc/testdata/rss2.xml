@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+  xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+  <channel>
+    <title>Радио-Т</title>
+    <link>https://radio-t.com</link>
+    <language>ru</language>
+    <copyright>Creative Commons - Attribution, Noncommercial, No Derivative Works 3.0 License.
+    </copyright>
+    <itunes:author>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:author>
+    <itunes:subtitle>Еженедельные импровизации на хай–тек темы</itunes:subtitle>
+    <description>Разговоры на темы хайтек, высоких компьютерных технологий, гаджетов, облаков,
+      программирования и прочего интересного из мира ИТ.
+    </description>
+    <itunes:explicit>no</itunes:explicit>
+
+    <itunes:image href="https://radio-t.com/images/cover.jpg"/>
+
+    <itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords>
+
+    <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="self" type="application/rss+xml"
+      href="http://feeds.rucast.net/radio-t"/>
+    <feedburner:info xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0" uri="radio-t"/>
+    <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="hub"
+      href="http://pubsubhubbub.appspot.com/"/>
+    <media:copyright>Creative Commons - Attribution, Noncommercial, No Derivative Works 3.0
+      License.
+    </media:copyright>
+    <media:thumbnail url="https://radio-t.com/images/cover.jpg"/>
+    <media:keywords>hitech,russian,radiot,tech,news,радио</media:keywords>
+    <media:category scheme="http://www.itunes.com/dtds/podcast-1.0.dtd">Technology/Tech News
+    </media:category>
+    <media:category scheme="http://www.itunes.com/dtds/podcast-1.0.dtd">Technology/Gadgets
+    </media:category>
+    <itunes:owner>
+      <itunes:email>podcast@radio-t.com</itunes:email>
+      <itunes:name>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:name>
+    </itunes:owner>
+    <itunes:summary>Еженедельные импровизации на хай–тек темы</itunes:summary>
+    <itunes:category text="Technology">
+      <itunes:category text="Tech News"/>
+    </itunes:category>
+    <itunes:category text="Technology">
+      <itunes:category text="Gadgets"/>
+    </itunes:category>
+
+    <item>
+      <title>Радио-Т 801</title>
+      <description><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt801.jpg" alt=""></p>
+<p><em>Темы</em><ul>
+<li><a href="https://habr.com/ru/company/ruvds/blog/659499/">10 причин любить Рунет</a> - <em>00:02:52</em>.</li>
+<li><a href="https://www.zeditor.app/">Zas Editor</a> - <em>00:46:14</em>.</li>
+<li><a href="https://www.remotion.com/">Remotion – виртуальный офис для хипстеров</a> - <em>01:06:20</em>.</li>
+<li><a href="https://www.warp.dev/?ref=showhn">Warp - терминал 21 века</a> - <em>01:26:35</em>.</li>
+<li><a href="https://radio-t.com/p/2022/04/05/prep-801/">Темы слушателей</a> - <em>01:55:31</em>.</li>
+</ul></p>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast801.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-801.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast801.mp3" preload="none"></audio>]]></description>
+      <link>https://radio-t.com/p/2022/04/09/podcast-801/</link>
+      <guid>https://radio-t.com/p/2022/04/09//podcast-801/</guid>
+      <pubDate>Sat, 09 Apr 2022 17:51:21 EST</pubDate>
+      <itunes:author>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:author>
+      <itunes:summary><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt801.jpg" alt=""></p>
+<ul>
+<li><a href="https://habr.com/ru/company/ruvds/blog/659499/">10 причин любить Рунет</a> - <em>00:02:52</em>.</li>
+<li><a href="https://www.zeditor.app/">Zas Editor</a> - <em>00:46:14</em>.</li>
+<li><a href="https://www.remotion.com/">Remotion – виртуальный офис для хипстеров</a> - <em>01:06:20</em>.</li>
+<li><a href="https://www.warp.dev/?ref=showhn">Warp - терминал 21 века</a> - <em>01:26:35</em>.</li>
+<li><a href="https://radio-t.com/p/2022/04/05/prep-801/">Темы слушателей</a> - <em>01:55:31</em>.</li>
+</ul>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast801.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-801.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast801.mp3" preload="none"></audio>]]></itunes:summary>
+      <itunes:image href="https://radio-t.com/images/radio-t/rt801.jpg"/>
+      <enclosure url="http://cdn.radio-t.com/rt_podcast801.mp3" type="audio/mp3"
+        length="131744428"/>
+      <author>podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)</author>
+      <media:content url="http://cdn.radio-t.com/rt_podcast801.mp3" fileSize="131744428"
+        type="audio/mp3"/>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:subtitle>Подкаст выходного дня - импровизации на темы высоких технологий
+      </itunes:subtitle>
+      <itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords>
+    </item>
+
+    <item>
+      <title>Радио-Т 800</title>
+      <description><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt800.jpg" alt=""></p>
+<p><em>Темы</em><ul>
+<li><a href="https://lepiter.io:443/feenk/developers-spend-most-of-their-time-figuri-9q25taswlbzjc5rsufndeu0py/">Разработчики тратят время на познание</a> - <em>00:03:24</em>.</li>
+<li><a href="https://www.praetorian.com/blog/spring-core-jdk9-rce/">Spring Core на JDK9+ уязвим</a> - <em>00:30:22</em>.</li>
+<li><a href="https://github.blog/2022-03-31-how-github-does-take-home-technical-interviews/">GitHub с его подходам к тестовым заданиям</a> - <em>00:36:19</em>.</li>
+<li><a href="https://www.nulliq.dev/posts/battleship/">Battleship :: nulliq</a> - <em>00:48:21</em>.</li>
+<li><a href="http://www.lupinia.net/writing/tech/scammed.htm">Специалиста по разводам смогли обмануть</a> - <em>00:55:12</em>.</li>
+<li><a href="https://blognot.co/61150/">За этим почти пришли</a> - <em>01:13:58</em>.</li>
+<li><a href="https://fly.io/blog/a-foolish-consistency/">Как Consul им все сломал</a> - <em>01:26:03</em>.</li>
+<li><a href="https://blog.uptrace.dev/posts/go-context-timeout.html">Go Context и его вред</a> - <em>01:44:49</em>.</li>
+<li><a href="https://radio-t.com/p/2022/03/29/prep-800/">Темы слушателей</a> - <em>01:53:48</em>.</li>
+</ul></p>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast800.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-800.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast800.mp3" preload="none"></audio>]]></description>
+      <link>https://radio-t.com/p/2022/04/02/podcast-800/</link>
+      <guid>https://radio-t.com/p/2022/04/02//podcast-800/</guid>
+      <pubDate>Sat, 02 Apr 2022 19:05:55 EST</pubDate>
+      <itunes:author>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:author>
+      <itunes:summary><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt800.jpg" alt=""></p>
+<ul>
+<li><a href="https://lepiter.io:443/feenk/developers-spend-most-of-their-time-figuri-9q25taswlbzjc5rsufndeu0py/">Разработчики тратят время на познание</a> - <em>00:03:24</em>.</li>
+<li><a href="https://www.praetorian.com/blog/spring-core-jdk9-rce/">Spring Core на JDK9+ уязвим</a> - <em>00:30:22</em>.</li>
+<li><a href="https://github.blog/2022-03-31-how-github-does-take-home-technical-interviews/">GitHub с его подходам к тестовым заданиям</a> - <em>00:36:19</em>.</li>
+<li><a href="https://www.nulliq.dev/posts/battleship/">Battleship :: nulliq</a> - <em>00:48:21</em>.</li>
+<li><a href="http://www.lupinia.net/writing/tech/scammed.htm">Специалиста по разводам смогли обмануть</a> - <em>00:55:12</em>.</li>
+<li><a href="https://blognot.co/61150/">За этим почти пришли</a> - <em>01:13:58</em>.</li>
+<li><a href="https://fly.io/blog/a-foolish-consistency/">Как Consul им все сломал</a> - <em>01:26:03</em>.</li>
+<li><a href="https://blog.uptrace.dev/posts/go-context-timeout.html">Go Context и его вред</a> - <em>01:44:49</em>.</li>
+<li><a href="https://radio-t.com/p/2022/03/29/prep-800/">Темы слушателей</a> - <em>01:53:48</em>.</li>
+</ul>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast800.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-800.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast800.mp3" preload="none"></audio>]]></itunes:summary>
+      <itunes:image href="https://radio-t.com/images/radio-t/rt800.jpg"/>
+      <enclosure url="http://cdn.radio-t.com/rt_podcast800.mp3" type="audio/mp3"
+        length="146253965"/>
+      <author>podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)</author>
+      <media:content url="http://cdn.radio-t.com/rt_podcast800.mp3" fileSize="146253965"
+        type="audio/mp3"/>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:subtitle>Подкаст выходного дня - импровизации на темы высоких технологий
+      </itunes:subtitle>
+      <itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords>
+    </item>
+
+    <item>
+      <title>Радио-Т 799</title>
+      <description><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt799.jpg" alt=""></p>
+<p><em>Темы</em><ul>
+<li><a href="https://www.opennet.ru/opennews/art.shtml?num=56899">Выпуск Java SE 18</a> - <em>00:03:43</em>.</li>
+<li><a href="https://habr.com/ru/post/656979/">Чем хороший программист отличается от плохого</a> - <em>00:22:08</em>.</li>
+<li><a href="https://www.vice.com/en/article/z3n5e9/russian-internet-lantern">Попытка врагов создать не ломаемый интернет</a> - <em>00:53:05</em>.</li>
+<li><a href="https://habr.com/ru/company/getmeit/blog/657083/">Как правильно откладывать на завтра</a> - <em>01:03:00</em>.</li>
+<li><a href="https://www.opennet.ru/opennews/art.shtml?num=56861">Из Debian ушёл мэйнтейнер, несогласный с новой моделью поведения в сообществе</a> - <em>01:19:28</em>.</li>
+<li><a href="https://github.blog/2022-03-23-an-update-on-recent-service-disruptions/">Как лежал GitHub</a> - <em>01:31:30</em>.</li>
+<li><a href="https://render.com/blog/redis">Render Redis</a> - <em>01:56:23</em>.</li>
+<li><a href="https://www.theregister.com/2022/03/23/github_for_you/">GitHub поменял стену</a> - <em>01:59:44</em>.</li>
+<li><a href="https://about.gitlab.com/blog/2022/03/24/efficient-free-tier/">GitLab SaaS урежет бесплатное</a> - <em>02:01:11</em>.</li>
+<li><a href="https://radio-t.com/p/2022/03/22/prep-799/">Темы слушателей</a> - <em>02:04:51</em>.</li>
+</ul></p>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast799.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-799.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast799.mp3" preload="none"></audio>]]></description>
+      <link>https://radio-t.com/p/2022/03/26/podcast-799/</link>
+      <guid>https://radio-t.com/p/2022/03/26//podcast-799/</guid>
+      <pubDate>Sat, 26 Mar 2022 19:07:00 EST</pubDate>
+      <itunes:author>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:author>
+      <itunes:summary><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt799.jpg" alt=""></p>
+<ul>
+<li><a href="https://www.opennet.ru/opennews/art.shtml?num=56899">Выпуск Java SE 18</a> - <em>00:03:43</em>.</li>
+<li><a href="https://habr.com/ru/post/656979/">Чем хороший программист отличается от плохого</a> - <em>00:22:08</em>.</li>
+<li><a href="https://www.vice.com/en/article/z3n5e9/russian-internet-lantern">Попытка врагов создать не ломаемый интернет</a> - <em>00:53:05</em>.</li>
+<li><a href="https://habr.com/ru/company/getmeit/blog/657083/">Как правильно откладывать на завтра</a> - <em>01:03:00</em>.</li>
+<li><a href="https://www.opennet.ru/opennews/art.shtml?num=56861">Из Debian ушёл мэйнтейнер, несогласный с новой моделью поведения в сообществе</a> - <em>01:19:28</em>.</li>
+<li><a href="https://github.blog/2022-03-23-an-update-on-recent-service-disruptions/">Как лежал GitHub</a> - <em>01:31:30</em>.</li>
+<li><a href="https://render.com/blog/redis">Render Redis</a> - <em>01:56:23</em>.</li>
+<li><a href="https://www.theregister.com/2022/03/23/github_for_you/">GitHub поменял стену</a> - <em>01:59:44</em>.</li>
+<li><a href="https://about.gitlab.com/blog/2022/03/24/efficient-free-tier/">GitLab SaaS урежет бесплатное</a> - <em>02:01:11</em>.</li>
+<li><a href="https://radio-t.com/p/2022/03/22/prep-799/">Темы слушателей</a> - <em>02:04:51</em>.</li>
+</ul>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast799.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-799.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast799.mp3" preload="none"></audio>]]></itunes:summary>
+      <itunes:image href="https://radio-t.com/images/radio-t/rt799.jpg"/>
+      <enclosure url="http://cdn.radio-t.com/rt_podcast799.mp3" type="audio/mp3"
+        length="139467750"/>
+      <author>podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)</author>
+      <media:content url="http://cdn.radio-t.com/rt_podcast799.mp3" fileSize="139467750"
+        type="audio/mp3"/>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:subtitle>Подкаст выходного дня - импровизации на темы высоких технологий
+      </itunes:subtitle>
+      <itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords>
+    </item>
+
+    <item>
+      <title>Радио-Т 798</title>
+      <description><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt798.jpg" alt=""></p>
+<p><em>Темы</em><ul>
+<li><a href="https://github.com/magiblot/tvision">Turbo Vision вернулся</a> - <em>00:08:27</em>.</li>
+<li><a href="https://go.dev/blog/go1.18">Долгожданный выход Go 1.18</a> - <em>00:17:08</em>.</li>
+<li><a href="https://www.theverge.com/22981815/apple-mac-studio-m1-ultra-max-review">Первые обзоры Apple Mac Studio</a> - <em>00:37:19</em>.</li>
+<li><a href="https://www.theverge.com/22981744/apple-studio-display-5k-monitor-webcam-speakers-review">Первые обзоры Apple Studio Display</a> - <em>00:54:06</em>.</li>
+<li><a href="https://500ish.com/it-really-just-works-d359cfcdffe6?gi=61783d4acbec">Работает, но странно</a> - <em>01:10:36</em>.</li>
+<li><a href="https://r.bluethl.net/how-to-design-better-apis">Как разработать правильный API</a> - <em>01:21:48</em>.</li>
+<li><a href="https://radio-t.com/p/2022/03/15/prep-798/">Темы слушателей</a> - <em>02:19:20</em>.</li>
+</ul></p>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><em><a href="https://blognot.co/donate/">Помочь</a> Украине</em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast798.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-798.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast798.mp3" preload="none"></audio>]]></description>
+      <link>https://radio-t.com/p/2022/03/19/podcast-798/</link>
+      <guid>https://radio-t.com/p/2022/03/19//podcast-798/</guid>
+      <pubDate>Sat, 19 Mar 2022 19:35:46 EST</pubDate>
+      <itunes:author>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:author>
+      <itunes:summary><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt798.jpg" alt=""></p>
+<ul>
+<li><a href="https://github.com/magiblot/tvision">Turbo Vision вернулся</a> - <em>00:08:27</em>.</li>
+<li><a href="https://go.dev/blog/go1.18">Долгожданный выход Go 1.18</a> - <em>00:17:08</em>.</li>
+<li><a href="https://www.theverge.com/22981815/apple-mac-studio-m1-ultra-max-review">Первые обзоры Apple Mac Studio</a> - <em>00:37:19</em>.</li>
+<li><a href="https://www.theverge.com/22981744/apple-studio-display-5k-monitor-webcam-speakers-review">Первые обзоры Apple Studio Display</a> - <em>00:54:06</em>.</li>
+<li><a href="https://500ish.com/it-really-just-works-d359cfcdffe6?gi=61783d4acbec">Работает, но странно</a> - <em>01:10:36</em>.</li>
+<li><a href="https://r.bluethl.net/how-to-design-better-apis">Как разработать правильный API</a> - <em>01:21:48</em>.</li>
+<li><a href="https://radio-t.com/p/2022/03/15/prep-798/">Темы слушателей</a> - <em>02:19:20</em>.</li>
+</ul>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><em><a href="https://blognot.co/donate/">Помочь</a> Украине</em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast798.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-798.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast798.mp3" preload="none"></audio>]]></itunes:summary>
+      <itunes:image href="https://radio-t.com/images/radio-t/rt798.jpg"/>
+      <enclosure url="http://cdn.radio-t.com/rt_podcast798.mp3" type="audio/mp3"
+        length="165795810"/>
+      <author>podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)</author>
+      <media:content url="http://cdn.radio-t.com/rt_podcast798.mp3" fileSize="165795810"
+        type="audio/mp3"/>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:subtitle>Подкаст выходного дня - импровизации на темы высоких технологий
+      </itunes:subtitle>
+      <itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords>
+    </item>
+
+    <item>
+      <title>Радио-Т 797</title>
+      <description><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt797.jpg" alt=""></p>
+<p><em>Темы</em><ul>
+<li><a href="https://gizmodo.com/apple-march-2022-event-iphone-se-5g-mac-studio-1848624874?utm_source=twitter">Новинки от Apple</a> - <em>00:06:17</em>.</li>
+<li><a href="https://9to5mac.com/2022/03/11/exclusive-apple-currently-has-no-plans-to-release-a-new-larger-screen-imac/">Apple не выпустит новый и большой iMac</a> - <em>00:43:08</em>.</li>
+<li><a href="https://www.opennet.ru/opennews/art.shtml?num=56830">В РФ началось продвижение собственного корневого TLS-сертификата</a> - <em>00:56:31</em>.</li>
+<li><a href="https://github.com/datastack-net/dockerized">Dockerized </a> - <em>01:12:53</em>.</li>
+<li><a href="https://blog.jetbrains.com/blog/2022/03/11/jetbrains-statement-on-ukraine/">JetBrains закрывает оффисы</a> - <em>01:33:16</em>.</li>
+<li><a href="https://help.twitter.com/en/using-twitter/twitter-supported-browsers">Twitter теперь доступен неожиданным образом</a> - <em>01:38:57</em>.</li>
+<li><a href="https://radio-t.com/p/2022/03/08/prep-797/">Темы слушателей</a> - <em>01:40:13</em>.</li>
+</ul></p>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast797.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-797.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast797.mp3" preload="none"></audio>]]></description>
+      <link>https://radio-t.com/p/2022/03/12/podcast-797/</link>
+      <guid>https://radio-t.com/p/2022/03/12//podcast-797/</guid>
+      <pubDate>Sat, 12 Mar 2022 16:31:49 EST</pubDate>
+      <itunes:author>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:author>
+      <itunes:summary><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt797.jpg" alt=""></p>
+<ul>
+<li><a href="https://gizmodo.com/apple-march-2022-event-iphone-se-5g-mac-studio-1848624874?utm_source=twitter">Новинки от Apple</a> - <em>00:06:17</em>.</li>
+<li><a href="https://9to5mac.com/2022/03/11/exclusive-apple-currently-has-no-plans-to-release-a-new-larger-screen-imac/">Apple не выпустит новый и большой iMac</a> - <em>00:43:08</em>.</li>
+<li><a href="https://www.opennet.ru/opennews/art.shtml?num=56830">В РФ началось продвижение собственного корневого TLS-сертификата</a> - <em>00:56:31</em>.</li>
+<li><a href="https://github.com/datastack-net/dockerized">Dockerized </a> - <em>01:12:53</em>.</li>
+<li><a href="https://blog.jetbrains.com/blog/2022/03/11/jetbrains-statement-on-ukraine/">JetBrains закрывает оффисы</a> - <em>01:33:16</em>.</li>
+<li><a href="https://help.twitter.com/en/using-twitter/twitter-supported-browsers">Twitter теперь доступен неожиданным образом</a> - <em>01:38:57</em>.</li>
+<li><a href="https://radio-t.com/p/2022/03/08/prep-797/">Темы слушателей</a> - <em>01:40:13</em>.</li>
+</ul>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast797.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-797.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast797.mp3" preload="none"></audio>]]></itunes:summary>
+      <itunes:image href="https://radio-t.com/images/radio-t/rt797.jpg"/>
+      <enclosure url="http://cdn.radio-t.com/rt_podcast797.mp3" type="audio/mp3"
+        length="113581077"/>
+      <author>podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)</author>
+      <media:content url="http://cdn.radio-t.com/rt_podcast797.mp3" fileSize="113581077"
+        type="audio/mp3"/>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:subtitle>Подкаст выходного дня - импровизации на темы высоких технологий
+      </itunes:subtitle>
+      <itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords>
+    </item>
+
+    <item>
+      <title>Радио-Т 796</title>
+      <description><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt796.jpg" alt=""></p>
+<p><em>Темы</em><ul>
+<li><a href="https://lenta.ru/news/2022/03/05/rutracker/">В России вновь заработал RuTracker</a> - <em>00:05:51</em>.</li>
+<li><a href="https://iamvishnu.com/posts/stop-saying-hi-and-waiting-for-a-response">Еще раз о холодных пингах</a> - <em>00:25:30</em>.</li>
+<li><a href="https://gomakethings.com/spas-were-a-mistake/">SPA были ошибкой</a> - <em>00:37:27</em>.</li>
+<li><a href="https://wagslane.dev/posts/gos-major-version-handling/">Все плохо с версиями Go пакетов</a> - <em>00:45:19</em>.</li>
+<li><a href="https://repography.com/blog/how-to-take-credit-for-someone-elses-work-on-github">Как присвоить себе чужую работу</a> - <em>00:58:45</em>.</li>
+<li><a href="https://libcello.org/">Cello - что можно сотворить из C</a> - <em>01:09:30</em>.</li>
+<li><a href="https://verdagon.dev/blog/python-data-races">GIL не помогает в гонках</a> - <em>01:15:55</em>.</li>
+<li><a href="https://drop.com/buy/drop-holy-panda-x-mechanical-switches?defaultSelectionIds=965923">Пришествие Holy Panda X</a> - <em>01:27:16</em>.</li>
+<li><a href="https://radio-t.com/p/2022/03/01/prep-796/">Темы слушателей</a> - <em>01:35:47</em>.</li>
+</ul></p>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast796.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-796.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast796.mp3" preload="none"></audio>]]></description>
+      <link>https://radio-t.com/p/2022/03/05/podcast-796/</link>
+      <guid>https://radio-t.com/p/2022/03/05//podcast-796/</guid>
+      <pubDate>Sat, 05 Mar 2022 18:06:03 EST</pubDate>
+      <itunes:author>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:author>
+      <itunes:summary><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt796.jpg" alt=""></p>
+<ul>
+<li><a href="https://lenta.ru/news/2022/03/05/rutracker/">В России вновь заработал RuTracker</a> - <em>00:05:51</em>.</li>
+<li><a href="https://iamvishnu.com/posts/stop-saying-hi-and-waiting-for-a-response">Еще раз о холодных пингах</a> - <em>00:25:30</em>.</li>
+<li><a href="https://gomakethings.com/spas-were-a-mistake/">SPA были ошибкой</a> - <em>00:37:27</em>.</li>
+<li><a href="https://wagslane.dev/posts/gos-major-version-handling/">Все плохо с версиями Go пакетов</a> - <em>00:45:19</em>.</li>
+<li><a href="https://repography.com/blog/how-to-take-credit-for-someone-elses-work-on-github">Как присвоить себе чужую работу</a> - <em>00:58:45</em>.</li>
+<li><a href="https://libcello.org/">Cello - что можно сотворить из C</a> - <em>01:09:30</em>.</li>
+<li><a href="https://verdagon.dev/blog/python-data-races">GIL не помогает в гонках</a> - <em>01:15:55</em>.</li>
+<li><a href="https://drop.com/buy/drop-holy-panda-x-mechanical-switches?defaultSelectionIds=965923">Пришествие Holy Panda X</a> - <em>01:27:16</em>.</li>
+<li><a href="https://radio-t.com/p/2022/03/01/prep-796/">Темы слушателей</a> - <em>01:35:47</em>.</li>
+</ul>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast796.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-796.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast796.mp3" preload="none"></audio>]]></itunes:summary>
+      <itunes:image href="https://radio-t.com/images/radio-t/rt796.jpg"/>
+      <enclosure url="http://cdn.radio-t.com/rt_podcast796.mp3" type="audio/mp3"
+        length="121627784"/>
+      <author>podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)</author>
+      <media:content url="http://cdn.radio-t.com/rt_podcast796.mp3" fileSize="121627784"
+        type="audio/mp3"/>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:subtitle>Подкаст выходного дня - импровизации на темы высоких технологий
+      </itunes:subtitle>
+      <itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords>
+    </item>
+
+    <item>
+      <title>Радио-Т 795</title>
+      <description><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt795.jpg" alt=""></p>
+<p><em>Темы</em><ul>
+<li><a href="https://www.macrumors.com/2022/02/25/apple-explores-mac-inside-keyboard-device/">Apple хотят нас вернуть в прошлое</a> - <em>00:09:22</em>.</li>
+<li><a href="https://www.macworld.com/article/612350/apple-planning-to-upgrade-every-m1-mac-in-2022.html">Все M1 Mac обновят в 2022</a> - <em>00:24:07</em>.</li>
+<li><a href="https://www.kolide.com/blog/is-grammarly-a-keylogger-what-can-you-do-about-it">Grammarly это keylogger? Скорее да, чем нет</a> - <em>00:34:58</em>.</li>
+<li><a href="https://www.opennet.ru/opennews/art.shtml?num=56747">Разработчики ядра Linux обсуждают возможность удаления ReiserFS</a> - <em>00:54:51</em>.</li>
+<li><a href="https://www.trustedreviews.com/news/the-purebook-pro-is-nokias-new-budget-friendly-laptop-4211742">PureBook Pro от Nokia</a> - <em>01:05:11</em>.</li>
+<li><a href="https://jless.io/">jless - A Command-Line JSON Viewer</a> - <em>01:21:33</em>.</li>
+<li><a href="https://medium.com/codex/the-illusions-of-software-development-ceb7dfdf6c2b">Иллюзии разработчиков софта</a> - <em>01:24:05</em>.</li>
+<li><a href="https://radio-t.com/p/2022/02/22/prep-795/">Темы слушателей</a> - <em>01:44:49</em>.</li>
+</ul></p>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><em>Тут <a href="https://savelife.in.ua/donate/">можно помочь</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast795.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-795.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast795.mp3" preload="none"></audio>]]></description>
+      <link>https://radio-t.com/p/2022/02/26/podcast-795/</link>
+      <guid>https://radio-t.com/p/2022/02/26//podcast-795/</guid>
+      <pubDate>Sat, 26 Feb 2022 16:53:31 EST</pubDate>
+      <itunes:author>Umputun, Bobuk, Gray, Ksenks, Alek.sys</itunes:author>
+      <itunes:summary><![CDATA[<p><img src="https://radio-t.com/images/radio-t/rt795.jpg" alt=""></p>
+<ul>
+<li><a href="https://www.macrumors.com/2022/02/25/apple-explores-mac-inside-keyboard-device/">Apple хотят нас вернуть в прошлое</a> - <em>00:09:22</em>.</li>
+<li><a href="https://www.macworld.com/article/612350/apple-planning-to-upgrade-every-m1-mac-in-2022.html">Все M1 Mac обновят в 2022</a> - <em>00:24:07</em>.</li>
+<li><a href="https://www.kolide.com/blog/is-grammarly-a-keylogger-what-can-you-do-about-it">Grammarly это keylogger? Скорее да, чем нет</a> - <em>00:34:58</em>.</li>
+<li><a href="https://www.opennet.ru/opennews/art.shtml?num=56747">Разработчики ядра Linux обсуждают возможность удаления ReiserFS</a> - <em>00:54:51</em>.</li>
+<li><a href="https://www.trustedreviews.com/news/the-purebook-pro-is-nokias-new-budget-friendly-laptop-4211742">PureBook Pro от Nokia</a> - <em>01:05:11</em>.</li>
+<li><a href="https://jless.io/">jless - A Command-Line JSON Viewer</a> - <em>01:21:33</em>.</li>
+<li><a href="https://medium.com/codex/the-illusions-of-software-development-ceb7dfdf6c2b">Иллюзии разработчиков софта</a> - <em>01:24:05</em>.</li>
+<li><a href="https://radio-t.com/p/2022/02/22/prep-795/">Темы слушателей</a> - <em>01:44:49</em>.</li>
+</ul>
+<p><em>Спонсор этого выпуска <a href="https://do.co/radiot">DigitalOcean</a></em></p>
+<p><em>Тут <a href="https://savelife.in.ua/donate/">можно помочь</a></em></p>
+<p><a href="https://cdn.radio-t.com/rt_podcast795.mp3">аудио</a> • <a href="https://chat.radio-t.com/logs/radio-t-795.html">лог чата</a></p>
+<audio src="https://cdn.radio-t.com/rt_podcast795.mp3" preload="none"></audio>]]></itunes:summary>
+      <itunes:image href="https://radio-t.com/images/radio-t/rt795.jpg"/>
+      <enclosure url="http://cdn.radio-t.com/rt_podcast795.mp3" type="audio/mp3"
+        length="128461835"/>
+      <author>podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)</author>
+      <media:content url="http://cdn.radio-t.com/rt_podcast795.mp3" fileSize="128461835"
+        type="audio/mp3"/>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:subtitle>Подкаст выходного дня - импровизации на темы высоких технологий
+      </itunes:subtitle>
+      <itunes:keywords>hitech,russian,radiot,tech,news,радио</itunes:keywords>
+    </item>
+
+    <media:credit role="author">Umputun, Bobuk, Gray, Ksenks, Alek.sys</media:credit>
+    <media:rating>nonadult</media:rating>
+    <media:description type="plain">Еженедельные импровизации на хай–тек темы</media:description>
+  </channel>
+</rss>

@@ -86,7 +86,11 @@ func main() {
 	}
 
 	p := &proc.Processor{Conf: conf, Store: procStore, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter(opts)}
-	go p.Do()
+	go func() {
+		if err := p.Do(context.Background()); err != nil {
+			log.Printf("[ERROR] processor failed: %v", err)
+		}
+	}()
 
 	var ytSvc youtube.Service
 	if len(conf.YouTube.Channels) > 0 {
