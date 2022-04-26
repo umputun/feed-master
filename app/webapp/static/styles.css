@@ -282,6 +282,12 @@ nav {
     color: rgba(4, 115, 180, 0.4);
 }
 
+.fa-telegram-plane-alt {
+    width: 1.5rem;
+    height: 1.5rem;
+    filter: brightness(0.85);
+}
+
 .junk-row 
 .fa-info-circle {
     color: rgba(70, 70, 70, 0.4);

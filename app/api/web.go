@@ -48,6 +48,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			Version         string
 			RSSLink         string
 			SourcesLink     string
+			TelegramChannel string
 		}{
 			Items:           items,
 			Name:            s.Conf.Feeds[feedName].Title,
@@ -59,6 +60,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 			Version:         s.Version,
 			RSSLink:         s.Conf.System.BaseURL + "/rss/" + feedName,
 			SourcesLink:     s.Conf.System.BaseURL + "/feed/" + feedName + "/sources",
+			TelegramChannel: s.Conf.Feeds[feedName].TelegramChannel,
 		}
 
 		res := bytes.NewBuffer(nil)

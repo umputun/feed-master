@@ -54,6 +54,8 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "tw_access_token", twitter.AccessToken)
 	assert.Equal(t, "tw_access_secret", twitter.AccessSecret)
 	assert.Equal(t, "{{.Title}}", twitter.Template)
+	assert.Equal(t, "nobody@feed-master.com", r.Feeds["first"].OwnerEmail)
+	assert.Equal(t, "blah@example.com", r.Feeds["second"].OwnerEmail)
 }
 
 func TestLoadConfigNotFoundFile(t *testing.T) {

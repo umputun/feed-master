@@ -194,7 +194,7 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 			ItunesExplicit: "no",
 			ItunesOwner: &feed.ItunesOwner{
 				Name:  "Feed Master",
-				Email: "umputun@feed-master.com",
+				Email: s.Conf.Feeds[feedName].OwnerEmail,
 			},
 			NsItunes: "http://www.itunes.com/dtds/podcast-1.0.dtd",
 			NsMedia:  "http://search.yahoo.com/mrss/",

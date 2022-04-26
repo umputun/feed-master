@@ -84,6 +84,7 @@ func TestServer_getFeedCtrl(t *testing.T) {
 					Description: "this is feed1",
 					Link:        "http://example.com/feed1",
 					Author:      "Feed Master",
+					OwnerEmail:  "test@email.com",
 				},
 				"feed2": {
 					Title: "feed2",
@@ -108,7 +109,7 @@ func TestServer_getFeedCtrl(t *testing.T) {
 	assert.Contains(t, body, " <description>this is feed1</description>")
 	assert.Contains(t, body, "<itunes:author>Feed Master</itunes:author>")
 	assert.Contains(t, body, "<itunes:explicit>no</itunes:explicit>")
-	assert.Contains(t, body, "<itunes:email>umputun@feed-master.com</itunes:email>")
+	assert.Contains(t, body, "<itunes:email>test@email.com</itunes:email>")
 	assert.Contains(t, body, "<itunes:name>Feed Master</itunes:name>")
 	assert.Contains(t, body, "<guid>guid1</guid>")
 	assert.Contains(t, body, "<title>title1</title>")

@@ -36,7 +36,9 @@ feeds:
     link: http://localhost:8080/feed/yt-example # link to the source site
     language: "ru-ru" # feed language
     author: "Someone" # feed author, default "Feed Master"
+    owner_email: "blah@example.com" # feed owner email, used in various services (i.e. spotify) to confirm RSS submission
     image: images/yt-example.png # feed image, used in generated RSS as podcast thumbnail
+    filter: "something" # filter from the feed, can be regexp or string 
     sources: # list of sources, each source is a name of and the source RSS feed
       - {name: "Точка", url: http://localhost:8080/yt/rss/PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd}
       - {name: "Живой Гвоздь", url: http://localhost:8080/yt/rss/UCWAIvx2yYLK_xTYD4F2mUNw}

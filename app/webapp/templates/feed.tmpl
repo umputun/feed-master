@@ -25,6 +25,13 @@
         <div>
             <span class="ump-feed-master-name">Feed Master</span>
             <span class="ump-feed-master-info">{{.Description}} <a href="{{.Link}}" class="ump-feed-master-header-link">«{{.Name}}»</a></span>
+            {{if ne .TelegramChannel ""}}
+            <span>
+            <a href="https://t.me/{{.TelegramChannel}}">
+                <img src="/static/telegram_logo.png" class="fa-telegram-plane-alt"  data-toggle="tooltip" title="t.me/{{.TelegramChannel}}"/>
+            </a>
+            </span>
+            {{end}}
         </div>
     </div>
     <div class="ump-feed-master-header__meta">
