@@ -25,6 +25,7 @@ feeds:
         url: "https://bbb.com/u1"
     title: "blah 2"
     author: "author 2"
+    owner_email: "blah@example.com"
 system:
   update: 600s
 

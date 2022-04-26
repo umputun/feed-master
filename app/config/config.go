@@ -55,6 +55,7 @@ type Feed struct {
 	Sources         []Source `yaml:"sources"`
 	ExtendDateTitle string   `yaml:"ext_date"`
 	Author          string   `yaml:"author"`
+	OwnerEmail      string   `yaml:"owner_email"`
 }
 
 // Filter defines feed section for a feed filter~
@@ -136,6 +137,10 @@ func (c *Conf) setDefaults() {
 			f.Author = "Feed Master"
 			c.Feeds[k] = f
 		}
+		if f.OwnerEmail == "" {
+			f.OwnerEmail = "nobody@feed-master.com"
+			c.Feeds[k] = f
+		}
 	}
 
 	// set youtube defaults from system part
@@ -147,6 +152,7 @@ func (c *Conf) setDefaults() {
 		if f.Keep == 0 {
 			f.Keep = c.System.MaxItems
 		}
+
 	}
 	if c.YouTube.BaseURL == "" {
 		c.YouTube.BaseURL = c.System.BaseURL + "/yt/media"

@@ -36,6 +36,8 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "Feed Master", r.Feeds["first"].Author)
 	assert.Equal(t, "author 2", r.Feeds["second"].Author)
 
+	assert.Equal(t, "nobody@feed-master.com", r.Feeds["first"].OwnerEmail)
+	assert.Equal(t, "blah@example.com", r.Feeds["second"].OwnerEmail)
 }
 
 func TestLoadConfigNotFoundFile(t *testing.T) {
