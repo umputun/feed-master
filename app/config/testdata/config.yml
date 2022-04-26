@@ -27,6 +27,17 @@ feeds:
     author: "author 2"
 system:
   update: 600s
+  notifications:
+    telegram:
+      server: ${TELEGRAM_SERVER}
+      token: ${TELEGRAM_TOKEN}
+      timeout: 5m
+    twitter:
+      consumer-key: ${TWI_CONSUMER_KEY}
+      consumer-secret: ${TWI_CONSUMER_SECRET}
+      access-token: ${TWI_ACCESS_TOKEN}
+      access-secret: ${TWI_ACCESS_SECRET}
+      template: "{{.Title}}"
 
 youtube:
   dl_template: yt-dlp --extract-audio --audio-format=mp3 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}.tmp
@@ -36,15 +47,3 @@ youtube:
   channels:
   - {id: id1, name: name1, type: playlist}
   - {id: id2, name: name2, lang: ru-ru, type: channel}
-
-telegram:
-  channel: ${TELEGRAM_CHAN}
-  token: ${TELEGRAM_TOKEN}
-  timeout: 5m
-
-twitter:
-  consumer-key: ${TWI_CONSUMER_KEY}
-  consumer-secret: ${TWI_CONSUMER_SECRET}
-  access-token: ${TWI_ACCESS_TOKEN}
-  access-secret: ${TWI_ACCESS_SECRET}
-  template: "{{.Title}}"

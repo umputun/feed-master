@@ -19,13 +19,27 @@ type Conf struct {
 	System struct {
 		DB             string        `yaml:"db"`
 		AdminPasswd    string        `yaml:"admin-passwd"`
-		Dbg            bool          `yaml:"debug"`
 		UpdateInterval time.Duration `yaml:"update"`
 		MaxItems       int           `yaml:"max_per_feed"`
 		MaxTotal       int           `yaml:"max_total"`
 		MaxKeepInDB    int           `yaml:"max_keep"`
 		Concurrent     int           `yaml:"concurrent"`
 		BaseURL        string        `yaml:"base_url"`
+		Notifications  struct {
+			Telegram struct {
+				Server  string        `yaml:"server"`
+				Token   string        `yaml:"token"`
+				Timeout time.Duration `yaml:"timeout"`
+			} `yaml:"telegram"`
+
+			Twitter struct {
+				ConsumerKey    string `yaml:"consumer-key"`
+				ConsumerSecret string `yaml:"consumer-secret"`
+				AccessToken    string `yaml:"access-token"`
+				AccessSecret   string `yaml:"access-secret"`
+				Template       string `yaml:"template"`
+			} `yaml:"twitter"`
+		} `yaml:"notifications"`
 	} `yaml:"system"`
 
 	YouTube struct {
@@ -39,21 +53,6 @@ type Conf struct {
 		FilesLocation   string             `yaml:"files_location"`
 		RSSLocation     string             `yaml:"rss_location"`
 	} `yaml:"youtube"`
-
-	Telegram struct {
-		Server  string        `yaml:"server"`
-		Channel string        `yaml:"channel"`
-		Token   string        `yaml:"token"`
-		Timeout time.Duration `yaml:"timeout"`
-	} `yaml:"telegram"`
-
-	Twitter struct {
-		ConsumerKey    string `yaml:"consumer-key"`
-		ConsumerSecret string `yaml:"consumer-secret"`
-		AccessToken    string `yaml:"access-token"`
-		AccessSecret   string `yaml:"access-secret"`
-		Template       string `yaml:"template"`
-	} `yaml:"twitter"`
 }
 
 // Source defines config section for source
@@ -135,14 +134,14 @@ func (c *Conf) setDefaults() {
 	if c.System.UpdateInterval == 0 {
 		c.System.UpdateInterval = time.Minute * 5
 	}
-	if c.Telegram.Server == "" {
-		c.Telegram.Server = "https://api.telegram.org"
+	if c.System.Notifications.Telegram.Server == "" {
+		c.System.Notifications.Telegram.Server = "https://api.telegram.org"
 	}
-	if c.Telegram.Timeout == 0 {
-		c.Telegram.Timeout = time.Minute * 1
+	if c.System.Notifications.Telegram.Timeout == 0 {
+		c.System.Notifications.Telegram.Timeout = time.Minute * 1
 	}
-	if c.Twitter.Template == "" {
-		c.Twitter.Template = "{{.Title}} - {{.Link}}"
+	if c.System.Notifications.Twitter.Template == "" {
+		c.System.Notifications.Twitter.Template = "{{.Title}} - {{.Link}}"
 	}
 	if c.System.DB == "" {
 		c.System.DB = "var/feed-master.bdb"

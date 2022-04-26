@@ -29,6 +29,7 @@ import (
 type options struct {
 	Port int    `short:"p" long:"port" env:"FM_PORT" description:"port to listen" default:"8080"`
 	Conf string `short:"f" long:"conf" env:"FM_CONF" default:"feed-master.yml" description:"config file (yml)"`
+	Dbg  bool   `long:"dbg" env:"DEBUG" description:"debug mode"`
 }
 
 var revision = "local"
@@ -39,12 +40,12 @@ func main() {
 	if _, err := flags.Parse(&opts); err != nil {
 		os.Exit(1)
 	}
+	setupLog(opts.Dbg)
 
 	conf, err := config.Load(opts.Conf)
 	if err != nil {
 		log.Fatalf("[ERROR] can't load config %s, %v", opts.Conf, err)
 	}
-	setupLog(conf.System.Dbg)
 
 	db, err := makeBoltDB(conf.System.DB)
 	if err != nil {
@@ -52,10 +53,11 @@ func main() {
 	}
 	procStore := &proc.BoltDB{DB: db}
 
-	telegramNotif, err := proc.NewTelegramClient(conf.Telegram.Token, conf.Telegram.Server, conf.Telegram.Timeout,
+	telegramConf := conf.System.Notifications.Telegram
+	telegramNotif, err := proc.NewTelegramClient(telegramConf.Token, telegramConf.Server, telegramConf.Timeout,
 		&duration.Service{}, &proc.TelegramSenderImpl{})
 	if err != nil {
-		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", conf.Telegram.Token, err)
+		log.Fatalf("[ERROR] failed to initialize telegram client %s, %v", telegramConf.Token, err)
 	}
 
 	p := &proc.Processor{Conf: conf, Store: procStore, TelegramNotif: telegramNotif, TwitterNotif: makeTwitter(*conf)}
@@ -129,9 +131,10 @@ func makeBoltDB(dbFile string) (*bolt.DB, error) {
 }
 
 func makeTwitter(conf config.Conf) *proc.TwitterClient {
+	twitterConf := conf.System.Notifications.Twitter
 	twitterFmtFn := func(item rssfeed.Item) string {
 		b1 := bytes.Buffer{}
-		if err := template.Must(template.New("twi").Parse(conf.Twitter.Template)).Execute(&b1, item); err != nil { // nolint
+		if err := template.Must(template.New("twi").Parse(twitterConf.Template)).Execute(&b1, item); err != nil { // nolint
 			// template failed to parse record, backup predefined format
 			return fmt.Sprintf("%s - %s", item.Title, item.Link)
 		}
@@ -139,10 +142,10 @@ func makeTwitter(conf config.Conf) *proc.TwitterClient {
 	}
 
 	twiAuth := proc.TwitterAuth{
-		ConsumerKey:    conf.Twitter.ConsumerKey,
-		ConsumerSecret: conf.Twitter.ConsumerSecret,
-		AccessToken:    conf.Twitter.AccessToken,
-		AccessSecret:   conf.Twitter.AccessSecret,
+		ConsumerKey:    twitterConf.ConsumerKey,
+		ConsumerSecret: twitterConf.ConsumerSecret,
+		AccessToken:    twitterConf.AccessToken,
+		AccessSecret:   twitterConf.AccessSecret,
 	}
 
 	return proc.NewTwitterClient(twiAuth, twitterFmtFn)

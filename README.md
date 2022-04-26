@@ -21,6 +21,7 @@ _example of docker-compose.yml available in [_example](https://github.com/umputu
 |--------------|-------------|-------------------|-------------------|
 | port         | FM_PORT     | `8080`            | port to listen    |
 | conf         | FM_CONF     | `feed-master.yml` | config file (yml) |
+| dbg          | DEBUG       | `false`           | debug mode        |
 
 
 ## Configuration
@@ -67,25 +68,20 @@ system: # system configuration
   base_url: http://localhost:8080 # base url for the generated RSS and media files
   db: ${FM_DB} # bolt db file, default "var/feed-master.bdb"
   admin-passwd: ${ADMIN_PASSWD} # admin password for protected endpoint, default (disabled)
-  debug: ${DEBUG} # debug mode, default "false"
-
-telegram:
-  server: ${TELEGRAM_SERVER} # telegram server, default "https://api.telegram.org"
-  channel: ${TELEGRAM_CHAN} # telegram channel
-  token: ${TELEGRAM_TOKEN} # telegram token
-  timeout: ${TELEGRAM_TIMEOUT} # telegram timeout, default 1m
-
-twitter:
-  consumer-key: ${TWI_CONSUMER_KEY} # twitter consumer key
-  consumer-secret: ${TWI_CONSUMER_SECRET} # twitter consumer secret
-  access-token: ${TWI_ACCESS_TOKEN} # twitter access token
-  access-secret: ${TWI_ACCESS_SECRET} # twitter access secret
-  template: ${TEMPLATE} # twitter message template, default "{{.Title}} - {{.Link}}"
+  notifications:
+    telegram:
+      server: ${TELEGRAM_SERVER} # telegram server, default "https://api.telegram.org"
+      token: ${TELEGRAM_TOKEN} # telegram token
+      timeout: ${TELEGRAM_TIMEOUT} # telegram timeout, default 1m
+    twitter:
+      consumer-key: ${TWI_CONSUMER_KEY} # twitter consumer key
+      consumer-secret: ${TWI_CONSUMER_SECRET} # twitter consumer secret
+      access-token: ${TWI_ACCESS_TOKEN} # twitter access token
+      access-secret: ${TWI_ACCESS_SECRET} # twitter access secret
+      template: ${TEMPLATE} # twitter message template, default "{{.Title}} - {{.Link}}"
 ```
 
 _see [examples](https://github.com/umputun/feed-master/tree/master/_example/etc) for more details._
-
-All this command-line mode is good for - process a single feed, send a telegram message and send a tweet on each new item.
 
 ## API
 

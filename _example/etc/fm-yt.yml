@@ -33,16 +33,14 @@ system:
   base_url: http://example.com
   db: ${FM_DB}
   admin-passwd: ${ADMIN_PASSWD}
-  debug: ${DEBUG}
-
-telegram:
-  channel: ${TELEGRAM_CHAN}
-  token: ${TELEGRAM_TOKEN}
-  timeout: ${TELEGRAM_TIMEOUT}
-
-twitter:
-  consumer-key: ${TWI_CONSUMER_KEY}
-  consumer-secret: ${TWI_CONSUMER_SECRET}
-  access-token: ${TWI_ACCESS_TOKEN}
-  access-secret: ${TWI_ACCESS_SECRET}
-  template: ${TEMPLATE}
+  notifications:
+    telegram:
+      server: ${TELEGRAM_SERVER}
+      token: ${TELEGRAM_TOKEN}
+      timeout: ${TELEGRAM_TIMEOUT}
+    twitter:
+      consumer-key: ${TWI_CONSUMER_KEY}
+      consumer-secret: ${TWI_CONSUMER_SECRET}
+      access-token: ${TWI_ACCESS_TOKEN}
+      access-secret: ${TWI_ACCESS_SECRET}
+      template: ${TEMPLATE}

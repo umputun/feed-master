@@ -8,20 +8,11 @@ import (
 )
 
 func TestMakeTwitter(t *testing.T) {
-	conf := config.Conf{
-		Twitter: struct {
-			ConsumerKey    string `yaml:"consumer-key"`
-			ConsumerSecret string `yaml:"consumer-secret"`
-			AccessToken    string `yaml:"access-token"`
-			AccessSecret   string `yaml:"access-secret"`
-			Template       string `yaml:"template"`
-		}{
-			ConsumerKey:    "a",
-			ConsumerSecret: "b",
-			AccessToken:    "c",
-			AccessSecret:   "d",
-		},
-	}
+	conf := config.Conf{}
+	conf.System.Notifications.Twitter.ConsumerKey = "a"
+	conf.System.Notifications.Twitter.ConsumerSecret = "b"
+	conf.System.Notifications.Twitter.AccessToken = "c"
+	conf.System.Notifications.Twitter.AccessSecret = "d"
 
 	client := makeTwitter(conf)
 

@@ -15,8 +15,7 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	assert.NoError(t, os.Setenv("TELEGRAM_CHAN", "tg_channel"))
-	assert.NoError(t, os.Setenv("TELEGRAM_CHAN", "tg_channel"))
+	assert.NoError(t, os.Setenv("TELEGRAM_SERVER", "tg_server"))
 	assert.NoError(t, os.Setenv("TELEGRAM_TOKEN", "tg_token"))
 	assert.NoError(t, os.Setenv("TWI_CONSUMER_KEY", "tw_key"))
 	assert.NoError(t, os.Setenv("TWI_CONSUMER_SECRET", "tw_secret"))
@@ -45,14 +44,16 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "Feed Master", r.Feeds["first"].Author)
 	assert.Equal(t, "author 2", r.Feeds["second"].Author)
 
-	assert.Equal(t, "tg_channel", r.Telegram.Channel)
-	assert.Equal(t, "tg_token", r.Telegram.Token)
-	assert.Equal(t, time.Minute*5, r.Telegram.Timeout)
-	assert.Equal(t, "tw_key", r.Twitter.ConsumerKey)
-	assert.Equal(t, "tw_secret", r.Twitter.ConsumerSecret)
-	assert.Equal(t, "tw_access_token", r.Twitter.AccessToken)
-	assert.Equal(t, "tw_access_secret", r.Twitter.AccessSecret)
-	assert.Equal(t, "{{.Title}}", r.Twitter.Template)
+	telegram := r.System.Notifications.Telegram
+	assert.Equal(t, "tg_server", telegram.Server)
+	assert.Equal(t, "tg_token", telegram.Token)
+	assert.Equal(t, time.Minute*5, telegram.Timeout)
+	twitter := r.System.Notifications.Twitter
+	assert.Equal(t, "tw_key", twitter.ConsumerKey)
+	assert.Equal(t, "tw_secret", twitter.ConsumerSecret)
+	assert.Equal(t, "tw_access_token", twitter.AccessToken)
+	assert.Equal(t, "tw_access_secret", twitter.AccessSecret)
+	assert.Equal(t, "{{.Title}}", twitter.Template)
 }
 
 func TestLoadConfigNotFoundFile(t *testing.T) {
@@ -73,21 +74,12 @@ func TestSetDefault(t *testing.T) {
 	c := Conf{}
 	c.setDefaults()
 
-	expectedConf := Conf{
-		System: struct {
-			DB             string        `yaml:"db"`
-			AdminPasswd    string        `yaml:"admin-passwd"`
-			Dbg            bool          `yaml:"debug"`
-			UpdateInterval time.Duration `yaml:"update"`
-			MaxItems       int           `yaml:"max_per_feed"`
-			MaxTotal       int           `yaml:"max_total"`
-			MaxKeepInDB    int           `yaml:"max_keep"`
-			Concurrent     int           `yaml:"concurrent"`
-			BaseURL        string        `yaml:"base_url"`
-		}{UpdateInterval: time.Minute * 5, MaxItems: 5, MaxTotal: 100, MaxKeepInDB: 5000, Concurrent: 8, BaseURL: "", DB: "var/feed-master.bdb"},
-	}
-
-	assert.Equal(t, expectedConf.System, c.System)
+	assert.Equal(t, time.Minute*5, c.System.UpdateInterval)
+	assert.Equal(t, 5, c.System.MaxItems)
+	assert.Equal(t, 100, c.System.MaxTotal)
+	assert.Equal(t, 5000, c.System.MaxKeepInDB)
+	assert.Equal(t, 8, c.System.Concurrent)
+	assert.Equal(t, "var/feed-master.bdb", c.System.DB)
 	assert.Equal(t, time.Minute*5, c.YouTube.UpdateInterval)
 	assert.Equal(t, "/yt/media", c.YouTube.BaseURL)
 	assert.Equal(t, "var/yt", c.YouTube.FilesLocation)
@@ -95,9 +87,9 @@ func TestSetDefault(t *testing.T) {
 	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.FileName}}.tmp", c.YouTube.DlTemplate)
 	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?channel_id=", c.YouTube.BaseChanURL)
 	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?playlist_id=", c.YouTube.BasePlaylistURL)
-	assert.Equal(t, "https://api.telegram.org", c.Telegram.Server)
-	assert.Equal(t, time.Minute*1, c.Telegram.Timeout)
-	assert.Equal(t, "{{.Title}} - {{.Link}}", c.Twitter.Template)
+	assert.Equal(t, "https://api.telegram.org", c.System.Notifications.Telegram.Server)
+	assert.Equal(t, time.Minute*1, c.System.Notifications.Telegram.Timeout)
+	assert.Equal(t, "{{.Title}} - {{.Link}}", c.System.Notifications.Twitter.Template)
 }
 
 func TestFilterAllCases(t *testing.T) {
