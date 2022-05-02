@@ -246,6 +246,13 @@ func TestBoltDB_SetProcessed(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, found)
 
+	lst, err := s.ListProcessed()
+	require.NoError(t, err)
+	assert.Equal(t, 3, len(lst))
+	assert.Equal(t, "dbff863dbc922f727afb93e949704da777739489 / 2022-03-21T16:45:22Z", lst[0])
+	assert.Equal(t, "ae9a2ed8bbf505091e35b9d54ccb9dc58e35c205 / 2022-03-21T18:45:22Z", lst[1])
+	assert.Equal(t, "a8fd9875c236fb27e26183b6df87f0cecb7a683f / 2022-03-21T17:45:22Z", lst[2])
+
 	err = s.ResetProcessed(feed.Entry{ChannelID: "chan1", VideoID: "vid2"})
 	require.NoError(t, err)
 	found, _, err = s.CheckProcessed(feed.Entry{ChannelID: "chan1", VideoID: "vid2"})

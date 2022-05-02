@@ -361,6 +361,7 @@ func (s *Service) isNew(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
 	if procErr == nil && found {
 		return false, nil
 	}
+
 	return true, nil
 }
 
