@@ -111,7 +111,7 @@ func Parse(uri string) (result Rss2, err error) {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return result, fmt.Errorf("non-200 status code %s, url: %ss", resp.Status, uri)
+		return result, fmt.Errorf("non-200 status code %s, url: %s", resp.Status, uri)
 	}
 
 	body, err := io.ReadAll(resp.Body)
