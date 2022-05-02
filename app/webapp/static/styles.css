@@ -142,7 +142,7 @@ nav {
     margin-top: 0.275rem;
     display: flex;
     color: rgba(255, 255, 255, 0.4);
-    font-size: 0.875rem;
+    font-size: 0.775rem;
 }
 
 @media (min-width: 760px) {
