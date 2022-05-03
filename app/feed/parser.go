@@ -111,7 +111,7 @@ func Parse(uri string) (result Rss2, err error) {
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		return result, fmt.Errorf("non-200 status code %s, url: %ss", resp.Status, uri)
+		return result, fmt.Errorf("non-200 status code %s, url: %s", resp.Status, uri)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -184,17 +184,17 @@ func parseFeedContent(content []byte) (Rss2, error) {
 
 // Normalize converts to RFC822 = "02 Jan 06 15:04 MST"
 func (rss *Rss2) Normalize() (Rss2, error) {
-	dt, err := rss.normalizeDate(rss.LastBuildDate)
-	if err != nil {
-		dt, err = rss.normalizeDate(rss.PubDate)
-	}
 
+	dt, err := rss.parseDateTime(rss.LastBuildDate)
+	if err != nil {
+		dt, err = rss.parseDateTime(rss.PubDate)
+	}
 	if err == nil {
 		rss.PubDate = dt.Format(time.RFC1123Z)
 	}
 
 	for i, item := range rss.ItemList {
-		if dt, err := rss.normalizeDate(item.PubDate); err == nil {
+		if dt, err := rss.parseDateTime(item.PubDate); err == nil {
 			rss.ItemList[i].DT = dt
 			rss.ItemList[i].PubDate = dt.Format(time.RFC1123Z)
 		}
@@ -204,9 +204,9 @@ func (rss *Rss2) Normalize() (Rss2, error) {
 	return *rss, nil
 }
 
-func (rss *Rss2) normalizeDate(dt string) (time.Time, error) {
+func (rss *Rss2) parseDateTime(dt string) (time.Time, error) {
 	if dt == "" {
-		return time.Now(), fmt.Errorf("can't normalize empty pubDate")
+		return time.Now(), fmt.Errorf("can't parse empty date-time")
 	}
 	if ts, err := time.Parse(time.RFC822, dt); err == nil {
 		return ts, nil
@@ -223,6 +223,6 @@ func (rss *Rss2) normalizeDate(dt string) (time.Time, error) {
 	if ts, err := time.Parse("2006-01-02 15:04:05 -0700", dt); err == nil {
 		return ts, nil
 	}
-	log.Printf("[DEBUG] can't normalize %s", dt)
-	return time.Now(), fmt.Errorf("can't normalize %s", dt)
+	log.Printf("[DEBUG] can't parse %s", dt)
+	return time.Now(), fmt.Errorf("can't parse %s", dt)
 }

@@ -105,24 +105,24 @@ func TestFeedParseHttpError(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestNormalizeDate(t *testing.T) {
+func TestParseDateTime(t *testing.T) {
 	tbl := []struct {
 		inp string
 		err error
 		out string
 	}{
-		{"", fmt.Errorf("can't normalize empty pubDate"), time.Now().Format(time.RFC822Z)},
+		{"", fmt.Errorf("can't parse empty date-time"), time.Now().Format(time.RFC822Z)},
 		{"05 Mar 14 22:08 +0400", nil, "05 Mar 14 22:08 +0400"},           // RFC822Z
 		{"05 Mar 14 22:08 MST", nil, "05 Mar 14 22:08 +0000"},             // RFC822
 		{"Mon, 02 Jan 2006 15:04:05 -0700", nil, "02 Jan 06 15:04 -0700"}, // RFC1123Z
 		{"Mon, 02 Jan 2006 15:04:05 MST", nil, "02 Jan 06 15:04 +0000"},   // RFC1123
 		{"2006-01-02 15:04:05 -0700", nil, "02 Jan 06 15:04 -0700"},
-		{"100500", fmt.Errorf("can't normalize 100500"), time.Now().Format(time.RFC822Z)},
+		{"100500", fmt.Errorf("can't parse 100500"), time.Now().Format(time.RFC822Z)},
 	}
 
 	rss := Rss2{}
 	for _, tb := range tbl {
-		ts, err := rss.normalizeDate(tb.inp)
+		ts, err := rss.parseDateTime(tb.inp)
 		assert.Equal(t, tb.err, err)
 		assert.Equal(t, tb.out, ts.Format(time.RFC822Z))
 	}
