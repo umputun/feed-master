@@ -390,16 +390,12 @@ func (s *Service) isAllowed(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error
 func (s *Service) update(entry ytfeed.Entry, file string, fi FeedInfo) ytfeed.Entry {
 	entry.File = file
 
-	// only reset time if updated not too while ago
-	// this is to avoid initial set of entries added with a new channel
-	lastDt := entry.Updated
-	if entry.Updated.IsZero() || entry.Updated.Before(entry.Published) { // pick the latest ts, sometimes published can be newer
-		lastDt = entry.Published
-	}
-
-	if time.Since(lastDt) < time.Hour*24 {
+	// only reset time if published not too long ago
+	// this is done to avoid initial set of entries added with a new channel to the top of the feed
+	if time.Since(entry.Published) < time.Hour*24 {
 		log.Printf("[DEBUG] reset published time for %s, from %s to %s (%v), %s",
-			entry.VideoID, lastDt.Format(time.RFC3339), time.Now().Format(time.RFC3339), time.Since(lastDt), entry.String())
+			entry.VideoID, entry.Published.Format(time.RFC3339), time.Now().Format(time.RFC3339),
+			time.Since(entry.Published), entry.String())
 		entry.Published = time.Now() // reset published ts to prevent possible out-of-order entries
 	} else {
 		log.Printf("[DEBUG] keep published time for %s, %s", entry.VideoID, entry.Published.Format(time.RFC3339))
