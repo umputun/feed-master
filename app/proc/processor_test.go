@@ -2,13 +2,6 @@ package proc
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/umputun/feed-master/app/config"
-	"github.com/umputun/feed-master/app/feed"
-	"github.com/umputun/feed-master/app/proc/mocks"
-	"github.com/umputun/feed-master/app/youtube"
-	bolt "go.etcd.io/bbolt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -16,6 +9,15 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	bolt "go.etcd.io/bbolt"
+
+	"github.com/umputun/feed-master/app/config"
+	"github.com/umputun/feed-master/app/feed"
+	"github.com/umputun/feed-master/app/proc/mocks"
+	"github.com/umputun/feed-master/app/youtube"
 )
 
 func TestProcessor_DoRemoveOldItems(t *testing.T) {
@@ -63,12 +65,29 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 				},
 			},
 			System: struct {
+				DB             string        `yaml:"db"`
+				AdminPasswd    string        `yaml:"admin-passwd"`
 				UpdateInterval time.Duration `yaml:"update"`
 				MaxItems       int           `yaml:"max_per_feed"`
 				MaxTotal       int           `yaml:"max_total"`
 				MaxKeepInDB    int           `yaml:"max_keep"`
 				Concurrent     int           `yaml:"concurrent"`
 				BaseURL        string        `yaml:"base_url"`
+				Notifications  struct {
+					Telegram struct {
+						Server  string        `yaml:"server"`
+						Token   string        `yaml:"token"`
+						Timeout time.Duration `yaml:"timeout"`
+					} `yaml:"telegram"`
+
+					Twitter struct {
+						ConsumerKey    string `yaml:"consumer-key"`
+						ConsumerSecret string `yaml:"consumer-secret"`
+						AccessToken    string `yaml:"access-token"`
+						AccessSecret   string `yaml:"access-secret"`
+						Template       string `yaml:"template"`
+					} `yaml:"twitter"`
+				} `yaml:"notifications"`
 			}{
 				UpdateInterval: time.Second / 2,
 				MaxItems:       5,
@@ -197,12 +216,29 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 				},
 			},
 			System: struct {
+				DB             string        `yaml:"db"`
+				AdminPasswd    string        `yaml:"admin-passwd"`
 				UpdateInterval time.Duration `yaml:"update"`
 				MaxItems       int           `yaml:"max_per_feed"`
 				MaxTotal       int           `yaml:"max_total"`
 				MaxKeepInDB    int           `yaml:"max_keep"`
 				Concurrent     int           `yaml:"concurrent"`
 				BaseURL        string        `yaml:"base_url"`
+				Notifications  struct {
+					Telegram struct {
+						Server  string        `yaml:"server"`
+						Token   string        `yaml:"token"`
+						Timeout time.Duration `yaml:"timeout"`
+					} `yaml:"telegram"`
+
+					Twitter struct {
+						ConsumerKey    string `yaml:"consumer-key"`
+						ConsumerSecret string `yaml:"consumer-secret"`
+						AccessToken    string `yaml:"access-token"`
+						AccessSecret   string `yaml:"access-secret"`
+						Template       string `yaml:"template"`
+					} `yaml:"twitter"`
+				} `yaml:"notifications"`
 			}{
 				UpdateInterval: time.Second / 2,
 				MaxItems:       3,
@@ -293,12 +329,29 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 				},
 			},
 			System: struct {
+				DB             string        `yaml:"db"`
+				AdminPasswd    string        `yaml:"admin-passwd"`
 				UpdateInterval time.Duration `yaml:"update"`
 				MaxItems       int           `yaml:"max_per_feed"`
 				MaxTotal       int           `yaml:"max_total"`
 				MaxKeepInDB    int           `yaml:"max_keep"`
 				Concurrent     int           `yaml:"concurrent"`
 				BaseURL        string        `yaml:"base_url"`
+				Notifications  struct {
+					Telegram struct {
+						Server  string        `yaml:"server"`
+						Token   string        `yaml:"token"`
+						Timeout time.Duration `yaml:"timeout"`
+					} `yaml:"telegram"`
+
+					Twitter struct {
+						ConsumerKey    string `yaml:"consumer-key"`
+						ConsumerSecret string `yaml:"consumer-secret"`
+						AccessToken    string `yaml:"access-token"`
+						AccessSecret   string `yaml:"access-secret"`
+						Template       string `yaml:"template"`
+					} `yaml:"twitter"`
+				} `yaml:"notifications"`
 			}{
 				UpdateInterval: time.Second / 2,
 				MaxItems:       10,
