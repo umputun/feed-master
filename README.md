@@ -1,5 +1,6 @@
 # Feed Master [![Build Status](https://github.com/umputun/feed-master/workflows/build/badge.svg)](https://github.com/umputun/feed-master/actions) [![Coverage Status](https://coveralls.io/repos/github/umputun/feed-master/badge.svg?branch=master)](https://coveralls.io/github/umputun/feed-master?branch=master) [![Docker Automated build](https://img.shields.io/docker/automated/umputun/feed-master)](https://hub.docker.com/r/umputun/feed-master)
 
+
 Feed-Master is a service that aggregates and publishes RSS feeds. It can pull multiple feeds from different sources and publish them to a single feed. The service normalizing all the feeds to make sure the combined feed is valid, compatible with podcast clients and compatible with RSS 2.0 specification. 
 
 In addition to making RSS feeds, Feed-Master can also publish updates to both twitter and telegram. In case of telegram the actual mp3 audio file is published too. In case of twitter the mp3 audio file is published as a tweet with a link to the original audio file and with the episode info, like title and/or description.

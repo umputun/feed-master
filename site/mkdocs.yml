@@ -1,0 +1,86 @@
+site_name: feed-master
+site_url: https://feed-master.umputun.dev/
+site_author: Umputun
+site_description: >-
+  Feed-Master is a service that aggregates and publishes RSS feeds. It can pull multiple feeds from different sources
+  and publish them to a single feed. The service normalizing all the feeds to make sure the combined feed is valid,
+  compatible with podcast clients and compatible with RSS 2.0 specification.
+
+repo_name: umputun/feed-master
+repo_url: https://github.com/umputun/feed-master
+copyright: Some rights reserved &copy; 2021 - 2022 Umputun
+
+theme:
+  name: material
+  favicon: favicon.png
+  language: en
+  palette:
+    - scheme: slate
+      media: "(prefers-color-scheme: dark)"
+      primary: blue
+  features:
+    - navigation.instant
+    - toc.follow
+    - toc.integrate
+    - content.code.annotate
+    - navigation.sections
+  logo: favicon.png
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+extra:
+  generator: true
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/umputun
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/r/umputun/feed-master/
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/umputun
+
+markdown_extensions:
+  - smarty
+  - sane_lists
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+nav:
+  - FeedMaster: index.md
