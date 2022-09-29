@@ -244,6 +244,13 @@ nav {
     font-size: .825rem;
 }
 
+.ump-feed-master-duration-cell {
+    text-align: right;
+    color: rgba(0, 0, 0, 0.25);
+    font-size: .825rem;
+    padding-left: 0.5rem;
+}
+
 @media (min-width: 1240px) {
     .ump-feed-master__data-row-info-cell {
         display: flex;
