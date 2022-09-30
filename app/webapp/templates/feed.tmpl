@@ -61,9 +61,6 @@
                     </i>
                 </a>
             </div>
-            <div class="ump-feed-master-duration-cell">
-                {{.DurationFmt}}
-            </div>
             <div class="ump-feed-master-timestamp-cell">
                 {{if .Junk}}
                 <i class="fas fa-exclamation-circle"
@@ -71,7 +68,8 @@
                    title="Junk - excluded from target rss feed">
                 </i>
                 {{end}}
-                {{.DT.Format "02 Jan 15:04"}}
+                <span class="ump-feed-master-duration-cell">{{.DurationFmt}}</span>
+                <span>{{.DT.Format "02 Jan 15:04"}}</span>
             </div>
         </div>
     </div>
