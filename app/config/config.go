@@ -34,6 +34,7 @@ type Conf struct {
 		MaxItems        int                `yaml:"max_per_channel"`
 		FilesLocation   string             `yaml:"files_location"`
 		RSSLocation     string             `yaml:"rss_location"`
+		SkipShorts      time.Duration      `yaml:"skip_shorts"`
 	} `yaml:"youtube"`
 }
 

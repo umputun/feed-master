@@ -14,7 +14,7 @@ type RSSFileStore struct {
 	Enabled  bool
 }
 
-// Save  RSS feed file to the FS
+// Save RSS feed file to the FS
 func (s *RSSFileStore) Save(chanID, rss string) error {
 	if !s.Enabled {
 		return nil
@@ -28,7 +28,7 @@ func (s *RSSFileStore) Save(chanID, rss string) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to create file %s", fname)
 	}
-	defer fh.Close() //nolint
+	defer fh.Close() // nolint
 	if _, err = fh.WriteString(rss); err != nil {
 		return errors.Wrapf(err, "failed to write to file %s", fname)
 	}

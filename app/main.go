@@ -120,6 +120,7 @@ func main() {
 				Enabled:  conf.YouTube.RSSLocation != "",
 			},
 			DurationService: &duration.Service{},
+			SkipShorts:      conf.YouTube.SkipShorts,
 		}
 		go func() {
 			if err := ytSvc.Do(context.TODO()); err != nil {

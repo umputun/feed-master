@@ -38,6 +38,7 @@ type Service struct {
 	DurationService DurationService
 	KeepPerChannel  int
 	RootURL         string
+	SkipShorts      time.Duration
 }
 
 // FeedInfo contains channel or feed ID, readable name and other per-feed info
@@ -88,6 +89,9 @@ type DurationService interface {
 func (s *Service) Do(ctx context.Context) error {
 	log.Printf("[INFO] starting youtube service")
 
+	if s.SkipShorts > 0 {
+		log.Printf("[DEBUG] skip youtube episodes shorter than %v", s.SkipShorts)
+	}
 	for _, f := range s.Feeds {
 		log.Printf("[INFO] youtube feed %+v", f)
 	}
@@ -137,6 +141,9 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 		duration := ""
 		if entry.Duration > 0 {
 			duration = fmt.Sprintf("%d", entry.Duration)
+			if entry.Duration < int(s.SkipShorts.Seconds()) {
+				continue
+			}
 		}
 
 		items = append(items, rssfeed.Item{
@@ -369,6 +376,7 @@ func (s *Service) isNew(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
 
 // isAllowed checks if entry matches all filters for the channel feed
 func (s *Service) isAllowed(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
+
 	matchedIncludeFilter := true
 	if fi.Filter.Include != "" {
 		matchedIncludeFilter, err = regexp.MatchString(fi.Filter.Include, entry.Title)

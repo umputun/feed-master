@@ -212,6 +212,7 @@ func TestService_RSSFeed(t *testing.T) {
 			res := []ytfeed.Entry{
 				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: "/tmp/file1.mp3"},
 				{ChannelID: "channel1", VideoID: "vid2", Title: "title2", File: "/tmp/file2.mp3"},
+				{ChannelID: "channel1", VideoID: "vid3", Title: "title3", File: "/tmp/file2.mp3", Duration: 40},
 			}
 			res[0].Link.Href = "http://example.com/v1"
 			res[1].Link.Href = "http://example.com/v2"
@@ -229,6 +230,7 @@ func TestService_RSSFeed(t *testing.T) {
 		Store:          storeSvc,
 		RootURL:        "http://localhost:8080/yt",
 		KeepPerChannel: 10,
+		SkipShorts:     time.Second * 60,
 	}
 
 	res, err := svc.RSSFeed(FeedInfo{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel})
@@ -240,6 +242,7 @@ func TestService_RSSFeed(t *testing.T) {
 	assert.Contains(t, res, `<enclosure url="http://localhost:8080/yt/file1.mp3"`)
 	assert.Contains(t, res, `<guid>channel1::vid1</guid>`)
 	assert.Contains(t, res, `<guid>channel1::vid2</guid>`)
+	assert.NotContains(t, res, `<guid>channel1::vid3</guid>`, "skipped short video")
 	assert.Contains(t, res, `<link>http://example.com/v1</link>`)
 	assert.Contains(t, res, `<link>http://example.com/v2</link>`)
 	assert.Contains(t, res, `<link>http://example.com/c1</link>`)

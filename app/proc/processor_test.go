@@ -2,13 +2,6 @@ package proc
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/umputun/feed-master/app/config"
-	"github.com/umputun/feed-master/app/feed"
-	"github.com/umputun/feed-master/app/proc/mocks"
-	"github.com/umputun/feed-master/app/youtube"
-	bolt "go.etcd.io/bbolt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -16,6 +9,15 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	bolt "go.etcd.io/bbolt"
+
+	"github.com/umputun/feed-master/app/config"
+	"github.com/umputun/feed-master/app/feed"
+	"github.com/umputun/feed-master/app/proc/mocks"
+	"github.com/umputun/feed-master/app/youtube"
 )
 
 func TestProcessor_DoRemoveOldItems(t *testing.T) {
@@ -87,6 +89,7 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 				MaxItems        int                `yaml:"max_per_channel"`
 				FilesLocation   string             `yaml:"files_location"`
 				RSSLocation     string             `yaml:"rss_location"`
+				SkipShorts      time.Duration      `yaml:"skip_shorts"`
 			}{},
 		},
 		Store:         boltStore,
@@ -221,6 +224,7 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 				MaxItems        int                `yaml:"max_per_channel"`
 				FilesLocation   string             `yaml:"files_location"`
 				RSSLocation     string             `yaml:"rss_location"`
+				SkipShorts      time.Duration      `yaml:"skip_shorts"`
 			}{},
 		},
 		Store:         boltStore,
@@ -317,6 +321,7 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 				MaxItems        int                `yaml:"max_per_channel"`
 				FilesLocation   string             `yaml:"files_location"`
 				RSSLocation     string             `yaml:"rss_location"`
+				SkipShorts      time.Duration      `yaml:"skip_shorts"`
 			}{},
 		},
 		Store:         boltStore,

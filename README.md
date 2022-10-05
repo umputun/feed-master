@@ -53,6 +53,7 @@ youtube: # youtube configuration, optional
   base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id=" # base url for youtube channel
   base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id=" # base url for youtube playlist
   update: 60s # update interval for youtube feeds
+  skip_shorts: 120s # skip videos (and audios) shorter than this value, optional
   max_per_channel: 2 # max number of the latest videos per yt channel to download and process
   files_location: ./var/yt # location for downloaded youtube files
   rss_location: ./var/rss # location for generated youtube channel's RSS
