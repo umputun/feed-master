@@ -141,9 +141,6 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 		duration := ""
 		if entry.Duration > 0 {
 			duration = fmt.Sprintf("%d", entry.Duration)
-			if entry.Duration < int(s.SkipShorts.Seconds()) {
-				continue
-			}
 		}
 
 		items = append(items, rssfeed.Item{
@@ -227,7 +224,6 @@ func (s *Service) procChannels(ctx context.Context) error {
 			if processed >= s.keep(feedInfo) {
 				break
 			}
-
 			isAllowed, err := s.isAllowed(entry, feedInfo)
 			if err != nil {
 				return errors.Wrapf(err, "failed to check if entry %s is relevant", entry.VideoID)
@@ -268,6 +264,12 @@ func (s *Service) procChannels(ctx context.Context) error {
 			if downErr != nil {
 				allStats.ignored++
 				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, downErr)
+				continue
+			}
+
+			if s.isShort(file) {
+				allStats.ignored++
+				log.Printf("[INFO] skip short file %s: %s, %s", file, entry.VideoID, entry.String())
 				continue
 			}
 
@@ -394,6 +396,17 @@ func (s *Service) isAllowed(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error
 	}
 
 	return matchedIncludeFilter && !matchedExcludeFilter, nil
+}
+
+func (s *Service) isShort(file string) bool {
+	if s.SkipShorts.Seconds() > 0 {
+		// skip shorts if duration is less than SkipShorts
+		duration := s.DurationService.File(file)
+		if duration > 0 && duration < int(s.SkipShorts.Seconds()) {
+			return true
+		}
+	}
+	return false
 }
 
 // update sets entry file name and reset published ts

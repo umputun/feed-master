@@ -212,7 +212,6 @@ func TestService_RSSFeed(t *testing.T) {
 			res := []ytfeed.Entry{
 				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: "/tmp/file1.mp3"},
 				{ChannelID: "channel1", VideoID: "vid2", Title: "title2", File: "/tmp/file2.mp3"},
-				{ChannelID: "channel1", VideoID: "vid3", Title: "title3", File: "/tmp/file2.mp3", Duration: 40},
 			}
 			res[0].Link.Href = "http://example.com/v1"
 			res[1].Link.Href = "http://example.com/v2"
