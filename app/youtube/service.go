@@ -429,7 +429,7 @@ func (s *Service) update(entry ytfeed.Entry, file string, fi FeedInfo) ytfeed.En
 	}
 
 	entry.Duration = s.DurationService.File(file)
-
+	log.Printf("[DEBUG] updated entry: %s", entry.String())
 	return entry
 }
 

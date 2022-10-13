@@ -364,3 +364,46 @@ func TestServer_removeEntryCtrl(t *testing.T) {
 	require.Equal(t, "chan1", yt.RemoveEntryCalls()[0].Entry.ChannelID)
 	require.Equal(t, "vid1", yt.RemoveEntryCalls()[0].Entry.VideoID)
 }
+
+func TestServer_configCtrl(t *testing.T) {
+
+	store := &mocks.StoreMock{}
+
+	s := Server{
+		Version:       "1.0",
+		TemplLocation: "../webapp/templates/*",
+		Store:         store,
+		cache:         lcw.NewNopCache(),
+		Conf: config.Conf{
+			Feeds: map[string]config.Feed{
+				"feed1": {
+					Title:       "feed1",
+					Language:    "ru-ru",
+					Description: "this is feed1",
+					Link:        "http://example.com/feed1",
+					Author:      "Feed Master",
+					OwnerEmail:  "test@email.com",
+				},
+				"feed2": {
+					Title: "feed2",
+				},
+			},
+		},
+	}
+	ts := httptest.NewServer(s.router())
+	defer ts.Close()
+
+	resp, err := ts.Client().Get(ts.URL + "/config")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	body := string(respBody)
+	t.Logf("resp body: %s", body)
+	assert.Contains(t, body, "feed1")
+	assert.Contains(t, body, "feed2")
+	assert.Contains(t, body, "this is feed1")
+	assert.Contains(t, body, "http://example.com/feed1")
+}

@@ -101,6 +101,7 @@ func (s *Server) router() *chi.Mux {
 	router.Use(middleware.Throttle(1000), middleware.Timeout(60*time.Second))
 	router.Use(rest.AppInfo("feed-master", "umputun", s.Version), rest.Ping)
 	router.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(5, nil)))
+
 	router.Group(func(rimg chi.Router) {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[DEBUG]"), logger.IPfn(logger.AnonymizeIP))
 		rimg.Use(l.Handler)
@@ -119,6 +120,8 @@ func (s *Server) router() *chi.Mux {
 		rrss.Get("/feed/{name}/sources", s.getSourcesPageCtrl)
 		rrss.Get("/feeds", s.getFeedsPageCtrl)
 	})
+
+	router.Get("/config", func(w http.ResponseWriter, r *http.Request) { rest.RenderJSON(w, s.Conf) })
 
 	router.Route("/yt", func(r chi.Router) {
 
