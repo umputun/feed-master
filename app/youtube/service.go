@@ -267,9 +267,9 @@ func (s *Service) procChannels(ctx context.Context) error {
 				continue
 			}
 
-			if s.isShort(file) {
+			if short, duration := s.isShort(file); short {
 				allStats.ignored++
-				log.Printf("[INFO] skip short file %s: %s, %s", file, entry.VideoID, entry.String())
+				log.Printf("[INFO] skip short file %s (%v): %s, %s", file, duration, entry.VideoID, entry.String())
 				continue
 			}
 
@@ -398,15 +398,15 @@ func (s *Service) isAllowed(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error
 	return matchedIncludeFilter && !matchedExcludeFilter, nil
 }
 
-func (s *Service) isShort(file string) bool {
+func (s *Service) isShort(file string) (bool, time.Duration) {
 	if s.SkipShorts.Seconds() > 0 {
 		// skip shorts if duration is less than SkipShorts
 		duration := s.DurationService.File(file)
 		if duration > 0 && duration < int(s.SkipShorts.Seconds()) {
-			return true
+			return true, time.Duration(duration) * time.Second
 		}
 	}
-	return false
+	return false, 0
 }
 
 // update sets entry file name and reset published ts
