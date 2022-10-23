@@ -39,6 +39,7 @@ type Server struct {
 	Version       string
 	Conf          config.Conf
 	Store         Store
+	YoutubeStore  YoutubeStore
 	YoutubeSvc    YoutubeSvc
 	TemplLocation string
 	AdminPasswd   string
@@ -58,6 +59,11 @@ type YoutubeSvc interface {
 // Store provides access to feed data
 type Store interface {
 	Load(fmFeed string, max int, skipJunk bool) ([]feed.Item, error)
+}
+
+// YoutubeStore provides access to YouTube channel data
+type YoutubeStore interface {
+	Load(channelID string, max int) ([]ytfeed.Entry, error)
 }
 
 // Run starts http server for API with all routes
@@ -118,6 +124,7 @@ func (s *Server) router() *chi.Mux {
 		rrss.Get("/list", s.getListCtrl)
 		rrss.Get("/feed/{name}", s.getFeedPageCtrl)
 		rrss.Get("/feed/{name}/sources", s.getSourcesPageCtrl)
+		rrss.Get("/feed/{name}/source/{source}", s.getFeedSourceCtrl)
 		rrss.Get("/feeds", s.getFeedsPageCtrl)
 	})
 
@@ -133,6 +140,7 @@ func (s *Server) router() *chi.Mux {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"), logger.IPfn(logger.AnonymizeIP))
 		r.Use(l.Handler)
 		r.Get("/rss/{channel}", s.getYoutubeFeedCtrl)
+		r.Get("/channels", s.getYoutubeChannelsPageCtrl)
 		r.With(auth).Post("/rss/generate", s.regenerateRSSCtrl)
 		r.With(auth).Delete("/entry/{channel}/{video}", s.removeEntryCtrl)
 	})

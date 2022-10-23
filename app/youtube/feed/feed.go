@@ -104,8 +104,9 @@ type Entry struct {
 		URI  string `xml:"uri"`
 	} `xml:"author"`
 
-	File     string
-	Duration int // seconds
+	File        string
+	Duration    int    // seconds
+	DurationFmt string // used for ui only
 }
 
 // UID returns the unique identifier of the entry.
