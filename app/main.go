@@ -95,6 +95,7 @@ func main() {
 	}()
 
 	var ytSvc youtube.Service
+	var ytStore *store.BoltDB
 	if len(conf.YouTube.Channels) > 0 {
 		log.Printf("[INFO] starting youtube processor for %d channels", len(conf.YouTube.Channels))
 		outWr := log.ToWriter(log.Default(), "DEBUG")
@@ -109,11 +110,12 @@ func main() {
 		}
 		log.Printf("[DEBUG] buckets for youtube store: %s", strings.Join(channels, ", "))
 
+		ytStore = &store.BoltDB{DB: db, Channels: channels}
 		ytSvc = youtube.Service{
 			Feeds:          conf.YouTube.Channels,
 			Downloader:     dwnl,
 			ChannelService: &fd,
-			Store:          &store.BoltDB{DB: db, Channels: channels},
+			Store:          ytStore,
 			CheckDuration:  conf.YouTube.UpdateInterval,
 			KeepPerChannel: conf.YouTube.MaxItems,
 			RootURL:        conf.YouTube.BaseURL,
@@ -137,11 +139,12 @@ func main() {
 	}
 
 	server := api.Server{
-		Version:     revision,
-		Conf:        *conf,
-		Store:       procStore,
-		YoutubeSvc:  &ytSvc,
-		AdminPasswd: opts.AdminPasswd,
+		Version:      revision,
+		Conf:         *conf,
+		Store:        procStore,
+		YoutubeStore: ytStore,
+		YoutubeSvc:   &ytSvc,
+		AdminPasswd:  opts.AdminPasswd,
 	}
 	server.Run(context.Background(), opts.Port)
 }
