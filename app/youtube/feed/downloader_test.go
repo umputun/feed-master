@@ -51,7 +51,7 @@ func TestDownloader_GetFailed(t *testing.T) {
 	loc := os.TempDir()
 	fh, err := os.CreateTemp(loc, "downloader_test*.mp3")
 	require.NoError(t, err)
-	os.Remove(fh.Name())
+	assert.NoError(t, os.Remove(fh.Name()))
 
 	fname := filepath.Base(fh.Name())
 
