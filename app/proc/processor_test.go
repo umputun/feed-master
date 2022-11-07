@@ -33,7 +33,7 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 	tmpfile := filepath.Join(os.TempDir(), "test.db")
 	defer os.Remove(tmpfile)
 
-	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 2 * time.Second})
 	require.NoError(t, err)
 	boltStore := &BoltDB{DB: db}
 

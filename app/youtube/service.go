@@ -280,15 +280,6 @@ func (s *Service) procChannels(ctx context.Context) error {
 				continue
 			}
 
-			if s.DurationService.File(file) == 0 {
-				allStats.ignored++
-				log.Printf("[INFO] skip zero-duration file %s: %s, %s", file, entry.VideoID, entry.String())
-				if procErr := s.Store.SetProcessed(entry); procErr != nil {
-					log.Printf("[WARN] failed to set processed status for %s: %v", entry.VideoID, procErr)
-				}
-				continue
-			}
-
 			// update metadata
 			if tagsErr := s.updateMp3Tags(file, entry, feedInfo); tagsErr != nil {
 				log.Printf("[WARN] failed to update metadata for %s: %s", entry.VideoID, tagsErr)

@@ -104,15 +104,11 @@ func TestService_Do(t *testing.T) {
 	assert.Contains(t, string(rssData), "<guid>channel2::vid2</guid>")
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
-	require.Equal(t, 4*2, len(duration.FileCalls()))
+	require.Equal(t, 4, len(duration.FileCalls()))
 	assert.Equal(t, "/tmp/e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3", duration.FileCalls()[0].Fname)
-	assert.Equal(t, "/tmp/e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3", duration.FileCalls()[1].Fname)
-	assert.Equal(t, "/tmp/4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3", duration.FileCalls()[2].Fname)
-	assert.Equal(t, "/tmp/4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3", duration.FileCalls()[3].Fname)
-	assert.Equal(t, "/tmp/3be877c750abb87daee80c005fe87e7a3f824fed.mp3", duration.FileCalls()[4].Fname)
-	assert.Equal(t, "/tmp/3be877c750abb87daee80c005fe87e7a3f824fed.mp3", duration.FileCalls()[5].Fname)
-	assert.Equal(t, "/tmp/648f79b3a05ececb8a37600aa0aee332f0374e01.mp3", duration.FileCalls()[6].Fname)
-	assert.Equal(t, "/tmp/648f79b3a05ececb8a37600aa0aee332f0374e01.mp3", duration.FileCalls()[7].Fname)
+	assert.Equal(t, "/tmp/4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3", duration.FileCalls()[1].Fname)
+	assert.Equal(t, "/tmp/3be877c750abb87daee80c005fe87e7a3f824fed.mp3", duration.FileCalls()[2].Fname)
+	assert.Equal(t, "/tmp/648f79b3a05ececb8a37600aa0aee332f0374e01.mp3", duration.FileCalls()[3].Fname)
 }
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
@@ -203,10 +199,10 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 	assert.Contains(t, string(rssData), "<guid>channel2::vid1</guid>")
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
-	require.Equal(t, 6, len(duration.FileCalls()))
+	require.Equal(t, 3, len(duration.FileCalls()))
 	assert.Equal(t, "/tmp/4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3", duration.FileCalls()[0].Fname)
-	assert.Equal(t, "/tmp/3be877c750abb87daee80c005fe87e7a3f824fed.mp3", duration.FileCalls()[2].Fname)
-	assert.Equal(t, "/tmp/648f79b3a05ececb8a37600aa0aee332f0374e01.mp3", duration.FileCalls()[4].Fname)
+	assert.Equal(t, "/tmp/3be877c750abb87daee80c005fe87e7a3f824fed.mp3", duration.FileCalls()[1].Fname)
+	assert.Equal(t, "/tmp/648f79b3a05ececb8a37600aa0aee332f0374e01.mp3", duration.FileCalls()[2].Fname)
 }
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
