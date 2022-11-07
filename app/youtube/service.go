@@ -263,6 +263,10 @@ func (s *Service) procChannels(ctx context.Context) error {
 			file, downErr := s.Downloader.Get(ctx, entry.VideoID, s.makeFileName(entry))
 			if downErr != nil {
 				allStats.ignored++
+				if downErr == ytfeed.ErrSkip { // downloader decided to skip this entry
+					log.Printf("[INFO] skipping %s", entry.String())
+					continue
+				}
 				log.Printf("[WARN] failed to download %s: %s", entry.VideoID, downErr)
 				continue
 			}

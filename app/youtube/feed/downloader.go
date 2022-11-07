@@ -15,6 +15,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ErrSkip is returned when the file is not downloaded
+var ErrSkip = errors.New("skip")
+
 // Downloader executes an external command to download a video and extract its audio.
 type Downloader struct {
 	ytTemplate   string
@@ -63,5 +66,10 @@ func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, er
 	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf("failed to execute command: %v", err)
 	}
-	return filepath.Join(d.destination, fname+".mp3"), nil
+
+	file = filepath.Join(d.destination, fname)
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		return file, ErrSkip
+	}
+	return file, nil
 }
