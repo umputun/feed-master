@@ -67,7 +67,7 @@ func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, er
 		return "", fmt.Errorf("failed to execute command: %v", err)
 	}
 
-	file = filepath.Join(d.destination, fname)
+	file = filepath.Join(d.destination, fname+".mp3")
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		return file, ErrSkip
 	}
