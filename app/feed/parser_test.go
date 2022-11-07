@@ -117,7 +117,8 @@ func TestParseDateTime(t *testing.T) {
 		{"Mon, 02 Jan 2006 15:04:05 -0700", nil, "02 Jan 06 15:04 -0700"}, // RFC1123Z
 		{"Mon, 02 Jan 2006 15:04:05 MST", nil, "02 Jan 06 15:04 +0000"},   // RFC1123
 		{"2006-01-02 15:04:05 -0700", nil, "02 Jan 06 15:04 -0700"},
-		{"100500", fmt.Errorf("can't parse 100500"), time.Now().Format(time.RFC822Z)},
+		{"2017-09-30T14:11:48-0500", nil, "30 Sep 17 14:11 -0500"},
+		{"100500", fmt.Errorf("can't parse timestamp 100500"), time.Now().Format(time.RFC822Z)},
 	}
 
 	rss := Rss2{}

@@ -187,6 +187,7 @@ func (rss *Rss2) Normalize() (Rss2, error) {
 
 	dt, err := rss.parseDateTime(rss.LastBuildDate)
 	if err != nil {
+		log.Printf("[DEBUG] failed to parse LastBuildDate: %v, fallback with PubDate", err)
 		dt, err = rss.parseDateTime(rss.PubDate)
 	}
 	if err == nil {
@@ -223,6 +224,9 @@ func (rss *Rss2) parseDateTime(dt string) (time.Time, error) {
 	if ts, err := time.Parse("2006-01-02 15:04:05 -0700", dt); err == nil {
 		return ts, nil
 	}
-	log.Printf("[DEBUG] can't parse %s", dt)
-	return time.Now(), fmt.Errorf("can't parse %s", dt)
+	if ts, err := time.Parse("2006-01-02T15:04:05-0700", dt); err == nil {
+		return ts, nil
+	}
+
+	return time.Now(), fmt.Errorf("can't parse timestamp %s", dt)
 }
