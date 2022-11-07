@@ -267,8 +267,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 				continue
 			}
 
-			short, duration := s.isShort(file)
-			if short {
+			if short, duration := s.isShort(file); short {
 				allStats.ignored++
 				log.Printf("[INFO] skip short file %s (%v): %s, %s", file, duration, entry.VideoID, entry.String())
 				if procErr := s.Store.SetProcessed(entry); procErr != nil {
@@ -276,9 +275,10 @@ func (s *Service) procChannels(ctx context.Context) error {
 				}
 				continue
 			}
-			if duration == 0 {
+
+			if s.DurationService.File(file) == 0 {
 				allStats.ignored++
-				log.Printf("[INFO] skip zero-duration file %s (%v): %s, %s", file, duration, entry.VideoID, entry.String())
+				log.Printf("[INFO] skip zero-duration file %s: %s, %s", file, entry.VideoID, entry.String())
 				if procErr := s.Store.SetProcessed(entry); procErr != nil {
 					log.Printf("[WARN] failed to set processed status for %s: %v", entry.VideoID, procErr)
 				}
