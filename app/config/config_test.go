@@ -25,8 +25,8 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "https://bbb.com/u1", r.Feeds["second"].Sources[0].URL)
 	assert.Equal(t, "^filterme*", r.Feeds["filtered"].Filter.Title)
 	assert.Equal(t, time.Second*600, r.System.UpdateInterval)
-	assert.Equal(t, []ytfdeed.FeedInfo{{Name: "name1", ID: "id1", Type: "playlist"},
-		{Name: "name2", ID: "id2", Type: "channel", Language: "ru-ru"}},
+	assert.Equal(t, []ytfdeed.FeedInfo{{Name: "name1", ID: "id1", Type: "playlist", Keep: 15},
+		{Name: "name2", ID: "id2", Type: "channel", Language: "ru-ru", Keep: 5}},
 		r.YouTube.Channels, "2 yt")
 	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.Filename}}.tmp", r.YouTube.DlTemplate)
 	assert.Equal(t, "https://www.youtube.com/videos.xml?channel_id=", r.YouTube.BaseChanURL)

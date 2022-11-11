@@ -35,5 +35,5 @@ youtube:
   base_playlist_url: "https://www.youtube.com/videos.xml?playlist_id="
   rss_location: ./var/rss
   channels:
-  - {id: id1, name: name1, type: playlist}
+  - {id: id1, name: name1, type: playlist, keep: 15}
   - {id: id2, name: name2, lang: ru-ru, type: channel}
