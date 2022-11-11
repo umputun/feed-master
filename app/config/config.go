@@ -149,9 +149,9 @@ func (c *Conf) setDefaults() {
 		c.YouTube.UpdateInterval = c.System.UpdateInterval
 	}
 
-	for _, f := range c.YouTube.Channels {
+	for idx, f := range c.YouTube.Channels {
 		if f.Keep == 0 {
-			f.Keep = c.System.MaxItems
+			c.YouTube.Channels[idx].Keep = c.System.MaxItems
 		}
 
 	}
