@@ -12,10 +12,18 @@ import (
 	"github.com/umputun/feed-master/app/feed"
 )
 
-// TwitterClient implements basic publisher of rss itom to twitter
+//go:generate moq -out mocks/tweet_poster.go -pkg mocks -skip-ensure -fmt goimports . TweetPoster
+
+// TweetPoster is the interface for posting Tweets to Twitter
+type TweetPoster interface {
+	PostTweet(msg string, v url.Values) (tweet anaconda.Tweet, err error)
+}
+
+// TwitterClient implements basic publisher of rss item to twitter
 type TwitterClient struct {
 	TwitterAuth
-	formatter func(feed.Item) string
+	formatter   func(feed.Item) string
+	tweetPoster TweetPoster
 }
 
 // TwitterAuth contains keys and secrets for twitter API
@@ -25,8 +33,8 @@ type TwitterAuth struct {
 }
 
 // NewTwitterClient makes twitter notifier
-func NewTwitterClient(auth TwitterAuth, formatter func(feed.Item) string) *TwitterClient {
-	return &TwitterClient{TwitterAuth: auth, formatter: formatter}
+func NewTwitterClient(auth TwitterAuth, formatter func(feed.Item) string, twitterSender TweetPoster) *TwitterClient {
+	return &TwitterClient{TwitterAuth: auth, formatter: formatter, tweetPoster: twitterSender}
 }
 
 // Send formatted item to twitter
@@ -36,11 +44,11 @@ func (t *TwitterClient) Send(item feed.Item) error {
 	}
 
 	log.Printf("[INFO] publish to twitter %+v", item.Title)
-	api := anaconda.NewTwitterApiWithCredentials(t.AccessToken, t.AccessSecret, t.ConsumerKey, t.ConsumerSecret)
+
 	v := url.Values{}
 	v.Set("tweet_mode", "extended")
 	msg := t.formatter(item)
-	if _, err := api.PostTweet(msg, v); err != nil {
+	if _, err := t.tweetPoster.PostTweet(msg, v); err != nil {
 		return errors.Wrap(err, "can't send to twitter")
 	}
 	log.Printf("[DEBUG] published to twitter %s", strings.ReplaceAll(msg, "\n", " "))
