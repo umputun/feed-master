@@ -1,6 +1,10 @@
 package proc
 
 import (
+	"github.com/ChimeraCoder/anaconda"
+	"github.com/stretchr/testify/require"
+	"github.com/umputun/feed-master/app/proc/mocks"
+	"net/url"
 	"strconv"
 	"testing"
 
@@ -19,7 +23,7 @@ func TestNewTwitterClient(t *testing.T) {
 
 	client := NewTwitterClient(twiAuth, func(item feed.Item) string {
 		return ""
-	})
+	}, nil)
 
 	assert.EqualValues(t, twiAuth, client.TwitterAuth)
 }
@@ -49,7 +53,7 @@ func TestTwitterSendIfFieldsTwitterAuthEmpty(t *testing.T) {
 				return ""
 			}
 
-			client := NewTwitterClient(twiAuth, twitterFmtFn)
+			client := NewTwitterClient(twiAuth, twitterFmtFn, nil)
 
 			assert.Nil(t, client.Send(feed.Item{}))
 		})
@@ -76,4 +80,26 @@ func TestCleanText(t *testing.T) {
 			assert.Equal(t, tt.out, out)
 		})
 	}
+}
+
+func TestTwitterSend(t *testing.T) {
+	twitPoster := &mocks.TweetPosterMock{PostTweetFunc: func(msg string, v url.Values) (anaconda.Tweet, error) {
+		return anaconda.Tweet{}, nil
+	}}
+	formatter := func(item feed.Item) string {
+		return "formatted text"
+	}
+
+	tClient := NewTwitterClient(TwitterAuth{
+		ConsumerKey:    "a",
+		ConsumerSecret: "b",
+		AccessToken:    "c",
+		AccessSecret:   "d",
+	}, formatter, twitPoster)
+
+	assert.Nil(t, tClient.Send(feed.Item{}))
+
+	require.Equal(t, 1, len(twitPoster.PostTweetCalls()))
+	assert.Equal(t, "formatted text", twitPoster.PostTweetCalls()[0].Msg)
+	assert.Equal(t, url.Values{"tweet_mode": []string{"extended"}}, twitPoster.PostTweetCalls()[0].V)
 }

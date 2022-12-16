@@ -11,6 +11,8 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/ChimeraCoder/anaconda"
+
 	log "github.com/go-pkgz/lgr"
 	"github.com/google/uuid"
 	"github.com/jessevdk/go-flags"
@@ -177,7 +179,9 @@ func makeTwitter(opts options) *proc.TwitterClient {
 		AccessSecret:   opts.TwitterAccessSecret,
 	}
 
-	return proc.NewTwitterClient(twiAuth, twitterFmtFn)
+	twitPoster := anaconda.NewTwitterApiWithCredentials(twiAuth.AccessToken, twiAuth.AccessSecret, twiAuth.ConsumerKey, twiAuth.ConsumerSecret)
+
+	return proc.NewTwitterClient(twiAuth, twitterFmtFn, twitPoster)
 }
 
 func setupLog(dbg bool) {
