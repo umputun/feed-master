@@ -1,6 +1,8 @@
 package proc
 
 import (
+	"errors"
+	"github.com/go-chi/chi/v5"
 	"html/template"
 	"io"
 	"net/http"
@@ -189,7 +191,7 @@ func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
 }
 
 func TestTelegramClient_sendAudio(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := mockTelegramServer(func(w http.ResponseWriter, r *http.Request) {
 		t.Logf("req: %+v", r)
 		require.Equal(t, "GET", r.Method)
 		fh, err := os.Open("testdata/audio.mp3")
@@ -197,7 +199,7 @@ func TestTelegramClient_sendAudio(t *testing.T) {
 		defer fh.Close() //nolint
 		_, err = io.Copy(w, fh)
 		assert.NoError(t, err)
-	}))
+	})
 	defer ts.Close()
 
 	dur := &mocks.DurationServiceMock{
@@ -225,4 +227,166 @@ func TestTelegramClient_sendAudio(t *testing.T) {
 	assert.Equal(t, 2, len(snd.SendCalls()))
 	assert.Equal(t, 1, len(dur.FileCalls()), "duration service used because item has no duration")
 	assert.Equal(t, 12345, snd.SendCalls()[1].Audio.Duration)
+}
+
+func TestSendIfSendAudioFailed(t *testing.T) {
+	ts := mockTelegramServer(nil)
+	defer ts.Close()
+
+	dur := &mocks.DurationServiceMock{
+		FileFunc: func(fname string) int {
+			return 12345
+		},
+	}
+
+	snd := &mocks.TelegramSenderMock{
+		SendFunc: func(audio tb.Audio, bot *tb.Bot, recipient tb.Recipient, sendOptions *tb.SendOptions) (*tb.Message, error) {
+			return nil, errors.New("error while sending audio")
+		},
+	}
+
+	tc, err := NewTelegramClient("test-token", ts.URL, 900*time.Millisecond, dur, snd)
+
+	require.NoError(t, err)
+	assert.NotNil(t, tc)
+
+	err = tc.Send("@channel", feed.Item{Enclosure: feed.Enclosure{URL: ts.URL + "/download/some.mp3"}})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "can't send to telegram for")
+
+	require.Equal(t, 1, len(snd.SendCalls()))
+}
+
+func TestSend(t *testing.T) {
+	ts := mockTelegramServer(nil)
+	defer ts.Close()
+
+	dur := &mocks.DurationServiceMock{
+		FileFunc: func(fname string) int {
+			return 12345
+		},
+	}
+
+	snd := &mocks.TelegramSenderMock{
+		SendFunc: func(audio tb.Audio, bot *tb.Bot, recipient tb.Recipient, sendOptions *tb.SendOptions) (*tb.Message, error) {
+			return &tb.Message{Text: "Some test message"}, nil
+		},
+	}
+
+	tc, err := NewTelegramClient("test-token", ts.URL, 900*time.Millisecond, dur, snd)
+
+	require.NoError(t, err)
+	assert.NotNil(t, tc)
+
+	err = tc.Send("@channel", feed.Item{Enclosure: feed.Enclosure{URL: ts.URL + "/download/some.mp3"}})
+	assert.NoError(t, err)
+
+	require.Equal(t, 1, len(snd.SendCalls()))
+	assert.Equal(t, 12345, snd.SendCalls()[0].Audio.Duration)
+	assert.Equal(t, "audio/mpeg", snd.SendCalls()[0].Audio.MIME)
+	assert.Equal(t, "some.mp3", snd.SendCalls()[0].Audio.FileName)
+	assert.Equal(t, "test-token", snd.SendCalls()[0].Bot.Token)
+	assert.Equal(t, ts.URL, snd.SendCalls()[0].Bot.URL)
+	assert.Equal(t, "@channel", snd.SendCalls()[0].Recipient.Recipient())
+}
+
+func TestSendTextIfAudioLarge(t *testing.T) {
+	ts := mockTelegramServer(nil)
+	defer ts.Close()
+
+	dur := &mocks.DurationServiceMock{
+		FileFunc: func(fname string) int {
+			return 12345
+		},
+	}
+
+	snd := &mocks.TelegramSenderMock{
+		SendFunc: func(audio tb.Audio, bot *tb.Bot, recipient tb.Recipient, sendOptions *tb.SendOptions) (*tb.Message, error) {
+			return nil, errors.New("Request Entity Too Large")
+		},
+	}
+
+	tc, err := NewTelegramClient("test-token", ts.URL, 900*time.Millisecond, dur, snd)
+
+	require.NoError(t, err)
+	assert.NotNil(t, tc)
+
+	err = tc.Send("@channel", feed.Item{Enclosure: feed.Enclosure{URL: ts.URL + "/download/some.mp3"}})
+	assert.NoError(t, err)
+
+	require.Equal(t, 1, len(snd.SendCalls()))
+	assert.Equal(t, 12345, snd.SendCalls()[0].Audio.Duration)
+	assert.Equal(t, "audio/mpeg", snd.SendCalls()[0].Audio.MIME)
+	assert.Equal(t, "some.mp3", snd.SendCalls()[0].Audio.FileName)
+	assert.Equal(t, "test-token", snd.SendCalls()[0].Bot.Token)
+	assert.Equal(t, ts.URL, snd.SendCalls()[0].Bot.URL)
+	assert.Equal(t, "@channel", snd.SendCalls()[0].Recipient.Recipient())
+}
+
+func TestTelegramSenderImpl_Send(t *testing.T) {
+	ts := mockTelegramServer(nil)
+	defer ts.Close()
+
+	senderImpl := TelegramSenderImpl{}
+
+	fName := "testdata/audio.mp3"
+	fh, err := os.Open(fName)
+	require.NoError(t, err)
+	defer fh.Close() //nolint
+
+	f := tb.File{FileLocal: fName}
+
+	bot, err := tb.NewBot(tb.Settings{URL: ts.URL})
+	require.NoError(t, err)
+
+	_, err = senderImpl.Send(tb.Audio{File: f, FileName: fName}, bot, &tb.Chat{}, &tb.SendOptions{})
+	assert.NoError(t, err)
+}
+
+const getMeResp = `{"ok": true,
+				"result": {
+					"first_name": "comments_test",
+					"id": 707381019,
+					"is_bot": true,
+					"username": "feedMaster_test_bot"
+				}}`
+
+func mockTelegramServer(h http.HandlerFunc) *httptest.Server {
+	if h != nil {
+		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.Contains(r.URL.String(), "getMe") {
+				_, _ = w.Write([]byte(getMeResp))
+				return
+			}
+			h(w, r)
+		}))
+	}
+	router := chi.NewRouter()
+
+	router.Post("/bottest-token/getMe", func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(getMeResp))
+	})
+
+	router.Get("/download/some.mp3", func(w http.ResponseWriter, r *http.Request) {
+		// taken from https://github.com/mathiasbynens/small/blob/master/mp3.mp3
+		smallMP3File := []byte{54, 53, 53, 48, 55, 54, 51, 52, 48, 48, 51, 49, 56, 52, 51, 50, 48, 55, 54, 49, 54, 55, 49, 55, 49, 55, 55, 49, 53, 49, 49, 56, 51, 51, 49, 52, 51, 56, 50, 49, 50, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48}
+
+		_, _ = w.Write(smallMP3File)
+	})
+
+	router.Post("/bottest-token/sendMessage", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"ok": true, "result": {"text": "Some test message"}}`))
+	})
+
+	router.Post("/bot/sendAudio", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"ok": true, "result": {"id": 1}}`))
+	})
+
+	router.Post("/bot/getMe", func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(getMeResp))
+	})
+
+	return httptest.NewServer(router)
 }
