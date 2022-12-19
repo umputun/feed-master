@@ -2,7 +2,6 @@ package proc
 
 import (
 	"errors"
-	"github.com/go-chi/chi/v5"
 	"html/template"
 	"io"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

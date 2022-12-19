@@ -1,16 +1,16 @@
 package proc
 
 import (
-	"github.com/ChimeraCoder/anaconda"
-	"github.com/stretchr/testify/require"
-	"github.com/umputun/feed-master/app/proc/mocks"
 	"net/url"
 	"strconv"
 	"testing"
 
-	"github.com/umputun/feed-master/app/feed"
-
+	"github.com/ChimeraCoder/anaconda"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/umputun/feed-master/app/feed"
+	"github.com/umputun/feed-master/app/proc/mocks"
 )
 
 func TestNewTwitterClient(t *testing.T) {

@@ -1,7 +1,6 @@
 package proc
 
 import (
-	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
@@ -18,7 +17,7 @@ import (
 const pubDate = "Mon, 02 Jan 2006 15:04:05 -0700"
 
 func TestSaveIfInvalidPubDate(t *testing.T) {
-	tmpfile, _ := ioutil.TempFile("", "")
+	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
 
 	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
@@ -34,7 +33,7 @@ func TestSaveIfInvalidPubDate(t *testing.T) {
 }
 
 func TestSave(t *testing.T) {
-	tmpfile, _ := ioutil.TempFile("", "")
+	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
 	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
 	require.NoError(t, err)
@@ -51,7 +50,7 @@ func TestSave(t *testing.T) {
 }
 
 func TestSaveIfItemIsExists(t *testing.T) {
-	tmpfile, _ := ioutil.TempFile("", "")
+	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
 	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
 	require.NoError(t, err)
@@ -70,7 +69,7 @@ func TestSaveIfItemIsExists(t *testing.T) {
 }
 
 func TestLoadIfNotBucket(t *testing.T) {
-	tmpfile, _ := ioutil.TempFile("", "")
+	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
 	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
 	require.NoError(t, err)
@@ -83,7 +82,7 @@ func TestLoadIfNotBucket(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	tmpfile, _ := ioutil.TempFile("", "")
+	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
 	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
 	require.NoError(t, err)
@@ -100,7 +99,7 @@ func TestLoad(t *testing.T) {
 }
 
 func TestLoadChackMax(t *testing.T) {
-	tmpfile, _ := ioutil.TempFile("", "")
+	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
 	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
 	require.NoError(t, err)
@@ -135,7 +134,7 @@ func TestLoadChackMax(t *testing.T) {
 }
 
 func TestRemoveOldIfNotExistsBucket(t *testing.T) {
-	tmpfile, _ := ioutil.TempFile("", "")
+	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
 	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
 	require.NoError(t, err)
@@ -161,7 +160,7 @@ func TestRemoveOld(t *testing.T) {
 		i := i
 		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			tmpfile, _ := ioutil.TempFile("", "")
+			tmpfile, _ := os.CreateTemp("", "")
 			defer os.Remove(tmpfile.Name())
 			db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
 			require.NoError(t, err)

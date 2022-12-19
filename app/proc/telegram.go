@@ -3,7 +3,6 @@ package proc
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -110,7 +109,7 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 	defer httpBody.Close()
 
 	// download audio to the temp file
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "feed-master-*.mp3")
+	tmpFile, err := os.CreateTemp(os.TempDir(), "feed-master-*.mp3")
 	if err != nil {
 		return nil, err
 	}
