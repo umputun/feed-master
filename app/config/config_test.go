@@ -19,7 +19,7 @@ func TestLoad(t *testing.T) {
 
 	r.setDefaults()
 
-	assert.Equal(t, 3, len(r.Feeds), "3 sets")
+	assert.Equal(t, 4, len(r.Feeds), "4 sets")
 	assert.Equal(t, 2, len(r.Feeds["first"].Sources), "2 feeds in first")
 	assert.Equal(t, 1, len(r.Feeds["second"].Sources), "1 feed in second")
 	assert.Equal(t, "https://bbb.com/u1", r.Feeds["second"].Sources[0].URL)
@@ -38,6 +38,9 @@ func TestLoad(t *testing.T) {
 
 	assert.Equal(t, "nobody@feed-master.com", r.Feeds["first"].OwnerEmail)
 	assert.Equal(t, "blah@example.com", r.Feeds["second"].OwnerEmail)
+
+	assert.Equal(t, "(one|two|three)", r.Feeds["filtered2"].Filter.Title)
+	assert.Equal(t, true, r.Feeds["filtered2"].Filter.Invert)
 }
 
 func TestLoadConfigNotFoundFile(t *testing.T) {
@@ -142,6 +145,12 @@ func TestFilter(t *testing.T) {
 			rssfeed.Item{Title: "something blah two something"},
 			nil,
 			false,
+		},
+		{
+			Filter{Title: "(one|two|three)", Invert: true},
+			rssfeed.Item{Title: "something blah something"},
+			nil,
+			true,
 		},
 		{
 			Filter{},

@@ -79,9 +79,7 @@ func (filter *Filter) Skip(item feed.Item) (bool, error) {
 		if err != nil {
 			return mayInvert(matched), err
 		}
-		if matched {
-			return mayInvert(true), err
-		}
+		return mayInvert(matched), nil
 	}
 	return false, nil
 }

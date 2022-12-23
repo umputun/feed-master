@@ -8,6 +8,17 @@ feeds:
         name: mmm1
         url: "https://filtered.feed"
     title: "filtered 1"
+
+  filtered2:
+    description: filtered2
+    filter:
+      title: (one|two|three)
+      invert: true
+    sources:
+      - name: mmm1
+        url: "https://filtered.feed"
+    title: "filtered 1"
+
   first:
     sources:
       -
@@ -17,6 +28,7 @@ feeds:
         name: nnn2
         url: "http://aa.com/u2"
     title: "blah 1"
+
   second:
     description: "some 2"
     sources:
