@@ -126,6 +126,24 @@ func TestFilter(t *testing.T) {
 			false,
 		},
 		{
+			Filter{Title: "(one|two|three)"},
+			rssfeed.Item{Title: "something blah one"},
+			nil,
+			true,
+		},
+		{
+			Filter{Title: "(one|two|three)", Invert: true},
+			rssfeed.Item{Title: "something blah one"},
+			nil,
+			false,
+		},
+		{
+			Filter{Title: "(one|two|three)", Invert: true},
+			rssfeed.Item{Title: "something blah two something"},
+			nil,
+			false,
+		},
+		{
 			Filter{},
 			rssfeed.Item{Title: "Title"},
 			nil,
