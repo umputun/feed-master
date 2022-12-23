@@ -1,12 +1,11 @@
 # Feed Master [![Build Status](https://github.com/umputun/feed-master/workflows/build/badge.svg)](https://github.com/umputun/feed-master/actions) [![Coverage Status](https://coveralls.io/repos/github/umputun/feed-master/badge.svg?branch=master)](https://coveralls.io/github/umputun/feed-master?branch=master) [![Docker Automated build](https://img.shields.io/docker/automated/umputun/feed-master)](https://hub.docker.com/r/umputun/feed-master)
 
 
-Feed-Master is a service that aggregates and publishes RSS feeds. It can pull multiple feeds from different sources and publish them to a single feed. The service normalizing all the feeds to make sure the combined feed is valid, compatible with podcast clients and compatible with RSS 2.0 specification. 
+Feed-Master is a service that aggregates and publishes RSS feeds from multiple sources into a single feed. It normalizes the feeds to ensure that they are valid, compatible with podcast clients, and compliant with the RSS 2.0 specification. This allows users to access all of their desired content in a single, easy-to-use feed.
 
-In addition to making RSS feeds, Feed-Master can also publish updates to both twitter and telegram. In case of telegram the actual mp3 audio file is published too. In case of twitter the mp3 audio file is published as a tweet with a link to the original audio file and with the episode info, like title and/or description.
+In addition to aggregating RSS feeds, Feed-Master can also publish updates to social media platforms such as Twitter and Telegram. For Telegram, the actual audio file is published, while for Twitter, a link to the original audio file is included in the tweet along with episode information like the title and description.
 
-
-Feed-Master supports extracting audio from youtube channels and use it to make the final feed. The service uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to pull videos and [ffmpeg](https://www.ffmpeg.org/) for audio extraction. In this mode feed-master serves the audio files in addition to the generated RSS feed.
+Feed-Master also supports extracting audio from YouTube channels and using it to create the final feed. The service uses tools like  [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ffmpeg](https://www.ffmpeg.org/) to pull videos and extract the audio, respectively. In this mode, Feed-Master serves the audio files in addition to the generated RSS feed, providing users with even more options for accessing and consuming content.
 
 ## Run in docker (short version)
 
@@ -40,7 +39,9 @@ feeds:
     author: "Someone" # feed author, default "Feed Master"
     owner_email: "blah@example.com" # feed owner email, used in various services (i.e. spotify) to confirm RSS submission
     image: images/yt-example.png # feed image, used in generated RSS as podcast thumbnail
-    filter: "something" # filter from the feed, can be regexp or string 
+    filter: 
+      - Title: "something" # filter from the feed, can be regexp or string
+      - Invert: true # invert filter (acts as "only"), default false
     sources: # list of sources, each source is a name of and the source RSS feed
       - {name: "Точка", url: http://localhost:8080/yt/rss/PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd}
       - {name: "Живой Гвоздь", url: http://localhost:8080/yt/rss/UCWAIvx2yYLK_xTYD4F2mUNw}
