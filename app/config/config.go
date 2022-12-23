@@ -61,18 +61,26 @@ type Feed struct {
 
 // Filter defines feed section for a feed filter~
 type Filter struct {
-	Title string `yaml:"title"`
+	Title  string `yaml:"title"`
+	Invert bool   `yaml:"invert"`
 }
 
 // Skip items with this regexp
 func (filter *Filter) Skip(item feed.Item) (bool, error) {
+	mayInvert := func(b bool) bool {
+		if filter.Invert {
+			return !b
+		}
+		return b
+	}
+
 	if filter.Title != "" {
 		matched, err := regexp.MatchString(filter.Title, item.Title)
 		if err != nil {
-			return matched, err
+			return mayInvert(matched), err
 		}
 		if matched {
-			return true, err
+			return mayInvert(true), err
 		}
 	}
 	return false, nil

@@ -106,7 +106,7 @@ func TestSetDefault(t *testing.T) {
 	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?playlist_id=", c.YouTube.BasePlaylistURL)
 }
 
-func TestFilterAllCases(t *testing.T) {
+func TestFilter(t *testing.T) {
 	tbl := []struct {
 		filter Filter
 		inp    rssfeed.Item
@@ -120,7 +120,19 @@ func TestFilterAllCases(t *testing.T) {
 			true,
 		},
 		{
+			Filter{Title: "(Part \\d+)", Invert: true},
+			rssfeed.Item{Title: "Title (Part 1)"},
+			nil,
+			false,
+		},
+		{
 			Filter{},
+			rssfeed.Item{Title: "Title"},
+			nil,
+			false,
+		},
+		{
+			Filter{Invert: true},
 			rssfeed.Item{Title: "Title"},
 			nil,
 			false,
