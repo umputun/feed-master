@@ -19,7 +19,7 @@ feeds:
 
 youtube:
   base_url: http://localhost:8080/yt/media
-  dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}}.tmp
+  dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}}.tmp --match-filter "!is_live"
   base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id="
   base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id="
   update: 60s

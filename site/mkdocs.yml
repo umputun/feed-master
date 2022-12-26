@@ -12,6 +12,7 @@ copyright: Some rights reserved &copy; 2021 - 2022 Umputun
 
 theme:
   name: material
+  custom_dir: overrides
   favicon: favicon.png
   language: en
   palette:
@@ -43,6 +44,9 @@ extra:
       link: https://hub.docker.com/r/umputun/feed-master/
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/umputun
+  analytics:
+    provider: custom
+    analytic_id: 785bcac8-2a25-418e-9ae1-be6b8c4a3de1
 
 markdown_extensions:
   - smarty
