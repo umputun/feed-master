@@ -78,7 +78,7 @@ _see [examples](https://github.com/umputun/feed-master/tree/master/_example/etc)
 
 ### Single-feed configuration
 
-For a very simple configuration, command-line only configuration is available. In this case only a single sopurce feed is allowed and yt processing is disabled.  The command-line configuration is the following:
+For a very simple configuration, command-line only configuration is available. In this case only a single source feed is allowed and yt processing is disabled.  The command-line configuration is the following:
 
 | Command line     | Environment         | Default                    | Description                               |
 |------------------|---------------------|----------------------------|-------------------------------------------|
