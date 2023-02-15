@@ -127,6 +127,10 @@ func main() {
 			SkipShorts:      conf.YouTube.SkipShorts,
 		}
 		go func() {
+			if conf.YouTube.DisableUpdates {
+				log.Printf("[INFO] youtube updates are disabled")
+				return
+			}
 			if err := ytSvc.Do(context.TODO()); err != nil {
 				log.Printf("[ERROR] youtube processor failed: %v", err)
 			}

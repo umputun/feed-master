@@ -90,6 +90,7 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 				FilesLocation   string             `yaml:"files_location"`
 				RSSLocation     string             `yaml:"rss_location"`
 				SkipShorts      time.Duration      `yaml:"skip_shorts"`
+				DisableUpdates  bool               `yaml:"disable_updates"`
 			}{},
 		},
 		Store:         boltStore,
@@ -225,6 +226,7 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 				FilesLocation   string             `yaml:"files_location"`
 				RSSLocation     string             `yaml:"rss_location"`
 				SkipShorts      time.Duration      `yaml:"skip_shorts"`
+				DisableUpdates  bool               `yaml:"disable_updates"`
 			}{},
 		},
 		Store:         boltStore,
@@ -322,6 +324,7 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 				FilesLocation   string             `yaml:"files_location"`
 				RSSLocation     string             `yaml:"rss_location"`
 				SkipShorts      time.Duration      `yaml:"skip_shorts"`
+				DisableUpdates  bool               `yaml:"disable_updates"`
 			}{},
 		},
 		Store:         boltStore,
