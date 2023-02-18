@@ -50,7 +50,7 @@ feeds:
 
 youtube: # youtube configuration, optional
   base_url: http://localhost:8080/yt/media # base url for youtube media
-  dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}}.tmp # template for youtube-dl
+  dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}} # template for youtube-dl
   base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id=" # base url for youtube channel
   base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id=" # base url for youtube playlist
   update: 60s # update interval for youtube feeds

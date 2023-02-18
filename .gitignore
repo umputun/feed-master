@@ -7,3 +7,4 @@ target
 *.bdb
 var/
 .vscode/
+user-test.yml
