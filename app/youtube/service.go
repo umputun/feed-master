@@ -277,6 +277,9 @@ func (s *Service) procChannels(ctx context.Context) error {
 				if procErr := s.Store.SetProcessed(entry); procErr != nil {
 					log.Printf("[WARN] failed to set processed status for %s: %v", entry.VideoID, procErr)
 				}
+				if errRm := os.Remove(file); errRm != nil {
+					log.Printf("[WARN] failed to remove short video's %s file %s: %v", entry.VideoID, file, errRm)
+				}
 				continue
 			}
 
