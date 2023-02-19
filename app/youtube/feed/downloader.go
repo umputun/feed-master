@@ -38,7 +38,7 @@ func NewDownloader(tmpl string, logOutWriter, logErrWriter io.Writer, destinatio
 }
 
 // Get downloads a video from youtube and extracts audio.
-// yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}.tmp
+// yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}
 func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, err error) {
 
 	if err := os.MkdirAll(d.destination, 0o750); err != nil {

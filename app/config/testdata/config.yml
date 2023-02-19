@@ -42,7 +42,7 @@ system:
   update: 600s
 
 youtube:
-  dl_template: yt-dlp --extract-audio --audio-format=mp3 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}.tmp
+  dl_template: yt-dlp --extract-audio --audio-format=mp3 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}
   base_chan_url: "https://www.youtube.com/videos.xml?channel_id="
   base_playlist_url: "https://www.youtube.com/videos.xml?playlist_id="
   rss_location: ./var/rss
