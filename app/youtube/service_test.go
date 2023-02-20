@@ -35,7 +35,7 @@ func TestService_Do(t *testing.T) {
 	downloader := &mocks.DownloaderServiceMock{
 		GetFunc: func(ctx context.Context, id string, fname string) (string, error) {
 			fpath := filepath.Join(tempDir, fname+".mp3")
-			_, err := os.Create(fpath)
+			_, err := os.Create(fpath) // nolint
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -104,14 +104,14 @@ func TestService_Do(t *testing.T) {
 	require.Equal(t, "vid1", downloader.GetCalls()[0].ID)
 	require.True(t, downloader.GetCalls()[0].Fname != "")
 
-	rssData, err := os.ReadFile(tempDir + "/channel1.xml")
+	rssData, err := os.ReadFile(tempDir + "/channel1.xml") // nolint
 	require.NoError(t, err)
 	t.Logf("%s", string(rssData))
 	assert.Contains(t, string(rssData), "<guid>channel1::vid1</guid>")
 	assert.Contains(t, string(rssData), "<guid>channel1::vid2</guid>")
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
-	rssData, err = os.ReadFile(tempDir + "/channel2.xml")
+	rssData, err = os.ReadFile(tempDir + "/channel2.xml") // nolint
 	require.NoError(t, err)
 	assert.Contains(t, string(rssData), "<guid>channel2::vid1</guid>")
 	assert.Contains(t, string(rssData), "<guid>channel2::vid2</guid>")
