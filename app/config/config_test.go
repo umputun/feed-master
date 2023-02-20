@@ -104,7 +104,7 @@ func TestSetDefault(t *testing.T) {
 	assert.Equal(t, "/yt/media", c.YouTube.BaseURL)
 	assert.Equal(t, "var/yt", c.YouTube.FilesLocation)
 	assert.Equal(t, "var/rss", c.YouTube.RSSLocation)
-	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.FileName}}.tmp", c.YouTube.DlTemplate)
+	assert.Equal(t, "yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio \"https://www.youtube.com/watch?v={{.ID}}\" --no-progress -o {{.FileName}} --match-filter \"!is_live & availability=public\"", c.YouTube.DlTemplate)
 	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?channel_id=", c.YouTube.BaseChanURL)
 	assert.Equal(t, "https://www.youtube.com/feeds/videos.xml?playlist_id=", c.YouTube.BasePlaylistURL)
 }

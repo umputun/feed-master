@@ -167,7 +167,7 @@ func (c *Conf) setDefaults() {
 	}
 
 	if c.YouTube.DlTemplate == "" {
-		c.YouTube.DlTemplate = `yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}}.tmp`
+		c.YouTube.DlTemplate = `yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}} --match-filter "!is_live & availability=public"`
 	}
 
 	if c.YouTube.BaseChanURL == "" {
