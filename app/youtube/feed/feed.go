@@ -47,7 +47,7 @@ func (c *Feed) Get(ctx context.Context, id string, feedType Type) ([]Entry, erro
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get channel %s", id)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.Errorf("failed to get %s: %s", id, resp.Status)
 	}

@@ -2,7 +2,7 @@
 package config
 
 import (
-	"io/ioutil"
+	"os"
 	"regexp"
 	"time"
 
@@ -94,7 +94,7 @@ type YTChannel struct {
 // Load config from file
 func Load(fname string) (res *Conf, err error) {
 	res = &Conf{}
-	data, err := ioutil.ReadFile(fname) // nolint
+	data, err := os.ReadFile(fname) // nolint
 	if err != nil {
 		return nil, err
 	}

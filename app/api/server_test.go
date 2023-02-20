@@ -31,7 +31,7 @@ func TestServer_Run(t *testing.T) {
 		time.Sleep(time.Millisecond * 100)
 		resp, err := http.Get(fmt.Sprintf("http://localhost:%d/ping", port))
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer resp.Body.Close() // nolint
 		require.Equal(t, http.StatusOK, resp.StatusCode)
 		t.Logf("%+v", resp.Header)
 		assert.Equal(t, "1.0", resp.Header.Get("App-Version"))
@@ -97,7 +97,7 @@ func TestServer_getFeedCtrl(t *testing.T) {
 
 	resp, err := ts.Client().Get(ts.URL + "/rss/feed1")
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	respBody, err := io.ReadAll(resp.Body)
@@ -177,7 +177,7 @@ func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
 
 	resp, err := ts.Client().Get(ts.URL + "/rss/feed1")
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	respBody, err := io.ReadAll(resp.Body)
@@ -252,7 +252,7 @@ func TestServer_getFeedCtrlFeedImage(t *testing.T) {
 
 	resp, err := ts.Client().Get(ts.URL + "/rss/feed1")
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	respBody, err := io.ReadAll(resp.Body)
@@ -297,7 +297,7 @@ func TestServer_regenerateRSSCtrl(t *testing.T) {
 		req.SetBasicAuth("admin", "bad")
 		resp, err := ts.Client().Do(req)
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer resp.Body.Close() // nolint
 		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 	}
 
@@ -307,7 +307,7 @@ func TestServer_regenerateRSSCtrl(t *testing.T) {
 		req.SetBasicAuth("admin", "123456")
 		resp, err := ts.Client().Do(req)
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer resp.Body.Close() // nolint
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	}
 
@@ -346,7 +346,7 @@ func TestServer_removeEntryCtrl(t *testing.T) {
 		req.SetBasicAuth("admin", "bad")
 		resp, err := ts.Client().Do(req)
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer resp.Body.Close() // nolint
 		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 	}
 
@@ -356,7 +356,7 @@ func TestServer_removeEntryCtrl(t *testing.T) {
 		req.SetBasicAuth("admin", "123456")
 		resp, err := ts.Client().Do(req)
 		require.NoError(t, err)
-		defer resp.Body.Close()
+		defer resp.Body.Close() // nolint
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	}
 
@@ -395,7 +395,7 @@ func TestServer_configCtrl(t *testing.T) {
 
 	resp, err := ts.Client().Get(ts.URL + "/config")
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	respBody, err := io.ReadAll(resp.Body)

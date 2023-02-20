@@ -35,15 +35,12 @@ linters:
     - govet
     - unconvert
     - megacheck
-    - structcheck
+    - unused
     - gas
     - misspell
     - unparam
-    - varcheck
-    - deadcode
     - typecheck
     - ineffassign
-    - varcheck
     - stylecheck
     - gochecknoinits
     - exportloopref
@@ -65,4 +62,7 @@ issues:
     - text: "weak cryptographic primitive"
       linters:
         - gosec
+    - text: "package-comments: should have a package comment"
+      linters:
+        - revive
   exclude-use-default: false

@@ -186,7 +186,7 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 			// add ts suffix to titles
 			switch s.Conf.Feeds[feedName].ExtendDateTitle {
 			case "yyyyddmm":
-				items[i].Title = fmt.Sprintf("%s (%s)", itm.Title, itm.DT.Format("2006-02-01"))
+				items[i].Title = fmt.Sprintf("%s (%s)", itm.Title, itm.DT.Format("2006-02-01")) // nolint
 			case "yyyymmdd":
 				items[i].Title = fmt.Sprintf("%s (%s)", itm.Title, itm.DT.Format("2006-01-02"))
 			}
