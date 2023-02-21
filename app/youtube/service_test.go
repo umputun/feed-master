@@ -36,9 +36,7 @@ func TestService_Do(t *testing.T) {
 		GetFunc: func(ctx context.Context, id string, fname string) (string, error) {
 			fpath := filepath.Join(tempDir, fname+".mp3")
 			_, err := os.Create(fpath) // nolint
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 			return fpath, nil
 		},
 	}
@@ -95,7 +93,7 @@ func TestService_Do(t *testing.T) {
 
 	res, err = boltStore.Load("channel2", 10)
 	require.NoError(t, err)
-	assert.Equal(t, 3, len(res), "two entries for channel1, skipped duplicate")
+	assert.Equal(t, 3, len(res), "three entries for channel2, skipped duplicate")
 	assert.Equal(t, "vid3", res[0].VideoID)
 	assert.Equal(t, "vid2", res[1].VideoID)
 	assert.Equal(t, "vid1", res[2].VideoID)
@@ -118,14 +116,15 @@ func TestService_Do(t *testing.T) {
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
 	t.Logf("%v", duration.FileCalls())
+	// DurationService.File called 11 times: 5 in Service.update(), 6 in Service.isShort()
 	require.Equal(t, 11, len(duration.FileCalls()))
 	assert.Equal(t, filepath.Join(tempDir, "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3"), duration.FileCalls()[0].Fname)
 	assert.Equal(t, filepath.Join(tempDir, "4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3"), duration.FileCalls()[2].Fname)
 	assert.Equal(t, filepath.Join(tempDir, "122b672d10e77708b51c041f852615dc0eedf354.mp3"), duration.FileCalls()[4].Fname)
 	assert.Equal(t, filepath.Join(tempDir, "3be877c750abb87daee80c005fe87e7a3f824fed.mp3"), duration.FileCalls()[6].Fname)
 	assert.Equal(t, filepath.Join(tempDir, "648f79b3a05ececb8a37600aa0aee332f0374e01.mp3"), duration.FileCalls()[8].Fname)
-	assert.NoFileExists(t, shortVideo)
-	assert.FileExists(t, filepath.Join(tempDir, "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3"))
+	assert.NoFileExists(t, shortVideo, "short video should be removed")
+	assert.FileExists(t, filepath.Join(tempDir, "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3"), "non short video should exist")
 }
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
