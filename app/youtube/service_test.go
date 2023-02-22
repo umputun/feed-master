@@ -20,28 +20,37 @@ import (
 
 func TestService_Do(t *testing.T) {
 
+	tempDir := t.TempDir()
+	shortVideo := filepath.Join(tempDir, "122b672d10e77708b51c041f852615dc0eedf354.mp3")
 	chans := &mocks.ChannelServiceMock{
 		GetFunc: func(ctx context.Context, chanID string, feedType ytfeed.Type) ([]ytfeed.Entry, error) {
 			return []ytfeed.Entry{
 				{ChannelID: chanID, VideoID: "vid1", Title: "title1", Published: time.Now()},
 				{ChannelID: chanID, VideoID: "vid2", Title: "title2", Published: time.Now()},
-				{ChannelID: chanID, VideoID: "vid2", Title: "title2", Published: time.Now()}, // duplicate
+				{ChannelID: chanID, VideoID: "vid2", Title: "title2", Published: time.Now()},               // duplicate
+				{ChannelID: chanID, VideoID: "vid3", Title: "title3", Published: time.Now(), Duration: 40}, // short
 			}, nil
 		},
 	}
 	downloader := &mocks.DownloaderServiceMock{
 		GetFunc: func(ctx context.Context, id string, fname string) (string, error) {
-			return "/tmp/" + fname + ".mp3", nil
+			fpath := filepath.Join(tempDir, fname+".mp3")
+			_, err := os.Create(fpath) // nolint
+			require.NoError(t, err)
+			return fpath, nil
 		},
 	}
 
 	duration := &mocks.DurationServiceMock{
 		FileFunc: func(fname string) int {
+			if fname == shortVideo {
+				return 30
+			}
 			return 1234
 		},
 	}
 
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
+	tmpfile := filepath.Join(tempDir, "test.db")
 	defer os.Remove(tmpfile)
 
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
@@ -57,8 +66,9 @@ func TestService_Do(t *testing.T) {
 		Store:           boltStore,
 		CheckDuration:   time.Millisecond * 500,
 		KeepPerChannel:  10,
-		RSSFileStore:    RSSFileStore{Enabled: true, Location: "/tmp"},
+		RSSFileStore:    RSSFileStore{Enabled: true, Location: tempDir},
 		DurationService: duration,
+		SkipShorts:      time.Second * 60,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*900)
@@ -83,32 +93,38 @@ func TestService_Do(t *testing.T) {
 
 	res, err = boltStore.Load("channel2", 10)
 	require.NoError(t, err)
-	assert.Equal(t, 2, len(res), "two entries for channel1, skipped duplicate")
-	assert.Equal(t, "vid2", res[0].VideoID)
-	assert.Equal(t, "vid1", res[1].VideoID)
+	assert.Equal(t, 3, len(res), "three entries for channel2, skipped duplicate")
+	assert.Equal(t, "vid3", res[0].VideoID)
+	assert.Equal(t, "vid2", res[1].VideoID)
+	assert.Equal(t, "vid1", res[2].VideoID)
 
-	require.Equal(t, 4, len(downloader.GetCalls()))
+	require.Equal(t, 6, len(downloader.GetCalls()))
 	require.Equal(t, "vid1", downloader.GetCalls()[0].ID)
 	require.True(t, downloader.GetCalls()[0].Fname != "")
 
-	rssData, err := os.ReadFile("/tmp/channel1.xml")
+	rssData, err := os.ReadFile(tempDir + "/channel1.xml") // nolint
 	require.NoError(t, err)
 	t.Logf("%s", string(rssData))
 	assert.Contains(t, string(rssData), "<guid>channel1::vid1</guid>")
 	assert.Contains(t, string(rssData), "<guid>channel1::vid2</guid>")
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
-	rssData, err = os.ReadFile("/tmp/channel2.xml")
+	rssData, err = os.ReadFile(tempDir + "/channel2.xml") // nolint
 	require.NoError(t, err)
 	assert.Contains(t, string(rssData), "<guid>channel2::vid1</guid>")
 	assert.Contains(t, string(rssData), "<guid>channel2::vid2</guid>")
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
-	require.Equal(t, 4, len(duration.FileCalls()))
-	assert.Equal(t, "/tmp/e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3", duration.FileCalls()[0].Fname)
-	assert.Equal(t, "/tmp/4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3", duration.FileCalls()[1].Fname)
-	assert.Equal(t, "/tmp/3be877c750abb87daee80c005fe87e7a3f824fed.mp3", duration.FileCalls()[2].Fname)
-	assert.Equal(t, "/tmp/648f79b3a05ececb8a37600aa0aee332f0374e01.mp3", duration.FileCalls()[3].Fname)
+	t.Logf("%v", duration.FileCalls())
+	// DurationService.File called 11 times: 5 in Service.update(), 6 in Service.isShort()
+	require.Equal(t, 11, len(duration.FileCalls()))
+	assert.Equal(t, filepath.Join(tempDir, "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3"), duration.FileCalls()[0].Fname)
+	assert.Equal(t, filepath.Join(tempDir, "4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3"), duration.FileCalls()[2].Fname)
+	assert.Equal(t, filepath.Join(tempDir, "122b672d10e77708b51c041f852615dc0eedf354.mp3"), duration.FileCalls()[4].Fname)
+	assert.Equal(t, filepath.Join(tempDir, "3be877c750abb87daee80c005fe87e7a3f824fed.mp3"), duration.FileCalls()[6].Fname)
+	assert.Equal(t, filepath.Join(tempDir, "648f79b3a05ececb8a37600aa0aee332f0374e01.mp3"), duration.FileCalls()[8].Fname)
+	assert.NoFileExists(t, shortVideo, "short video should be removed")
+	assert.FileExists(t, filepath.Join(tempDir, "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3"), "non short video should exist")
 }
 
 // nolint:dupl // test if very similar to TestService_RSSFeed
