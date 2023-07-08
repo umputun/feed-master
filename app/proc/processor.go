@@ -7,6 +7,7 @@ import (
 	"time"
 
 	log "github.com/go-pkgz/lgr"
+	"github.com/go-pkgz/repeater"
 	"github.com/go-pkgz/syncs"
 
 	"github.com/umputun/feed-master/app/config"
@@ -101,6 +102,20 @@ func (p *Processor) processFeed(name, url, telegramChannel string, max int, filt
 		// or in case it was filtered out
 		if !created || item.Junk {
 			continue
+		}
+
+		rptr := repeater.NewDefault(3, 5*time.Second)
+		err = rptr.Do(context.Background(), func() error {
+			if e := p.TelegramNotif.Send(telegramChannel, item); e != nil {
+				log.Printf("[WARN] failed attempt to send telegram message, url=%s to channel=%s, %v",
+					item.Enclosure.URL, telegramChannel, e)
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			log.Printf("[WARN] failed to send telegram message, url=%s to channel=%s, %v",
+				item.Enclosure.URL, telegramChannel, err)
 		}
 
 		if err := p.TelegramNotif.Send(telegramChannel, item); err != nil {
