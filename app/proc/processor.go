@@ -118,11 +118,6 @@ func (p *Processor) processFeed(name, url, telegramChannel string, max int, filt
 				item.Enclosure.URL, telegramChannel, err)
 		}
 
-		if err := p.TelegramNotif.Send(telegramChannel, item); err != nil {
-			log.Printf("[WARN] failed to send telegram message, url=%s to channel=%s, %v",
-				item.Enclosure.URL, telegramChannel, err)
-		}
-
 		if err := p.TwitterNotif.Send(item); err != nil {
 			log.Printf("[WARN] failed send twitter message, url=%s, %v", item.Enclosure.URL, err)
 		}

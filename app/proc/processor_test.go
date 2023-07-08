@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-pkgz/lgr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	bolt "go.etcd.io/bbolt"
@@ -21,7 +22,7 @@ import (
 )
 
 func TestProcessor_DoRemoveOldItems(t *testing.T) {
-
+	lgr.Setup(lgr.Debug)
 	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(chanID string, item feed.Item) error {
 		return nil
 	}}
