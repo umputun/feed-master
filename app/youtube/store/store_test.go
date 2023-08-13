@@ -17,7 +17,7 @@ func TestStore_SaveAndLoad(t *testing.T) {
 	tmpfile := filepath.Join(os.TempDir(), "test.db")
 	defer os.Remove(tmpfile)
 
-	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 5 * time.Second})
 	require.NoError(t, err)
 
 	s := BoltDB{DB: db}
