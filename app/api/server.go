@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/didip/tollbooth/v7"
@@ -75,8 +76,11 @@ func (s *Server) Run(ctx context.Context, port int) {
 		return
 	}
 
+	serverLock := sync.Mutex{}
 	go func() {
 		<-ctx.Done()
+		serverLock.Lock()
+		defer serverLock.Unlock()
 		if s.httpServer != nil {
 			if clsErr := s.httpServer.Close(); clsErr != nil {
 				log.Printf("[ERROR] failed to close proxy http server, %v", clsErr)
@@ -90,6 +94,7 @@ func (s *Server) Run(ctx context.Context, port int) {
 	log.Printf("[DEBUG] loading templates from %s", s.TemplLocation)
 	s.templates = template.Must(template.ParseGlob(s.TemplLocation))
 
+	serverLock.Lock()
 	s.httpServer = &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),
 		Handler:           s.router(),
@@ -97,6 +102,7 @@ func (s *Server) Run(ctx context.Context, port int) {
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       30 * time.Second,
 	}
+	serverLock.Unlock()
 	err = s.httpServer.ListenAndServe()
 	log.Printf("[WARN] http server terminated, %s", err)
 }
