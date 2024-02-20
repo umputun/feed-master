@@ -71,7 +71,7 @@ func TestFeedParse(t *testing.T) {
   <media:credit role="author">Umputun, Bobuk, Gray, Ksenks, Alek.sys</media:credit><media:rating>nonadult</media:rating><media:description type="plain">Еженедельные импровизации на хай–тек темы</media:description></channel>
 </rss>
 `
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(testFeed))
 		assert.NoError(t, err)
@@ -84,7 +84,7 @@ func TestFeedParse(t *testing.T) {
 }
 
 func TestFeedParseBadBody(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte("bad"))
 		assert.NoError(t, err)
@@ -96,7 +96,7 @@ func TestFeedParseBadBody(t *testing.T) {
 
 func TestFeedParseHttpError(t *testing.T) {
 	var ts *httptest.Server
-	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts = httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 		ts.CloseClientConnections()
 	}))
 

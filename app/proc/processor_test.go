@@ -23,11 +23,11 @@ import (
 
 func TestProcessor_DoRemoveOldItems(t *testing.T) {
 	lgr.Setup(lgr.Debug)
-	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(chanID string, item feed.Item) error {
+	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(string, feed.Item) error {
 		return nil
 	}}
 
-	twitterNotif := &mocks.TwitterNotifMock{SendFunc: func(item feed.Item) error {
+	twitterNotif := &mocks.TwitterNotifMock{SendFunc: func(feed.Item) error {
 		return nil
 	}}
 
@@ -41,7 +41,7 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 	testFeed, err := os.ReadFile("./testdata/rss1.xml")
 	require.NoError(t, err)
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Length", strconv.Itoa(len(testFeed)))
 		_, e := w.Write(testFeed)
@@ -159,11 +159,11 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 
 func TestProcessor_DoLoadMaxItems(t *testing.T) {
 
-	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(chanID string, item feed.Item) error {
+	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(string, feed.Item) error {
 		return nil
 	}}
 
-	twitterNotif := &mocks.TwitterNotifMock{SendFunc: func(item feed.Item) error {
+	twitterNotif := &mocks.TwitterNotifMock{SendFunc: func(feed.Item) error {
 		return nil
 	}}
 
@@ -177,7 +177,7 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 	testFeed, err := os.ReadFile("./testdata/rss2.xml")
 	require.NoError(t, err)
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Length", strconv.Itoa(len(testFeed)))
 		_, e := w.Write(testFeed)
@@ -255,11 +255,11 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 
 func TestProcessor_DoSkipItems(t *testing.T) {
 
-	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(chanID string, item feed.Item) error {
+	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(string, feed.Item) error {
 		return nil
 	}}
 
-	twitterNotif := &mocks.TwitterNotifMock{SendFunc: func(item feed.Item) error {
+	twitterNotif := &mocks.TwitterNotifMock{SendFunc: func(feed.Item) error {
 		return nil
 	}}
 
@@ -273,7 +273,7 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 	testFeed, err := os.ReadFile("./testdata/rss1.xml")
 	require.NoError(t, err)
 
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Length", strconv.Itoa(len(testFeed)))
 		_, e := w.Write(testFeed)
