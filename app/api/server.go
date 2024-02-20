@@ -135,7 +135,7 @@ func (s *Server) router() *chi.Mux {
 		rrss.Get("/feeds", s.getFeedsPageCtrl)
 	})
 
-	router.Get("/config", func(w http.ResponseWriter, r *http.Request) { rest.RenderJSON(w, s.Conf) })
+	router.Get("/config", func(w http.ResponseWriter, _ *http.Request) { rest.RenderJSON(w, s.Conf) })
 
 	router.Route("/yt", func(r chi.Router) {
 

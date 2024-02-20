@@ -21,7 +21,7 @@ func TestNewTwitterClient(t *testing.T) {
 		AccessSecret:   "d",
 	}
 
-	client := NewTwitterClient(twiAuth, func(item feed.Item) string {
+	client := NewTwitterClient(twiAuth, func(feed.Item) string {
 		return ""
 	}, nil)
 
@@ -49,7 +49,7 @@ func TestTwitterSendIfFieldsTwitterAuthEmpty(t *testing.T) {
 				AccessSecret:   tt.accessSecret,
 			}
 
-			twitterFmtFn := func(item feed.Item) string {
+			twitterFmtFn := func(feed.Item) string {
 				return ""
 			}
 
@@ -83,10 +83,10 @@ func TestCleanText(t *testing.T) {
 }
 
 func TestTwitterSend(t *testing.T) {
-	twitPoster := &mocks.TweetPosterMock{PostTweetFunc: func(msg string, v url.Values) (anaconda.Tweet, error) {
+	twitPoster := &mocks.TweetPosterMock{PostTweetFunc: func(string, url.Values) (anaconda.Tweet, error) {
 		return anaconda.Tweet{}, nil
 	}}
-	formatter := func(item feed.Item) string {
+	formatter := func(feed.Item) string {
 		return "formatted text"
 	}
 

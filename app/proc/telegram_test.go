@@ -204,13 +204,13 @@ func TestTelegramClient_sendAudio(t *testing.T) {
 	defer ts.Close()
 
 	dur := &mocks.DurationServiceMock{
-		FileFunc: func(fname string) int {
+		FileFunc: func(string) int {
 			return 12345
 		},
 	}
 
 	snd := &mocks.TelegramSenderMock{
-		SendFunc: func(audio tb.Audio, bot *tb.Bot, recipient tb.Recipient, sendOptions *tb.SendOptions) (*tb.Message, error) {
+		SendFunc: func(tb.Audio, *tb.Bot, tb.Recipient, *tb.SendOptions) (*tb.Message, error) {
 			return nil, nil
 		},
 	}
@@ -235,13 +235,13 @@ func TestSendIfSendAudioFailed(t *testing.T) {
 	defer ts.Close()
 
 	dur := &mocks.DurationServiceMock{
-		FileFunc: func(fname string) int {
+		FileFunc: func(string) int {
 			return 12345
 		},
 	}
 
 	snd := &mocks.TelegramSenderMock{
-		SendFunc: func(audio tb.Audio, bot *tb.Bot, recipient tb.Recipient, sendOptions *tb.SendOptions) (*tb.Message, error) {
+		SendFunc: func(tb.Audio, *tb.Bot, tb.Recipient, *tb.SendOptions) (*tb.Message, error) {
 			return nil, errors.New("error while sending audio")
 		},
 	}
@@ -263,13 +263,13 @@ func TestSend(t *testing.T) {
 	defer ts.Close()
 
 	dur := &mocks.DurationServiceMock{
-		FileFunc: func(fname string) int {
+		FileFunc: func(string) int {
 			return 12345
 		},
 	}
 
 	snd := &mocks.TelegramSenderMock{
-		SendFunc: func(audio tb.Audio, bot *tb.Bot, recipient tb.Recipient, sendOptions *tb.SendOptions) (*tb.Message, error) {
+		SendFunc: func(tb.Audio, *tb.Bot, tb.Recipient, *tb.SendOptions) (*tb.Message, error) {
 			return &tb.Message{Text: "Some test message"}, nil
 		},
 	}
@@ -296,13 +296,13 @@ func TestSendTextIfAudioLarge(t *testing.T) {
 	defer ts.Close()
 
 	dur := &mocks.DurationServiceMock{
-		FileFunc: func(fname string) int {
+		FileFunc: func(string) int {
 			return 12345
 		},
 	}
 
 	snd := &mocks.TelegramSenderMock{
-		SendFunc: func(audio tb.Audio, bot *tb.Bot, recipient tb.Recipient, sendOptions *tb.SendOptions) (*tb.Message, error) {
+		SendFunc: func(tb.Audio, *tb.Bot, tb.Recipient, *tb.SendOptions) (*tb.Message, error) {
 			return nil, errors.New("Request Entity Too Large")
 		},
 	}
@@ -369,18 +369,18 @@ func mockTelegramServer(h http.HandlerFunc) *httptest.Server {
 		_, _ = w.Write([]byte(getMeResp))
 	})
 
-	router.Get("/download/some.mp3", func(w http.ResponseWriter, r *http.Request) {
+	router.Get("/download/some.mp3", func(w http.ResponseWriter, _ *http.Request) {
 		// taken from https://github.com/mathiasbynens/small/blob/master/mp3.mp3
 		smallMP3File := []byte{54, 53, 53, 48, 55, 54, 51, 52, 48, 48, 51, 49, 56, 52, 51, 50, 48, 55, 54, 49, 54, 55, 49, 55, 49, 55, 55, 49, 53, 49, 49, 56, 51, 51, 49, 52, 51, 56, 50, 49, 50, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48}
 
 		_, _ = w.Write(smallMP3File)
 	})
 
-	router.Post("/bottest-token/sendMessage", func(w http.ResponseWriter, r *http.Request) {
+	router.Post("/bottest-token/sendMessage", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"ok": true, "result": {"text": "Some test message"}}`))
 	})
 
-	router.Post("/bot/sendAudio", func(w http.ResponseWriter, r *http.Request) {
+	router.Post("/bot/sendAudio", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"ok": true, "result": {"id": 1}}`))
 	})
 

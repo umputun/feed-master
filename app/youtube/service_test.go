@@ -23,7 +23,7 @@ func TestService_Do(t *testing.T) {
 	tempDir := t.TempDir()
 	shortVideo := filepath.Join(tempDir, "122b672d10e77708b51c041f852615dc0eedf354.mp3")
 	chans := &mocks.ChannelServiceMock{
-		GetFunc: func(ctx context.Context, chanID string, feedType ytfeed.Type) ([]ytfeed.Entry, error) {
+		GetFunc: func(_ context.Context, chanID string, _ ytfeed.Type) ([]ytfeed.Entry, error) {
 			return []ytfeed.Entry{
 				{ChannelID: chanID, VideoID: "vid1", Title: "title1", Published: time.Now()},
 				{ChannelID: chanID, VideoID: "vid2", Title: "title2", Published: time.Now()},
@@ -33,7 +33,7 @@ func TestService_Do(t *testing.T) {
 		},
 	}
 	downloader := &mocks.DownloaderServiceMock{
-		GetFunc: func(ctx context.Context, id string, fname string) (string, error) {
+		GetFunc: func(_ context.Context, _ string, fname string) (string, error) {
 			fpath := filepath.Join(tempDir, fname+".mp3")
 			_, err := os.Create(fpath) // nolint
 			require.NoError(t, err)
@@ -131,7 +131,7 @@ func TestService_Do(t *testing.T) {
 func TestService_DoIsAllowedFilter(t *testing.T) {
 
 	chans := &mocks.ChannelServiceMock{
-		GetFunc: func(ctx context.Context, chanID string, feedType ytfeed.Type) ([]ytfeed.Entry, error) {
+		GetFunc: func(_ context.Context, chanID string, _ ytfeed.Type) ([]ytfeed.Entry, error) {
 			return []ytfeed.Entry{
 				{ChannelID: chanID, VideoID: "vid1", Title: "Prefix1: title1", Published: time.Now()},
 				{ChannelID: chanID, VideoID: "vid2", Title: "Prefix2: title2", Published: time.Now()},
@@ -140,13 +140,13 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 		},
 	}
 	downloader := &mocks.DownloaderServiceMock{
-		GetFunc: func(ctx context.Context, id string, fname string) (string, error) {
+		GetFunc: func(_ context.Context, _ string, fname string) (string, error) {
 			return "/tmp/" + fname + ".mp3", nil
 		},
 	}
 
 	duration := &mocks.DurationServiceMock{
-		FileFunc: func(fname string) int {
+		FileFunc: func(string) int {
 			return 1234
 		},
 	}
@@ -224,7 +224,7 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 // nolint:dupl // test if very similar to TestService_RSSFeed
 func TestService_RSSFeed(t *testing.T) {
 	storeSvc := &mocks.StoreServiceMock{
-		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
+		LoadFunc: func(string, int) ([]ytfeed.Entry, error) {
 			res := []ytfeed.Entry{
 				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: "/tmp/file1.mp3"},
 				{ChannelID: "channel1", VideoID: "vid2", Title: "title2", File: "/tmp/file2.mp3"},
@@ -269,7 +269,7 @@ func TestService_RSSFeed(t *testing.T) {
 // nolint:dupl // test if very similar to TestService_RSSFeed
 func TestService_RSSFeedPlayList(t *testing.T) {
 	storeSvc := &mocks.StoreServiceMock{
-		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
+		LoadFunc: func(string, int) ([]ytfeed.Entry, error) {
 			res := []ytfeed.Entry{
 				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: "/tmp/file1.mp3"},
 				{ChannelID: "channel1", VideoID: "vid2", Title: "title2", File: "/tmp/file2.mp3"},
@@ -344,7 +344,7 @@ func TestService_makeFileName(t *testing.T) {
 func TestService_update(t *testing.T) {
 
 	duration := &mocks.DurationServiceMock{
-		FileFunc: func(fname string) int {
+		FileFunc: func(string) int {
 			return 1234
 		},
 	}
@@ -400,7 +400,7 @@ func TestService_totalEntriesToKeep(t *testing.T) {
 func TestService_countAllEntries(t *testing.T) {
 
 	storeSvc := &mocks.StoreServiceMock{
-		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
+		LoadFunc: func(channelID string, _ int) ([]ytfeed.Entry, error) {
 			switch channelID {
 			case "channel1":
 				return []ytfeed.Entry{{}, {}, {}}, nil
@@ -431,7 +431,7 @@ func TestService_countAllEntries(t *testing.T) {
 func TestService_oldestEntry(t *testing.T) {
 	dt := time.Date(2022, 4, 11, 11, 35, 17, 0, time.UTC)
 	storeSvc := &mocks.StoreServiceMock{
-		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
+		LoadFunc: func(channelID string, _ int) ([]ytfeed.Entry, error) {
 			switch channelID {
 			case "channel1":
 				return []ytfeed.Entry{
@@ -475,7 +475,7 @@ func TestService_oldestEntry(t *testing.T) {
 func TestService_newestEntry(t *testing.T) {
 	dt := time.Date(2022, 4, 11, 11, 35, 17, 0, time.UTC)
 	storeSvc := &mocks.StoreServiceMock{
-		LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
+		LoadFunc: func(channelID string, _ int) ([]ytfeed.Entry, error) {
 			switch channelID {
 			case "channel1":
 				return []ytfeed.Entry{

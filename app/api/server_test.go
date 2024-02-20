@@ -43,7 +43,7 @@ func TestServer_Run(t *testing.T) {
 func TestServer_getFeedCtrl(t *testing.T) {
 
 	store := &mocks.StoreMock{
-		LoadFunc: func(fmFeed string, max int, skipJunk bool) ([]feed.Item, error) {
+		LoadFunc: func(string, int, bool) ([]feed.Item, error) {
 			return []feed.Item{
 				{
 					GUID:        "guid1",
@@ -126,7 +126,7 @@ func TestServer_getFeedCtrl(t *testing.T) {
 func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
 
 	store := &mocks.StoreMock{
-		LoadFunc: func(fmFeed string, max int, skipJunk bool) ([]feed.Item, error) {
+		LoadFunc: func(string, int, bool) ([]feed.Item, error) {
 			return []feed.Item{
 				{
 					GUID:        "guid1",
@@ -198,7 +198,7 @@ func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
 func TestServer_getFeedCtrlFeedImage(t *testing.T) {
 
 	store := &mocks.StoreMock{
-		LoadFunc: func(fmFeed string, max int, skipJunk bool) ([]feed.Item, error) {
+		LoadFunc: func(string, int, bool) ([]feed.Item, error) {
 			return []feed.Item{
 				{
 					GUID:        "guid1",
@@ -272,10 +272,10 @@ func TestServer_getFeedCtrlFeedImage(t *testing.T) {
 func TestServer_regenerateRSSCtrl(t *testing.T) {
 
 	yt := &mocks.YoutubeSvcMock{
-		RSSFeedFunc: func(cinfo youtube.FeedInfo) (string, error) {
+		RSSFeedFunc: func(youtube.FeedInfo) (string, error) {
 			return "blah", nil
 		},
-		StoreRSSFunc: func(chanID string, rss string) error {
+		StoreRSSFunc: func(string, string) error {
 			return nil
 		},
 	}
@@ -324,7 +324,7 @@ func TestServer_regenerateRSSCtrl(t *testing.T) {
 
 func TestServer_removeEntryCtrl(t *testing.T) {
 	yt := &mocks.YoutubeSvcMock{
-		RemoveEntryFunc: func(entry ytfeed.Entry) error {
+		RemoveEntryFunc: func(ytfeed.Entry) error {
 			return nil
 		},
 	}

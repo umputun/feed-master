@@ -35,7 +35,7 @@ func TestGetFilename(t *testing.T) {
 
 func TestDownloadAudioIfRequestError(t *testing.T) {
 	var ts *httptest.Server
-	ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts = httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 		ts.CloseClientConnections()
 	}))
 
@@ -49,7 +49,7 @@ func TestDownloadAudioIfRequestError(t *testing.T) {
 }
 
 func TestDownloadAudio(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Length", "4")
 		fmt.Fprint(w, "abcd")
