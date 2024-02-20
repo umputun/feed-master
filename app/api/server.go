@@ -20,7 +20,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-	"github.com/go-pkgz/lcw"
+	"github.com/go-pkgz/lcw/v2"
 	log "github.com/go-pkgz/lgr"
 	"github.com/go-pkgz/rest"
 	"github.com/go-pkgz/rest/logger"
@@ -46,7 +46,7 @@ type Server struct {
 	AdminPasswd   string
 
 	httpServer *http.Server
-	cache      lcw.LoadingCache
+	cache      lcw.LoadingCache[[]byte]
 	templates  *template.Template
 }
 
@@ -71,7 +71,8 @@ type YoutubeStore interface {
 func (s *Server) Run(ctx context.Context, port int) {
 	log.Printf("[INFO] starting server on port %d", port)
 	var err error
-	if s.cache, err = lcw.NewExpirableCache(lcw.TTL(time.Minute*3), lcw.MaxCacheSize(10*1024*1024)); err != nil {
+	o := lcw.NewOpts[[]byte]()
+	if s.cache, err = lcw.NewExpirableCache(o.TTL(time.Minute*3), o.MaxCacheSize(10*1024*1024)); err != nil {
 		log.Printf("[PANIC] failed to make loading cache, %v", err)
 		return
 	}
@@ -182,7 +183,7 @@ func (s *Server) router() *chi.Mux {
 func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
 
-	data, err := s.cache.Get("feed::"+feedName, func() (interface{}, error) {
+	data, err := s.cache.Get("feed::"+feedName, func() ([]byte, error) {
 		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, true)
 		if err != nil {
 			return nil, err
@@ -238,7 +239,7 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		res = strings.Replace(res, "<duration>", "<itunes:duration>", -1)
 		res = strings.Replace(res, "</duration>", "</itunes:duration>", -1)
 
-		return res, nil
+		return []byte(res), nil
 	})
 
 	if err != nil {
@@ -246,14 +247,8 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, ok := data.(string)
-	if !ok {
-		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to convert feed")
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
-	_, _ = fmt.Fprintf(w, "%s", res)
+	_, _ = fmt.Fprintf(w, "%s", data)
 }
 
 // GET /image/{name}

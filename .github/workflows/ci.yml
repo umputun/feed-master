@@ -12,13 +12,13 @@ jobs:
 
     steps:
       - name: set up go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.20"
         id: go
 
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: build and test
         run: |
@@ -28,10 +28,9 @@ jobs:
         env:
           GO111MODULE: on
           TZ: "America/Chicago"
-          GOFLAGS: "-mod=vendor"
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
         with:
           version: latest
 
@@ -43,11 +42,11 @@ jobs:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: available platforms
         run: echo ${{ steps.buildx.outputs.platforms }}

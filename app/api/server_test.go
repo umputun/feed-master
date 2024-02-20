@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-pkgz/lcw"
+	"github.com/go-pkgz/lcw/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -75,7 +75,7 @@ func TestServer_getFeedCtrl(t *testing.T) {
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		Store:         store,
-		cache:         lcw.NewNopCache(),
+		cache:         lcw.NewNopCache[[]byte](),
 		Conf: config.Conf{
 			Feeds: map[string]config.Feed{
 				"feed1": {
@@ -159,7 +159,7 @@ func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		Store:         store,
-		cache:         lcw.NewNopCache(),
+		cache:         lcw.NewNopCache[[]byte](),
 		Conf: config.Conf{
 			Feeds: map[string]config.Feed{
 				"feed1": {
@@ -230,7 +230,7 @@ func TestServer_getFeedCtrlFeedImage(t *testing.T) {
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		Store:         store,
-		cache:         lcw.NewNopCache(),
+		cache:         lcw.NewNopCache[[]byte](),
 		Conf: config.Conf{
 			Feeds: map[string]config.Feed{
 				"feed1": {
@@ -373,7 +373,7 @@ func TestServer_configCtrl(t *testing.T) {
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		Store:         store,
-		cache:         lcw.NewNopCache(),
+		cache:         lcw.NewNopCache[[]byte](),
 		Conf: config.Conf{
 			Feeds: map[string]config.Feed{
 				"feed1": {
