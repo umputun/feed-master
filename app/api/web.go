@@ -23,7 +23,7 @@ import (
 func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
 
-	data, err := s.cache.Get(feedName, func() (interface{}, error) {
+	data, err := s.cache.Get(feedName, func() ([]byte, error) {
 		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, false)
 		if err != nil {
 			return nil, err
@@ -79,7 +79,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data.([]byte)) // nolint
+	_, _ = w.Write(data) // nolint
 }
 
 // GET /feed/{name}/source/{source} - renders feed's source page with list of items
@@ -94,7 +94,7 @@ func (s *Server) getFeedSourceCtrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := s.cache.Get(feedName+sourceName, func() (interface{}, error) {
+	data, err := s.cache.Get(feedName+sourceName, func() ([]byte, error) {
 		if _, ok := s.Conf.Feeds[feedName]; !ok {
 			return nil, fmt.Errorf("feed %s not found", feedName)
 		}
@@ -160,12 +160,12 @@ func (s *Server) getFeedSourceCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data.([]byte)) // nolint
+	_, _ = w.Write(data) // nolint
 }
 
 // GET /feeds - renders page with list of feeds
 func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
-	data, err := s.cache.Get("feeds", func() (interface{}, error) {
+	data, err := s.cache.Get("feeds", func() ([]byte, error) {
 
 		feeds := s.feeds()
 
@@ -213,12 +213,12 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data.([]byte)) // nolint
+	_, _ = w.Write(data) // nolint
 }
 
 // GET /yt/channels - renders page with list of YouTube channels
 func (s *Server) getYoutubeChannelsPageCtrl(w http.ResponseWriter, r *http.Request) {
-	data, err := s.cache.Get("channels", func() (interface{}, error) {
+	data, err := s.cache.Get("channels", func() ([]byte, error) {
 		type channelItem struct {
 			youtube.FeedInfo
 			ChannelURL  string
@@ -265,13 +265,13 @@ func (s *Server) getYoutubeChannelsPageCtrl(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data.([]byte)) // nolint
+	_, _ = w.Write(data) // nolint
 }
 
 // GET /feed/{name}/sources - renders page with feed's list of sources
 func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := chi.URLParam(r, "name")
-	data, err := s.cache.Get(feedName+"-sources", func() (interface{}, error) {
+	data, err := s.cache.Get(feedName+"-sources", func() ([]byte, error) {
 		if _, ok := s.Conf.Feeds[feedName]; !ok {
 			return nil, fmt.Errorf("feed %s not found", feedName)
 		}
@@ -308,7 +308,7 @@ func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data.([]byte)) // nolint
+	_, _ = w.Write(data) // nolint
 }
 
 func (s *Server) renderErrorPage(w http.ResponseWriter, r *http.Request, err error, errCode int) { // nolint

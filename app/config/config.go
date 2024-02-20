@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/umputun/feed-master/app/feed"
 	"github.com/umputun/feed-master/app/youtube"
