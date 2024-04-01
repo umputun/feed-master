@@ -100,7 +100,7 @@ func (s *Server) Run(ctx context.Context, port int) {
 		Addr:              fmt.Sprintf(":%d", port),
 		Handler:           s.router(),
 		ReadHeaderTimeout: 5 * time.Second,
-		WriteTimeout:      30 * time.Second,
+		WriteTimeout:      s.Conf.System.HttpResponseTimeout,
 		IdleTimeout:       30 * time.Second,
 	}
 	serverLock.Unlock()

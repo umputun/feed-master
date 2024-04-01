@@ -16,12 +16,13 @@ import (
 type Conf struct {
 	Feeds  map[string]Feed `yaml:"feeds"`
 	System struct {
-		UpdateInterval time.Duration `yaml:"update"`
-		MaxItems       int           `yaml:"max_per_feed"`
-		MaxTotal       int           `yaml:"max_total"`
-		MaxKeepInDB    int           `yaml:"max_keep"`
-		Concurrent     int           `yaml:"concurrent"`
-		BaseURL        string        `yaml:"base_url"`
+		UpdateInterval      time.Duration `yaml:"update"`
+		HttpResponseTimeout time.Duration `yaml:"http_response_timeout"`
+		MaxItems            int           `yaml:"max_per_feed"`
+		MaxTotal            int           `yaml:"max_total"`
+		MaxKeepInDB         int           `yaml:"max_keep"`
+		Concurrent          int           `yaml:"concurrent"`
+		BaseURL             string        `yaml:"base_url"`
 	} `yaml:"system"`
 
 	YouTube struct {
@@ -137,6 +138,9 @@ func (c *Conf) setDefaults() {
 	}
 	if c.System.UpdateInterval == 0 {
 		c.System.UpdateInterval = time.Minute * 5
+	}
+	if c.System.HttpResponseTimeout == 0 {
+		c.System.HttpResponseTimeout = time.Second * 30
 	}
 
 	// set default values for feeds

@@ -40,6 +40,7 @@ feeds:
     owner_email: "blah@example.com"
 system:
   update: 600s
+  http_response_timeout: 10s
 
 youtube:
   dl_template: yt-dlp --extract-audio --audio-format=mp3 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}
