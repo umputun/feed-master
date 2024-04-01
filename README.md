@@ -68,6 +68,7 @@ youtube: # youtube configuration, optional
 
 system: # system configuration
   update: 1m # update interval for checking source feeds
+  http_response_timeout: 30s # http response timeout
   max_per_feed: 10 # max items per feed to be processed and inclueded in the final RSS
   max_total: 50 # max total items to be included in the final RSS
   max_keep: 1000 # max items to be kept in the internal database 
