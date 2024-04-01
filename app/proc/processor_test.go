@@ -66,19 +66,21 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 				},
 			},
 			System: struct {
-				UpdateInterval time.Duration `yaml:"update"`
-				MaxItems       int           `yaml:"max_per_feed"`
-				MaxTotal       int           `yaml:"max_total"`
-				MaxKeepInDB    int           `yaml:"max_keep"`
-				Concurrent     int           `yaml:"concurrent"`
-				BaseURL        string        `yaml:"base_url"`
+				UpdateInterval      time.Duration `yaml:"update"`
+				HttpResponseTimeout time.Duration `yaml:"http_response_timeout"`
+				MaxItems            int           `yaml:"max_per_feed"`
+				MaxTotal            int           `yaml:"max_total"`
+				MaxKeepInDB         int           `yaml:"max_keep"`
+				Concurrent          int           `yaml:"concurrent"`
+				BaseURL             string        `yaml:"base_url"`
 			}{
-				UpdateInterval: time.Second / 2,
-				MaxItems:       5,
-				MaxTotal:       5,
-				MaxKeepInDB:    5,
-				Concurrent:     1,
-				BaseURL:        "baseUrl",
+				UpdateInterval:      time.Second / 2,
+				HttpResponseTimeout: time.Second,
+				MaxItems:            5,
+				MaxTotal:            5,
+				MaxKeepInDB:         5,
+				Concurrent:          1,
+				BaseURL:             "baseUrl",
 			},
 			YouTube: struct {
 				DlTemplate      string             `yaml:"dl_template"`
@@ -202,19 +204,21 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 				},
 			},
 			System: struct {
-				UpdateInterval time.Duration `yaml:"update"`
-				MaxItems       int           `yaml:"max_per_feed"`
-				MaxTotal       int           `yaml:"max_total"`
-				MaxKeepInDB    int           `yaml:"max_keep"`
-				Concurrent     int           `yaml:"concurrent"`
-				BaseURL        string        `yaml:"base_url"`
+				UpdateInterval      time.Duration `yaml:"update"`
+				HttpResponseTimeout time.Duration `yaml:"http_response_timeout"`
+				MaxItems            int           `yaml:"max_per_feed"`
+				MaxTotal            int           `yaml:"max_total"`
+				MaxKeepInDB         int           `yaml:"max_keep"`
+				Concurrent          int           `yaml:"concurrent"`
+				BaseURL             string        `yaml:"base_url"`
 			}{
-				UpdateInterval: time.Second / 2,
-				MaxItems:       3,
-				MaxTotal:       5,
-				MaxKeepInDB:    5,
-				Concurrent:     1,
-				BaseURL:        "baseUrl",
+				UpdateInterval:      time.Second / 2,
+				HttpResponseTimeout: time.Second,
+				MaxItems:            3,
+				MaxTotal:            5,
+				MaxKeepInDB:         5,
+				Concurrent:          1,
+				BaseURL:             "baseUrl",
 			},
 			YouTube: struct {
 				DlTemplate      string             `yaml:"dl_template"`
@@ -300,19 +304,21 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 				},
 			},
 			System: struct {
-				UpdateInterval time.Duration `yaml:"update"`
-				MaxItems       int           `yaml:"max_per_feed"`
-				MaxTotal       int           `yaml:"max_total"`
-				MaxKeepInDB    int           `yaml:"max_keep"`
-				Concurrent     int           `yaml:"concurrent"`
-				BaseURL        string        `yaml:"base_url"`
+				UpdateInterval      time.Duration `yaml:"update"`
+				HttpResponseTimeout time.Duration `yaml:"http_response_timeout"`
+				MaxItems            int           `yaml:"max_per_feed"`
+				MaxTotal            int           `yaml:"max_total"`
+				MaxKeepInDB         int           `yaml:"max_keep"`
+				Concurrent          int           `yaml:"concurrent"`
+				BaseURL             string        `yaml:"base_url"`
 			}{
-				UpdateInterval: time.Second / 2,
-				MaxItems:       10,
-				MaxTotal:       10,
-				MaxKeepInDB:    10,
-				Concurrent:     1,
-				BaseURL:        "baseUrl",
+				UpdateInterval:      time.Second / 2,
+				HttpResponseTimeout: time.Second,
+				MaxItems:            10,
+				MaxTotal:            10,
+				MaxKeepInDB:         10,
+				Concurrent:          1,
+				BaseURL:             "baseUrl",
 			},
 			YouTube: struct {
 				DlTemplate      string             `yaml:"dl_template"`
