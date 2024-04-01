@@ -25,7 +25,7 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "https://bbb.com/u1", r.Feeds["second"].Sources[0].URL)
 	assert.Equal(t, "^filterme*", r.Feeds["filtered"].Filter.Title)
 	assert.Equal(t, time.Second*600, r.System.UpdateInterval)
-	assert.Equal(t, time.Second*10, r.System.HttpResponseTimeout)
+	assert.Equal(t, time.Second*10, r.System.HTTPResponseTimeout)
 	assert.Equal(t, []ytfdeed.FeedInfo{{Name: "name1", ID: "id1", Type: "playlist", Keep: 15},
 		{Name: "name2", ID: "id2", Type: "channel", Language: "ru-ru", Keep: 5}},
 		r.YouTube.Channels, "2 yt")
@@ -92,7 +92,7 @@ func TestSetDefault(t *testing.T) {
 	expectedConf := Conf{
 		System: struct {
 			UpdateInterval      time.Duration `yaml:"update"`
-			HttpResponseTimeout time.Duration `yaml:"http_response_timeout"`
+			HTTPResponseTimeout time.Duration `yaml:"http_response_timeout"`
 			MaxItems            int           `yaml:"max_per_feed"`
 			MaxTotal            int           `yaml:"max_total"`
 			MaxKeepInDB         int           `yaml:"max_keep"`
@@ -100,7 +100,7 @@ func TestSetDefault(t *testing.T) {
 			BaseURL             string        `yaml:"base_url"`
 		}{
 			UpdateInterval:      time.Minute * 5,
-			HttpResponseTimeout: time.Second * 30,
+			HTTPResponseTimeout: time.Second * 30,
 			MaxItems:            5,
 			MaxTotal:            100,
 			MaxKeepInDB:         5000,

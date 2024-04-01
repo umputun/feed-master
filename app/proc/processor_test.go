@@ -67,7 +67,7 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 			},
 			System: struct {
 				UpdateInterval      time.Duration `yaml:"update"`
-				HttpResponseTimeout time.Duration `yaml:"http_response_timeout"`
+				HTTPResponseTimeout time.Duration `yaml:"http_response_timeout"`
 				MaxItems            int           `yaml:"max_per_feed"`
 				MaxTotal            int           `yaml:"max_total"`
 				MaxKeepInDB         int           `yaml:"max_keep"`
@@ -75,7 +75,7 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 				BaseURL             string        `yaml:"base_url"`
 			}{
 				UpdateInterval:      time.Second / 2,
-				HttpResponseTimeout: time.Second,
+				HTTPResponseTimeout: time.Second,
 				MaxItems:            5,
 				MaxTotal:            5,
 				MaxKeepInDB:         5,
@@ -205,7 +205,7 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 			},
 			System: struct {
 				UpdateInterval      time.Duration `yaml:"update"`
-				HttpResponseTimeout time.Duration `yaml:"http_response_timeout"`
+				HTTPResponseTimeout time.Duration `yaml:"http_response_timeout"`
 				MaxItems            int           `yaml:"max_per_feed"`
 				MaxTotal            int           `yaml:"max_total"`
 				MaxKeepInDB         int           `yaml:"max_keep"`
@@ -213,7 +213,7 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 				BaseURL             string        `yaml:"base_url"`
 			}{
 				UpdateInterval:      time.Second / 2,
-				HttpResponseTimeout: time.Second,
+				HTTPResponseTimeout: time.Second,
 				MaxItems:            3,
 				MaxTotal:            5,
 				MaxKeepInDB:         5,
@@ -305,7 +305,7 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 			},
 			System: struct {
 				UpdateInterval      time.Duration `yaml:"update"`
-				HttpResponseTimeout time.Duration `yaml:"http_response_timeout"`
+				HTTPResponseTimeout time.Duration `yaml:"http_response_timeout"`
 				MaxItems            int           `yaml:"max_per_feed"`
 				MaxTotal            int           `yaml:"max_total"`
 				MaxKeepInDB         int           `yaml:"max_keep"`
@@ -313,7 +313,7 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 				BaseURL             string        `yaml:"base_url"`
 			}{
 				UpdateInterval:      time.Second / 2,
-				HttpResponseTimeout: time.Second,
+				HTTPResponseTimeout: time.Second,
 				MaxItems:            10,
 				MaxTotal:            10,
 				MaxKeepInDB:         10,
