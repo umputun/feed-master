@@ -24,7 +24,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	go.etcd.io/bbolt v1.3.9
-	golang.org/x/net v0.22.0
+	golang.org/x/net v0.23.0
 	gopkg.in/tucnak/telebot.v2 v2.5.0
 	gopkg.in/yaml.v3 v3.0.1
 )
