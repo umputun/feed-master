@@ -65,7 +65,7 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
 }
 
 // Load from bold for given feed, up to max
-func (b BoltDB) Load(fmFeed string, max int, skipJunk bool) ([]feed.Item, error) {
+func (b BoltDB) Load(fmFeed string, maximum int, skipJunk bool) ([]feed.Item, error) {
 	var result []feed.Item
 
 	err := b.DB.View(func(tx *bolt.Tx) error {
@@ -83,7 +83,7 @@ func (b BoltDB) Load(fmFeed string, max int, skipJunk bool) ([]feed.Item, error)
 			if skipJunk && item.Junk {
 				continue
 			}
-			if len(result) >= max {
+			if len(result) >= maximum {
 				break
 			}
 			result = append(result, item)

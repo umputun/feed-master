@@ -195,9 +195,9 @@ func (r recipient) Recipient() string {
 }
 
 // CropText shrinks the provided string, removing HTML tags in case it's exceeding the limit
-func CropText(inp string, max int) string {
-	if len([]rune(inp)) > max {
-		return CleanText(inp, max)
+func CropText(inp string, maximum int) string {
+	if len([]rune(inp)) > maximum {
+		return CleanText(inp, maximum)
 	}
 	return inp
 }

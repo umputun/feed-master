@@ -56,11 +56,11 @@ func (t *TwitterClient) Send(item feed.Item) error {
 }
 
 // CleanText removes html tags and shrinks result
-func CleanText(inp string, max int) string {
+func CleanText(inp string, maximum int) string {
 	res := striphtmltags.StripTags(inp)
-	if len([]rune(res)) > max {
+	if len([]rune(res)) > maximum {
 		// 4 symbols reserved for space and three dots on the end
-		snippet := []rune(res)[:max-4]
+		snippet := []rune(res)[:maximum-4]
 		// go back in snippet and found first space
 		for i := len(snippet) - 1; i >= 0; i-- {
 			if snippet[i] == ' ' {
