@@ -65,7 +65,7 @@ func (p *Processor) processFeeds(ctx context.Context) {
 	time.Sleep(p.Conf.System.UpdateInterval)
 }
 
-func (p *Processor) processFeed(name, url, telegramChannel string, max int, filter config.Filter) {
+func (p *Processor) processFeed(name, url, telegramChannel string, maximum int, filter config.Filter) {
 	rss, err := feed.Parse(url)
 	if err != nil {
 		log.Printf("[WARN] failed to parse %s, %v", url, err)
@@ -73,8 +73,8 @@ func (p *Processor) processFeed(name, url, telegramChannel string, max int, filt
 	}
 
 	// up to MaxItems (5) items from each feed
-	upto := max
-	if len(rss.ItemList) <= max {
+	upto := maximum
+	if len(rss.ItemList) <= maximum {
 		upto = len(rss.ItemList)
 	}
 

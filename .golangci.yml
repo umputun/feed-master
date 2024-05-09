@@ -1,6 +1,7 @@
 linters-settings:
   govet:
-    check-shadowing: true
+    enable:
+      - shadow
   misspell:
     locale: US
   gocritic:
@@ -17,12 +18,12 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - megacheck
+    - staticcheck
     - revive
     - govet
     - unconvert
     - unused
-    - gas
+    - gosec
     - misspell
     - unparam
     - typecheck
@@ -38,12 +39,11 @@ linters:
   fast: false
 
 run:
-  modules-download-mode: vendor
-  skip-dirs:
-    - vendor
   concurrency: 4
 
 issues:
+  exclude-dirs:
+    - vendor
   exclude-rules:
     - text: "weak cryptographic primitive"
       linters:

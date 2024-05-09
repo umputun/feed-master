@@ -87,7 +87,7 @@ func (s *BoltDB) Exist(entry feed.Entry) (bool, error) {
 }
 
 // Load entries from bolt for a given channel, up to max in reverse order (from newest to oldest)
-func (s *BoltDB) Load(channelID string, max int) ([]feed.Entry, error) {
+func (s *BoltDB) Load(channelID string, maximum int) ([]feed.Entry, error) {
 	var result []feed.Entry
 
 	err := s.View(func(tx *bolt.Tx) error {
@@ -102,7 +102,7 @@ func (s *BoltDB) Load(channelID string, max int) ([]feed.Entry, error) {
 				log.Printf("[WARN] failed to unmarshal %s, %q: %v", channelID, string(v), err)
 				continue
 			}
-			if len(result) >= max {
+			if len(result) >= maximum {
 				break
 			}
 			result = append(result, item)
