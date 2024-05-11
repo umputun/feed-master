@@ -365,7 +365,7 @@ func (s *Service) isNew(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
 	// this method won't work after migration to locally altered published ts but have to stay for now
 	// to avoid false-positives on old entries what never got set with SetProcessed
 	exists, exErr := s.Store.Exist(entry)
-	if err != nil {
+	if exErr != nil {
 		return false, errors.Wrapf(exErr, "failed to check if entry %s exists", entry.VideoID)
 	}
 	if exists {
