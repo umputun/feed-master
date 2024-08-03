@@ -30,8 +30,8 @@ github.com/denisbrodbeck/striphtmltags/html/template
 # github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f
 ## explicit
 github.com/dgryski/go-rendezvous
-# github.com/didip/tollbooth/v7 v7.0.1
-## explicit; go 1.12
+# github.com/didip/tollbooth/v7 v7.0.2
+## explicit; go 1.19
 github.com/didip/tollbooth/v7
 github.com/didip/tollbooth/v7/errors
 github.com/didip/tollbooth/v7/internal/time/rate
@@ -52,16 +52,16 @@ github.com/dustin/gojson
 # github.com/garyburd/go-oauth v0.0.0-20180319155456-bca2e7f09a17
 ## explicit
 github.com/garyburd/go-oauth/oauth
-# github.com/go-chi/chi/v5 v5.0.12
+# github.com/go-chi/chi/v5 v5.1.0
 ## explicit; go 1.14
 github.com/go-chi/chi/v5
 github.com/go-chi/chi/v5/middleware
 # github.com/go-chi/render v1.0.3
 ## explicit; go 1.16
 github.com/go-chi/render
-# github.com/go-pkgz/expirable-cache v1.0.0
-## explicit; go 1.14
-github.com/go-pkgz/expirable-cache
+# github.com/go-pkgz/expirable-cache/v3 v3.0.0
+## explicit; go 1.20
+github.com/go-pkgz/expirable-cache/v3
 # github.com/go-pkgz/lcw/v2 v2.0.0
 ## explicit; go 1.21
 github.com/go-pkgz/lcw/v2
@@ -99,13 +99,13 @@ github.com/hashicorp/golang-lru/v2
 github.com/hashicorp/golang-lru/v2/expirable
 github.com/hashicorp/golang-lru/v2/internal
 github.com/hashicorp/golang-lru/v2/simplelru
-# github.com/jessevdk/go-flags v1.5.0
-## explicit; go 1.15
+# github.com/jessevdk/go-flags v1.6.1
+## explicit; go 1.20
 github.com/jessevdk/go-flags
 # github.com/kr/pretty v0.3.1
 ## explicit; go 1.12
-# github.com/microcosm-cc/bluemonday v1.0.26
-## explicit; go 1.21
+# github.com/microcosm-cc/bluemonday v1.0.27
+## explicit; go 1.19
 github.com/microcosm-cc/bluemonday
 github.com/microcosm-cc/bluemonday/css
 # github.com/pkg/errors v0.9.1
@@ -124,27 +124,27 @@ github.com/redis/go-redis/v9/internal/pool
 github.com/redis/go-redis/v9/internal/proto
 github.com/redis/go-redis/v9/internal/rand
 github.com/redis/go-redis/v9/internal/util
-# github.com/stretchr/testify v1.8.4
-## explicit; go 1.20
+# github.com/stretchr/testify v1.9.0
+## explicit; go 1.17
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 ## explicit
 github.com/tcolgate/mp3
 github.com/tcolgate/mp3/internal/data
-# go.etcd.io/bbolt v1.3.9
-## explicit; go 1.17
+# go.etcd.io/bbolt v1.3.10
+## explicit; go 1.21
 go.etcd.io/bbolt
-# golang.org/x/net v0.23.0
+# golang.org/x/net v0.26.0
 ## explicit; go 1.18
 golang.org/x/net/context
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.18.0
+# golang.org/x/sys v0.21.0
 ## explicit; go 1.18
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.14.0
+# golang.org/x/text v0.16.0
 ## explicit; go 1.18
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
