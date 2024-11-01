@@ -13,7 +13,7 @@ require (
 	github.com/go-chi/render v1.0.3
 	github.com/go-pkgz/lcw/v2 v2.0.0
 	github.com/go-pkgz/lgr v0.11.1
-	github.com/go-pkgz/repeater v1.1.3
+	github.com/go-pkgz/repeater v1.2.0
 	github.com/go-pkgz/rest v1.19.0
 	github.com/go-pkgz/syncs v1.3.2
 	github.com/google/uuid v1.6.0
@@ -24,7 +24,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
 	go.etcd.io/bbolt v1.3.11
-	golang.org/x/net v0.28.0
+	golang.org/x/net v0.30.0
 	gopkg.in/tucnak/telebot.v2 v2.5.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -47,7 +47,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/redis/go-redis/v9 v9.5.1 // indirect
-	golang.org/x/sys v0.23.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
