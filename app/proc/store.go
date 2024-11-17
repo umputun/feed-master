@@ -129,12 +129,12 @@ func (b BoltDB) Remove(fmFeed string, item feed.Item) error {
 		}
 		c := bucket.Cursor()
 		for k, v := c.Last(); k != nil; k, v = c.Prev() {
-			var itemDb feed.Item
-			if err := json.Unmarshal(v, &itemDb); err != nil {
+			var itemDB feed.Item
+			if err := json.Unmarshal(v, &itemDB); err != nil {
 				log.Printf("[WARN] failed to unmarshal, %v", err)
 				continue
 			}
-			if itemDb.GUID == item.GUID {
+			if itemDB.GUID == item.GUID {
 				if err := bucket.Delete(k); err != nil {
 					return errors.Wrapf(err, "failed to delete %s (%s)", string(k), item.GUID)
 				}

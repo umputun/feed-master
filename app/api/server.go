@@ -324,8 +324,8 @@ func (s *Server) regenerateRSSCtrl(w http.ResponseWriter, r *http.Request) {
 // DELETE /yt/entry/{channel}/{video} - deletes entry from youtube channel by given videoID
 func (s *Server) removeEntryCtrl(w http.ResponseWriter, r *http.Request) {
 	channelID := chi.URLParam(r, "channel")
-	videoId := chi.URLParam(r, "video")
-	err := s.YoutubeSvc.RemoveEntry(ytfeed.Entry{ChannelID: channelID, VideoID: videoId})
+	videoID := chi.URLParam(r, "video")
+	err := s.YoutubeSvc.RemoveEntry(ytfeed.Entry{ChannelID: channelID, VideoID: videoID})
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to remove entry")
 		return
@@ -337,9 +337,9 @@ func (s *Server) removeEntryCtrl(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		for _, item := range items {
-			if item.GUID == fmt.Sprintf("%s::%s", channelID, videoId) {
-				if err := s.Store.Remove(f, item); err != nil {
-					rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to remove entry")
+			if item.GUID == fmt.Sprintf("%s::%s", channelID, videoID) {
+				if storeErr := s.Store.Remove(f, item); storeErr != nil {
+					rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, storeErr, "failed to remove entry")
 					return
 				}
 				rest.RenderJSON(w, rest.JSON{"status": "ok", "removed": chi.URLParam(r, "video")})

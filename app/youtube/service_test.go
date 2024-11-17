@@ -387,7 +387,7 @@ func TestService_update(t *testing.T) {
 func TestService_RemoveEntry(t *testing.T) {
 	tempDir := t.TempDir()
 	video := filepath.Join(tempDir, "122b672d10e77708b51c041f852615dc0eedf354.mp3")
-	_, err := os.Create(video)
+	_, err := os.Create(video) // nolint
 	require.NoError(t, err)
 
 	storeSvc := &mocks.StoreServiceMock{
@@ -398,10 +398,10 @@ func TestService_RemoveEntry(t *testing.T) {
 			}
 			return res, nil
 		},
-		ResetProcessedFunc: func(entry ytfeed.Entry) error {
+		ResetProcessedFunc: func(_ ytfeed.Entry) error {
 			return nil
 		},
-		RemoveFunc: func(entry ytfeed.Entry) error {
+		RemoveFunc: func(_ ytfeed.Entry) error {
 			return nil
 		},
 	}
