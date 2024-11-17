@@ -60,6 +60,7 @@ type YoutubeSvc interface {
 // Store provides access to feed data
 type Store interface {
 	Load(fmFeed string, maX int, skipJunk bool) ([]feed.Item, error)
+	Remove(fmFeed string, item feed.Item) error
 }
 
 // YoutubeStore provides access to YouTube channel data
@@ -320,14 +321,33 @@ func (s *Server) regenerateRSSCtrl(w http.ResponseWriter, r *http.Request) {
 	rest.RenderJSON(w, rest.JSON{"status": "ok", "feeds": len(s.Conf.YouTube.Channels)})
 }
 
-// DELETE /yt/entry/{channel}/{video} - deletes entry from youtube channel and videID
+// DELETE /yt/entry/{channel}/{video} - deletes entry from youtube channel by given videoID
 func (s *Server) removeEntryCtrl(w http.ResponseWriter, r *http.Request) {
-	err := s.YoutubeSvc.RemoveEntry(ytfeed.Entry{ChannelID: chi.URLParam(r, "channel"), VideoID: chi.URLParam(r, "video")})
+	channelID := chi.URLParam(r, "channel")
+	videoId := chi.URLParam(r, "video")
+	err := s.YoutubeSvc.RemoveEntry(ytfeed.Entry{ChannelID: channelID, VideoID: videoId})
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to remove entry")
 		return
 	}
-	rest.RenderJSON(w, rest.JSON{"status": "ok", "removed": chi.URLParam(r, "video")})
+	feeds := s.feeds()
+	for _, f := range feeds {
+		items, loadErr := s.Store.Load(f, s.Conf.System.MaxTotal, true)
+		if loadErr != nil {
+			continue
+		}
+		for _, item := range items {
+			if item.GUID == fmt.Sprintf("%s::%s", channelID, videoId) {
+				if err := s.Store.Remove(f, item); err != nil {
+					rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to remove entry")
+					return
+				}
+				rest.RenderJSON(w, rest.JSON{"status": "ok", "removed": chi.URLParam(r, "video")})
+				return
+			}
+		}
+	}
+	rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to remove entry")
 }
 
 func (s *Server) feeds() []string {

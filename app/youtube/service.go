@@ -364,6 +364,9 @@ func (s *Service) RemoveEntry(entry ytfeed.Entry) error {
 	if err := s.Store.Remove(entry); err != nil {
 		return errors.Wrapf(err, "failed to remove entry %s", entry.VideoID)
 	}
+	if err := os.Remove(entry.File); err != nil {
+		return errors.Wrapf(err, "failed to remove file %s", entry.File)
+	}
 	return nil
 }
 
