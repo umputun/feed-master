@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
 	log "github.com/go-pkgz/lgr"
 	bolt "go.etcd.io/bbolt"
 
@@ -115,4 +117,33 @@ func (b BoltDB) removeOld(fmFeed string, keep int) (int, error) {
 		return err
 	})
 	return deleted, err
+}
+
+// Remove entry matched by item.GUID from given feed
+func (b BoltDB) Remove(fmFeed string, item feed.Item) error {
+
+	err := b.DB.Update(func(tx *bolt.Tx) (e error) {
+		bucket := tx.Bucket([]byte(fmFeed))
+		if bucket == nil {
+			return fmt.Errorf("no bucket for %s", fmFeed)
+		}
+		c := bucket.Cursor()
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
+			var itemDb feed.Item
+			if err := json.Unmarshal(v, &itemDb); err != nil {
+				log.Printf("[WARN] failed to unmarshal, %v", err)
+				continue
+			}
+			if itemDb.GUID == item.GUID {
+				if err := bucket.Delete(k); err != nil {
+					return errors.Wrapf(err, "failed to delete %s (%s)", string(k), item.GUID)
+				}
+				log.Printf("[INFO] delete %s - %s", string(k), item.GUID)
+				return nil
+			}
+		}
+		return fmt.Errorf("no item found for %s and item.GUID %s", fmFeed, item.GUID)
+	})
+
+	return err
 }

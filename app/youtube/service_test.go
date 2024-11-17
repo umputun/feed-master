@@ -384,6 +384,52 @@ func TestService_update(t *testing.T) {
 
 }
 
+func TestService_RemoveEntry(t *testing.T) {
+	tempDir := t.TempDir()
+	video := filepath.Join(tempDir, "122b672d10e77708b51c041f852615dc0eedf354.mp3")
+	_, err := os.Create(video)
+	require.NoError(t, err)
+
+	storeSvc := &mocks.StoreServiceMock{
+		LoadFunc: func(string, int) ([]ytfeed.Entry, error) {
+			res := []ytfeed.Entry{
+				{ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: video},
+				{ChannelID: "channel1", VideoID: "vid2", Title: "title2", File: "/tmp/file2.mp3"},
+			}
+			return res, nil
+		},
+		ResetProcessedFunc: func(entry ytfeed.Entry) error {
+			return nil
+		},
+		RemoveFunc: func(entry ytfeed.Entry) error {
+			return nil
+		},
+	}
+
+	svc := Service{
+		Feeds: []FeedInfo{
+			{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel},
+			{ID: "channel2", Name: "name2", Type: ytfeed.FTPlaylist},
+		},
+		Store:          storeSvc,
+		RootURL:        "http://localhost:8080/yt",
+		KeepPerChannel: 10,
+		SkipShorts:     time.Second * 60,
+	}
+
+	entry := ytfeed.Entry{
+		ChannelID: "channel1", VideoID: "vid1", Title: "title1", File: video,
+	}
+
+	err = svc.RemoveEntry(entry)
+	require.NoError(t, err)
+
+	_, err = os.Stat(video)
+	assert.True(t, os.IsNotExist(err))
+	assert.Equal(t, entry.ChannelID, storeSvc.RemoveCalls()[0].Entry.ChannelID)
+	assert.Equal(t, entry.ChannelID, storeSvc.ResetProcessedCalls()[0].Entry.ChannelID)
+}
+
 func TestService_totalEntriesToKeep(t *testing.T) {
 	svc := Service{
 		Feeds: []FeedInfo{
