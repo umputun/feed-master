@@ -178,3 +178,30 @@ func TestRemoveOld(t *testing.T) {
 		})
 	}
 }
+
+func TestStore_Remove(t *testing.T) {
+	tmpfile, _ := os.CreateTemp("", "")
+	defer os.Remove(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	bdb := &BoltDB{DB: db}
+
+	item := feed.Item{
+		PubDate: pubDate,
+		GUID:    "chan1::vid1",
+	}
+
+	created, err := bdb.Save("feed1", item)
+	require.NoError(t, err)
+	assert.True(t, created)
+
+	err = bdb.Remove("feed1", feed.Item{GUID: "chan2"})
+	require.Error(t, err)
+
+	err = bdb.Remove("feed1", item)
+	require.NoError(t, err)
+
+	items, err := bdb.Load("feed1", 5, false)
+	require.NoError(t, err)
+	assert.Equal(t, 0, len(items))
+}
