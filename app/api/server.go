@@ -59,12 +59,12 @@ type YoutubeSvc interface {
 
 // Store provides access to feed data
 type Store interface {
-	Load(fmFeed string, max int, skipJunk bool) ([]feed.Item, error)
+	Load(fmFeed string, maX int, skipJunk bool) ([]feed.Item, error)
 }
 
 // YoutubeStore provides access to YouTube channel data
 type YoutubeStore interface {
-	Load(channelID string, max int) ([]ytfeed.Entry, error)
+	Load(channelID string, maX int) ([]ytfeed.Entry, error)
 }
 
 // Run starts http server for API with all routes

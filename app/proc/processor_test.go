@@ -94,6 +94,10 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 				RSSLocation     string             `yaml:"rss_location"`
 				SkipShorts      time.Duration      `yaml:"skip_shorts"`
 				DisableUpdates  bool               `yaml:"disable_updates"`
+				YtDlpUpdate     struct {
+					Interval time.Duration `yaml:"interval"`
+					Command  string        `yaml:"command"`
+				} `yaml:"ytdlp_update"`
 			}{},
 		},
 		Store:         boltStore,
@@ -232,6 +236,10 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 				RSSLocation     string             `yaml:"rss_location"`
 				SkipShorts      time.Duration      `yaml:"skip_shorts"`
 				DisableUpdates  bool               `yaml:"disable_updates"`
+				YtDlpUpdate     struct {
+					Interval time.Duration `yaml:"interval"`
+					Command  string        `yaml:"command"`
+				} `yaml:"ytdlp_update"`
 			}{},
 		},
 		Store:         boltStore,
@@ -332,6 +340,10 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 				RSSLocation     string             `yaml:"rss_location"`
 				SkipShorts      time.Duration      `yaml:"skip_shorts"`
 				DisableUpdates  bool               `yaml:"disable_updates"`
+				YtDlpUpdate     struct {
+					Interval time.Duration `yaml:"interval"`
+					Command  string        `yaml:"command"`
+				} `yaml:"ytdlp_update"`
 			}{},
 		},
 		Store:         boltStore,

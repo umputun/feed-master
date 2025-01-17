@@ -7,6 +7,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"regexp"
 	"sort"
@@ -39,6 +40,9 @@ type Service struct {
 	KeepPerChannel  int
 	RootURL         string
 	SkipShorts      time.Duration
+
+	YtDlpUpdDuration time.Duration
+	YtDlpUpdCommand  string
 }
 
 // FeedInfo contains channel or feed ID, readable name and other per-feed info
@@ -70,7 +74,7 @@ type ChannelService interface {
 // StoreService is an interface for storing and loading metadata about downloaded audio
 type StoreService interface {
 	Save(entry ytfeed.Entry) (bool, error)
-	Load(channelID string, max int) ([]ytfeed.Entry, error)
+	Load(channelID string, maX int) ([]ytfeed.Entry, error)
 	Exist(entry ytfeed.Entry) (bool, error)
 	RemoveOld(channelID string, keep int) ([]string, error)
 	Remove(entry ytfeed.Entry) error
@@ -88,7 +92,7 @@ type DurationService interface {
 // Do is a blocking function that downloads audio from youtube channels and updates metadata
 func (s *Service) Do(ctx context.Context) error {
 	log.Printf("[INFO] starting youtube service")
-
+	lastYtDlpUpdate := time.Now()
 	if s.SkipShorts > 0 {
 		log.Printf("[DEBUG] skip youtube episodes shorter than %v", s.SkipShorts)
 	}
@@ -108,6 +112,11 @@ func (s *Service) Do(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-tick.C:
+			if s.YtDlpUpdDuration > 0 && time.Since(lastYtDlpUpdate) > s.YtDlpUpdDuration && s.YtDlpUpdCommand != "" {
+				// update yt-dlp binary once in a while
+				lastYtDlpUpdate = time.Now()
+				s.execYtdlpUpdate(ctx, s.YtDlpUpdCommand)
+			}
 			if err := s.procChannels(ctx); err != nil {
 				return errors.Wrap(err, "failed to process channels")
 			}
@@ -550,6 +559,17 @@ func (s *Service) updateMp3Tags(file string, entry ytfeed.Entry, fi FeedInfo) er
 		return errors.Wrapf(err, "failed to close file %s", file)
 	}
 	return nil
+}
+
+func (s *Service) execYtdlpUpdate(ctx context.Context, updCmd string) {
+	log.Printf("[INFO] executing yt-dlp update command %s", s.YtDlpUpdCommand)
+	cmd := exec.CommandContext(ctx, "sh", "-c", updCmd) // nolint
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = log.ToWriter(log.Default(), "DEBUG")
+	cmd.Stderr = log.ToWriter(log.Default(), "INFO")
+	if err := cmd.Run(); err != nil {
+		log.Printf("[WARN] failed to execute yt-dlp update command %s: %v", s.YtDlpUpdCommand, err)
+	}
 }
 
 type stats struct {
