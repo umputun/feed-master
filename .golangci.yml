@@ -30,7 +30,7 @@ linters:
     - ineffassign
     - stylecheck
     - gochecknoinits
-    - exportloopref
+    # - copyloopvar  # Disabled as it conflicts with code supporting Go <1.22
     - gocritic
     - nakedret
     - gosimple

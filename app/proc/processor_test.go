@@ -114,24 +114,21 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 
 	res, err := boltStore.Load("feed1", 10, false)
 	require.NoError(t, err)
-	assert.Equal(t, 4, len(res), "all 4 items loaded on the first rss parsing")
+	assert.Equal(t, 3, len(res), "all 3 items loaded on the first rss parsing")
 	assert.Equal(t, "Радио-Т 798", res[0].Title)
 	assert.Equal(t, "Радио-Т 797", res[1].Title)
 	assert.Equal(t, "Радио-Т 796", res[2].Title)
-	assert.Equal(t, "Радио-Т 795", res[3].Title)
 
-	require.Equal(t, 4, len(tgNotif.SendCalls()))
+	require.Equal(t, 3, len(tgNotif.SendCalls()))
 	assert.Equal(t, "Радио-Т 798", tgNotif.SendCalls()[0].Item.Title)
 	assert.Equal(t, "tgChannel", tgNotif.SendCalls()[0].ChanID)
 	assert.Equal(t, "Радио-Т 797", tgNotif.SendCalls()[1].Item.Title)
 	assert.Equal(t, "Радио-Т 796", tgNotif.SendCalls()[2].Item.Title)
-	assert.Equal(t, "Радио-Т 795", tgNotif.SendCalls()[3].Item.Title)
 
-	require.Equal(t, 4, len(twitterNotif.SendCalls()))
+	require.Equal(t, 3, len(twitterNotif.SendCalls()))
 	assert.Equal(t, "Радио-Т 798", twitterNotif.SendCalls()[0].Item.Title)
 	assert.Equal(t, "Радио-Т 797", twitterNotif.SendCalls()[1].Item.Title)
 	assert.Equal(t, "Радио-Т 796", twitterNotif.SendCalls()[2].Item.Title)
-	assert.Equal(t, "Радио-Т 795", twitterNotif.SendCalls()[3].Item.Title)
 
 	// running processor second time to load new items and remove old ones
 	testFeed, err = os.ReadFile("./testdata/rss2.xml")
@@ -151,16 +148,16 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 	assert.Equal(t, "Радио-Т 798", res[3].Title)
 	assert.Equal(t, "Радио-Т 797", res[4].Title)
 
-	require.Equal(t, 7, len(tgNotif.SendCalls()))
-	assert.Equal(t, "Радио-Т 801", tgNotif.SendCalls()[4].Item.Title)
-	assert.Equal(t, "tgChannel", tgNotif.SendCalls()[4].ChanID)
-	assert.Equal(t, "Радио-Т 800", tgNotif.SendCalls()[5].Item.Title)
-	assert.Equal(t, "Радио-Т 799", tgNotif.SendCalls()[6].Item.Title)
+	require.Equal(t, 6, len(tgNotif.SendCalls()))
+	assert.Equal(t, "Радио-Т 801", tgNotif.SendCalls()[3].Item.Title)
+	assert.Equal(t, "tgChannel", tgNotif.SendCalls()[3].ChanID)
+	assert.Equal(t, "Радио-Т 800", tgNotif.SendCalls()[4].Item.Title)
+	assert.Equal(t, "Радио-Т 799", tgNotif.SendCalls()[5].Item.Title)
 
-	require.Equal(t, 7, len(twitterNotif.SendCalls()))
-	assert.Equal(t, "Радио-Т 801", twitterNotif.SendCalls()[4].Item.Title)
-	assert.Equal(t, "Радио-Т 800", twitterNotif.SendCalls()[5].Item.Title)
-	assert.Equal(t, "Радио-Т 799", twitterNotif.SendCalls()[6].Item.Title)
+	require.Equal(t, 6, len(twitterNotif.SendCalls()))
+	assert.Equal(t, "Радио-Т 801", twitterNotif.SendCalls()[3].Item.Title)
+	assert.Equal(t, "Радио-Т 800", twitterNotif.SendCalls()[4].Item.Title)
+	assert.Equal(t, "Радио-Т 799", twitterNotif.SendCalls()[5].Item.Title)
 }
 
 func TestProcessor_DoLoadMaxItems(t *testing.T) {
@@ -360,11 +357,10 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 
 	res, err := boltStore.Load("feed1", 10, false)
 	require.NoError(t, err)
-	assert.Equal(t, 4, len(res), "all 4 items are loaded")
+	assert.Equal(t, 3, len(res), "all 3 items are loaded")
 	assert.Equal(t, "Радио-Т 798", res[0].Title)
 	assert.Equal(t, "Радио-Т 797", res[1].Title)
 	assert.Equal(t, "Радио-Т 796", res[2].Title)
-	assert.Equal(t, "Радио-Т 795", res[3].Title)
 
 	require.Equal(t, 2, len(tgNotif.SendCalls()))
 	assert.Equal(t, "Радио-Т 798", tgNotif.SendCalls()[0].Item.Title)
