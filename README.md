@@ -67,7 +67,7 @@ youtube: # youtube configuration, optional
       - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru", filter: {include: "ТОЧКА", exclude: "STAR'цы Live"}} 
   ytdlp_update: 
     interval: 24h # update interval for yt-dlp. If not set, yt-dlp will not be updated 
-    cmd: "pip3 install --break-system-packages -U yt-dlp" # update yt-dlp command
+    command: "pip3 install --break-system-packages -U yt-dlp" # update yt-dlp command
 
 system: # system configuration
   update: 1m # update interval for checking source feeds
