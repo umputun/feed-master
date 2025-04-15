@@ -1,7 +1,7 @@
 module github.com/umputun/feed-master
 
 go 1.22
-toolchain go1.23.7
+toolchain go1.24.1
 
 require (
 	github.com/ChimeraCoder/anaconda v2.0.0+incompatible
@@ -15,7 +15,7 @@ require (
 	github.com/go-pkgz/lcw/v2 v2.0.0
 	github.com/go-pkgz/lgr v0.11.1
 	github.com/go-pkgz/repeater v1.2.0
-	github.com/go-pkgz/rest v1.20.2
+	github.com/go-pkgz/rest v1.20.3
 	github.com/go-pkgz/syncs v1.3.2
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
