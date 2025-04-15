@@ -52,8 +52,8 @@ github.com/dustin/gojson
 # github.com/garyburd/go-oauth v0.0.0-20180319155456-bca2e7f09a17
 ## explicit
 github.com/garyburd/go-oauth/oauth
-# github.com/go-chi/chi/v5 v5.2.0
-## explicit; go 1.14
+# github.com/go-chi/chi/v5 v5.2.1
+## explicit; go 1.20
 github.com/go-chi/chi/v5
 github.com/go-chi/chi/v5/middleware
 # github.com/go-chi/render v1.0.3
