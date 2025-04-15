@@ -328,14 +328,42 @@ func TestServer_removeEntryCtrl(t *testing.T) {
 			return nil
 		},
 	}
+	store := &mocks.StoreMock{
+		LoadFunc: func(string, int, bool) ([]feed.Item, error) {
+			return []feed.Item{
+				{
+					GUID:        "chan1::vid1",
+					Title:       "title1",
+					Link:        "http://example.com/link1",
+					Description: "some description1",
+					Enclosure: feed.Enclosure{
+						URL:    "http://example.com/enclosure1",
+						Type:   "audio/mpeg",
+						Length: 12345,
+					},
+				},
+			}, nil
+		},
+		RemoveFunc: func(string, feed.Item) error {
+			return nil
+		},
+	}
 
 	s := Server{
 		Version:       "1.0",
 		TemplLocation: "../webapp/templates/*",
 		YoutubeSvc:    yt,
-		Conf:          config.Conf{},
-		AdminPasswd:   "123456",
+		Store:         store,
+		Conf: config.Conf{
+			Feeds: map[string]config.Feed{
+				"feed1": {
+					Title: "feed1 title",
+				},
+			},
+		},
+		AdminPasswd: "123456",
 	}
+	s.Conf.System.MaxTotal = 2
 
 	ts := httptest.NewServer(s.router())
 	defer ts.Close()
@@ -363,6 +391,9 @@ func TestServer_removeEntryCtrl(t *testing.T) {
 	require.Equal(t, 1, len(yt.RemoveEntryCalls()))
 	require.Equal(t, "chan1", yt.RemoveEntryCalls()[0].Entry.ChannelID)
 	require.Equal(t, "vid1", yt.RemoveEntryCalls()[0].Entry.VideoID)
+	require.Equal(t, "feed1", store.LoadCalls()[0].FmFeed)
+	require.Equal(t, "feed1", store.RemoveCalls()[0].FmFeed)
+	require.Equal(t, "chan1::vid1", store.RemoveCalls()[0].Item.GUID)
 }
 
 func TestServer_configCtrl(t *testing.T) {
