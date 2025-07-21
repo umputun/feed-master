@@ -20,8 +20,6 @@ linters:
     - prealloc
   
   settings:
-    govet:
-      shadow: true
     misspell:
       locale: US
     gocritic:
@@ -47,6 +45,3 @@ linters:
 
 run:
   concurrency: 4
-
-issues:
-  exclude-use-default: false
