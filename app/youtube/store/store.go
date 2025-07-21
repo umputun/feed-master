@@ -33,7 +33,7 @@ func (s *BoltDB) Save(entry feed.Entry) (bool, error) {
 		return created, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
 	}
 
-	err := s.DB.Update(func(tx *bolt.Tx) error {
+	err := s.Update(func(tx *bolt.Tx) error {
 		bucket, e := tx.CreateBucketIfNotExists([]byte(entry.ChannelID))
 		if e != nil {
 			return errors.Wrapf(e, "create bucket %s", entry.ChannelID)
@@ -70,7 +70,7 @@ func (s *BoltDB) Exist(entry feed.Entry) (bool, error) {
 		return false, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
 	}
 
-	err := s.DB.View(func(tx *bolt.Tx) error {
+	err := s.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(entry.ChannelID))
 		if bucket == nil {
 			return nil
@@ -140,7 +140,7 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 	deleted := 0
 	var res []string
 
-	err := s.DB.Update(func(tx *bolt.Tx) (e error) {
+	err := s.Update(func(tx *bolt.Tx) (e error) {
 		errs := new(multierror.Error)
 		bucket := tx.Bucket([]byte(channelID))
 		if bucket == nil {
@@ -173,7 +173,7 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 // Remove entry matched by vidoID and channelID
 func (s *BoltDB) Remove(entry feed.Entry) error {
 
-	err := s.DB.Update(func(tx *bolt.Tx) (e error) {
+	err := s.Update(func(tx *bolt.Tx) (e error) {
 		bucket := tx.Bucket([]byte(entry.ChannelID))
 		if bucket == nil {
 			return fmt.Errorf("no bucket for %s", entry.ChannelID)
@@ -207,7 +207,7 @@ func (s *BoltDB) SetProcessed(entry feed.Entry) error {
 		return errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
 	}
 
-	err := s.DB.Update(func(tx *bolt.Tx) error {
+	err := s.Update(func(tx *bolt.Tx) error {
 		bucket, e := tx.CreateBucketIfNotExists(processedBkt)
 		if e != nil {
 			return errors.Wrapf(e, "create bucket %s", processedBkt)
@@ -236,7 +236,7 @@ func (s *BoltDB) ResetProcessed(entry feed.Entry) error {
 		return errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
 	}
 
-	err := s.DB.Update(func(tx *bolt.Tx) error {
+	err := s.Update(func(tx *bolt.Tx) error {
 		bucket, e := tx.CreateBucketIfNotExists(processedBkt)
 		if e != nil {
 			return errors.Wrapf(e, "create bucket %s", processedBkt)
@@ -266,7 +266,7 @@ func (s *BoltDB) CheckProcessed(entry feed.Entry) (found bool, ts time.Time, err
 		return false, time.Time{}, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
 	}
 
-	err = s.DB.View(func(tx *bolt.Tx) error {
+	err = s.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(processedBkt)
 		if bucket == nil {
 			return nil
@@ -289,7 +289,7 @@ func (s *BoltDB) CheckProcessed(entry feed.Entry) (found bool, ts time.Time, err
 // CountProcessed returns the number of processed entries stored in processedBkt
 func (s *BoltDB) CountProcessed() (count int) {
 
-	_ = s.DB.View(func(tx *bolt.Tx) error {
+	_ = s.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(processedBkt)
 		if bucket == nil {
 			return nil
@@ -304,7 +304,7 @@ func (s *BoltDB) CountProcessed() (count int) {
 // ListProcessed returns processed entries stored in processedBkt
 func (s *BoltDB) ListProcessed() (res []string, err error) {
 
-	err = s.DB.View(func(tx *bolt.Tx) error {
+	err = s.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(processedBkt)
 		if bucket == nil {
 			return nil

@@ -202,8 +202,8 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 
 	res := string(b)
 	// this hack to avoid having different items for marshal and unmarshal due to "itunes" namespace
-	res = strings.Replace(res, "<duration>", "<itunes:duration>", -1)
-	res = strings.Replace(res, "</duration>", "</itunes:duration>", -1)
+	res = strings.ReplaceAll(res, "<duration>", "<itunes:duration>")
+	res = strings.ReplaceAll(res, "</duration>", "</itunes:duration>")
 	return res, nil
 }
 

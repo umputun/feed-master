@@ -1,21 +1,7 @@
-linters-settings:
-  govet:
-    enable:
-      - shadow
-  misspell:
-    locale: US
-  gocritic:
-    enabled-tags:
-      - performance
-      - style
-      - experimental
-    disabled-checks:
-      - wrapperFunc
-      - hugeParam
-      - rangeValCopy
+version: "2"
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - bodyclose
     - staticcheck
@@ -26,29 +12,41 @@ linters:
     - gosec
     - misspell
     - unparam
-    - typecheck
     - ineffassign
-    - stylecheck
     - gochecknoinits
     # - copyloopvar  # Disabled as it conflicts with code supporting Go <1.22
     - gocritic
     - nakedret
-    - gosimple
     - prealloc
-
-  fast: false
+  
+  settings:
+    govet:
+      shadow: true
+    misspell:
+      locale: US
+    gocritic:
+      enabled-tags:
+        - performance
+        - style
+        - experimental
+      disabled-checks:
+        - wrapperFunc
+        - hugeParam
+        - rangeValCopy
+  
+  exclusions:
+    paths:
+      - vendor
+    rules:
+      - text: "weak cryptographic primitive"
+        linters:
+          - gosec
+      - text: "package-comments: should have a package comment"
+        linters:
+          - revive
 
 run:
   concurrency: 4
 
 issues:
-  exclude-dirs:
-    - vendor
-  exclude-rules:
-    - text: "weak cryptographic primitive"
-      linters:
-        - gosec
-    - text: "package-comments: should have a package comment"
-      linters:
-        - revive
   exclude-use-default: false

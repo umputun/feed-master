@@ -1,7 +1,6 @@
 module github.com/umputun/feed-master
 
-go 1.22
-toolchain go1.23.7
+go 1.24
 
 require (
 	github.com/ChimeraCoder/anaconda v2.0.0+incompatible

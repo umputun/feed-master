@@ -236,8 +236,8 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		res := `<?xml version="1.0" encoding="UTF-8"?>` + "\n" + string(b)
 
 		// this hack to avoid having different items for marshal and unmarshal due to "itunes" namespace
-		res = strings.Replace(res, "<duration>", "<itunes:duration>", -1)
-		res = strings.Replace(res, "</duration>", "</itunes:duration>", -1)
+		res = strings.ReplaceAll(res, "<duration>", "<itunes:duration>")
+		res = strings.ReplaceAll(res, "</duration>", "</itunes:duration>")
 
 		return []byte(res), nil
 	})
