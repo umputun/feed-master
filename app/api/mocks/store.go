@@ -28,6 +28,9 @@ type StoreMock struct {
 	// LoadFunc mocks the Load method.
 	LoadFunc func(fmFeed string, max int, skipJunk bool) ([]feed.Item, error)
 
+	// RemoveFunc mocks the Remove method.
+	RemoveFunc func(fmFeed string, item feed.Item) error
+
 	// calls tracks calls to the methods.
 	calls struct {
 		// Load holds details about calls to the Load method.
@@ -39,8 +42,16 @@ type StoreMock struct {
 			// SkipJunk is the skipJunk argument value.
 			SkipJunk bool
 		}
+		// Remove holds details about calls to the Remove method.
+		Remove []struct {
+			// FmFeed is the fmFeed argument value.
+			FmFeed string
+			// Item is the item argument value.
+			Item feed.Item
+		}
 	}
-	lockLoad sync.RWMutex
+	lockLoad   sync.RWMutex
+	lockRemove sync.RWMutex
 }
 
 // Load calls LoadFunc.
@@ -79,5 +90,41 @@ func (mock *StoreMock) LoadCalls() []struct {
 	mock.lockLoad.RLock()
 	calls = mock.calls.Load
 	mock.lockLoad.RUnlock()
+	return calls
+}
+
+// Remove calls RemoveFunc.
+func (mock *StoreMock) Remove(fmFeed string, item feed.Item) error {
+	if mock.RemoveFunc == nil {
+		panic("StoreMock.RemoveFunc: method is nil but Store.Remove was just called")
+	}
+	callInfo := struct {
+		FmFeed string
+		Item   feed.Item
+	}{
+		FmFeed: fmFeed,
+		Item:   item,
+	}
+	mock.lockRemove.Lock()
+	mock.calls.Remove = append(mock.calls.Remove, callInfo)
+	mock.lockRemove.Unlock()
+	return mock.RemoveFunc(fmFeed, item)
+}
+
+// RemoveCalls gets all the calls that were made to Remove.
+// Check the length with:
+//
+//	len(mockedStore.RemoveCalls())
+func (mock *StoreMock) RemoveCalls() []struct {
+	FmFeed string
+	Item   feed.Item
+} {
+	var calls []struct {
+		FmFeed string
+		Item   feed.Item
+	}
+	mock.lockRemove.RLock()
+	calls = mock.calls.Remove
+	mock.lockRemove.RUnlock()
 	return calls
 }
