@@ -42,6 +42,10 @@ linters:
       - text: "package-comments: should have a package comment"
         linters:
           - revive
+      - path: _test\.go
+        linters:
+          - revive
+        text: "unused-parameter"
 
 run:
   concurrency: 4

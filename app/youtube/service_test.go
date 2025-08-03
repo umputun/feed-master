@@ -116,7 +116,7 @@ func TestService_Do(t *testing.T) {
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
 	t.Logf("%v", duration.FileCalls())
-	// DurationService.File called 11 times: 5 in Service.update(), 6 in Service.isShort()
+	// durationService.File called 11 times: 5 in Service.update(), 6 in Service.isShort()
 	require.Equal(t, 11, len(duration.FileCalls()))
 	assert.Equal(t, filepath.Join(tempDir, "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3"), duration.FileCalls()[0].Fname)
 	assert.Equal(t, filepath.Join(tempDir, "4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3"), duration.FileCalls()[2].Fname)

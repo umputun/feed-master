@@ -34,6 +34,7 @@ import (
 
 //go:generate moq -out mocks/yt_service.go -pkg mocks -skip-ensure -fmt goimports . YoutubeSvc
 //go:generate moq -out mocks/store.go -pkg mocks -skip-ensure -fmt goimports . Store
+//go:generate moq -out mocks/youtube_store.go -pkg mocks -skip-ensure -fmt goimports . YoutubeStore
 
 // Server provides HTTP API
 type Server struct {
@@ -59,12 +60,12 @@ type YoutubeSvc interface {
 
 // Store provides access to feed data
 type Store interface {
-	Load(fmFeed string, maX int, skipJunk bool) ([]feed.Item, error)
+	Load(fmFeed string, maxItems int, skipJunk bool) ([]feed.Item, error)
 }
 
 // YoutubeStore provides access to YouTube channel data
 type YoutubeStore interface {
-	Load(channelID string, maX int) ([]ytfeed.Entry, error)
+	Load(channelID string, maxItems int) ([]ytfeed.Entry, error)
 }
 
 // Run starts http server for API with all routes
@@ -93,7 +94,7 @@ func (s *Server) Run(ctx context.Context, port int) {
 		s.TemplLocation = "webapp/templates/*"
 	}
 	log.Printf("[DEBUG] loading templates from %s", s.TemplLocation)
-	s.templates = template.Must(template.ParseGlob(s.TemplLocation))
+	s.loadTemplates()
 
 	serverLock.Lock()
 	s.httpServer = &http.Server{
@@ -106,6 +107,16 @@ func (s *Server) Run(ctx context.Context, port int) {
 	serverLock.Unlock()
 	err = s.httpServer.ListenAndServe()
 	log.Printf("[WARN] http server terminated, %s", err)
+}
+
+// loadTemplates loads templates with custom functions
+func (s *Server) loadTemplates() {
+	funcMap := template.FuncMap{
+		"currentYear": func() int {
+			return time.Now().Year()
+		},
+	}
+	s.templates = template.Must(template.New("").Funcs(funcMap).ParseGlob(s.TemplLocation))
 }
 
 func (s *Server) router() *chi.Mux {

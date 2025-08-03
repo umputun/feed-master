@@ -255,7 +255,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 
 			// got new entry, but with very old timestamp. skip it if we have already reached max capacity
 			// (this is to eliminate the initial load) and this entry is older than the oldest one we have.
-			// Also marks it as processed as we don't want to process it again
+			// also marks it as processed as we don't want to process it again
 			oldestEntry := s.oldestEntry()
 			if entry.Published.Before(oldestEntry.Published) && s.countAllEntries() >= s.totalEntriesToKeep() {
 				allStats.ignored++

@@ -12,25 +12,25 @@ import (
 
 // YoutubeSvcMock is a mock implementation of api.YoutubeSvc.
 //
-// 	func TestSomethingThatUsesYoutubeSvc(t *testing.T) {
+//	func TestSomethingThatUsesYoutubeSvc(t *testing.T) {
 //
-// 		// make and configure a mocked api.YoutubeSvc
-// 		mockedYoutubeSvc := &YoutubeSvcMock{
-// 			RSSFeedFunc: func(cinfo youtube.FeedInfo) (string, error) {
-// 				panic("mock out the RSSFeed method")
-// 			},
-// 			RemoveEntryFunc: func(entry ytfeed.Entry) error {
-// 				panic("mock out the RemoveEntry method")
-// 			},
-// 			StoreRSSFunc: func(chanID string, rss string) error {
-// 				panic("mock out the StoreRSS method")
-// 			},
-// 		}
+//		// make and configure a mocked api.YoutubeSvc
+//		mockedYoutubeSvc := &YoutubeSvcMock{
+//			RSSFeedFunc: func(cinfo youtube.FeedInfo) (string, error) {
+//				panic("mock out the RSSFeed method")
+//			},
+//			RemoveEntryFunc: func(entry ytfeed.Entry) error {
+//				panic("mock out the RemoveEntry method")
+//			},
+//			StoreRSSFunc: func(chanID string, rss string) error {
+//				panic("mock out the StoreRSS method")
+//			},
+//		}
 //
-// 		// use mockedYoutubeSvc in code that requires api.YoutubeSvc
-// 		// and then make assertions.
+//		// use mockedYoutubeSvc in code that requires api.YoutubeSvc
+//		// and then make assertions.
 //
-// 	}
+//	}
 type YoutubeSvcMock struct {
 	// RSSFeedFunc mocks the RSSFeed method.
 	RSSFeedFunc func(cinfo youtube.FeedInfo) (string, error)
@@ -84,7 +84,8 @@ func (mock *YoutubeSvcMock) RSSFeed(cinfo youtube.FeedInfo) (string, error) {
 
 // RSSFeedCalls gets all the calls that were made to RSSFeed.
 // Check the length with:
-//     len(mockedYoutubeSvc.RSSFeedCalls())
+//
+//	len(mockedYoutubeSvc.RSSFeedCalls())
 func (mock *YoutubeSvcMock) RSSFeedCalls() []struct {
 	Cinfo youtube.FeedInfo
 } {
@@ -115,7 +116,8 @@ func (mock *YoutubeSvcMock) RemoveEntry(entry ytfeed.Entry) error {
 
 // RemoveEntryCalls gets all the calls that were made to RemoveEntry.
 // Check the length with:
-//     len(mockedYoutubeSvc.RemoveEntryCalls())
+//
+//	len(mockedYoutubeSvc.RemoveEntryCalls())
 func (mock *YoutubeSvcMock) RemoveEntryCalls() []struct {
 	Entry ytfeed.Entry
 } {
@@ -148,7 +150,8 @@ func (mock *YoutubeSvcMock) StoreRSS(chanID string, rss string) error {
 
 // StoreRSSCalls gets all the calls that were made to StoreRSS.
 // Check the length with:
-//     len(mockedYoutubeSvc.StoreRSSCalls())
+//
+//	len(mockedYoutubeSvc.StoreRSSCalls())
 func (mock *YoutubeSvcMock) StoreRSSCalls() []struct {
 	ChanID string
 	Rss    string
