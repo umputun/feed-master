@@ -105,17 +105,28 @@ func (p *Processor) processFeed(name, url, telegramChannel string, maximum int, 
 		}
 
 		rptr := repeater.NewDefault(3, 5*time.Second)
+		attemptNum := 0
 		err = rptr.Do(context.Background(), func() error {
+			attemptNum++
+			startTime := time.Now()
+			log.Printf("[DEBUG] sending telegram message (attempt %d/3): title=%q, size=%d bytes, url=%s to channel=%s",
+				attemptNum, item.Title, item.Enclosure.Length, item.Enclosure.URL, telegramChannel)
+			
 			if e := p.TelegramNotif.Send(telegramChannel, item); e != nil {
-				log.Printf("[WARN] failed attempt to send telegram message, url=%s to channel=%s, %v",
-					item.Enclosure.URL, telegramChannel, e)
+				elapsed := time.Since(startTime)
+				log.Printf("[WARN] failed attempt %d/3 to send telegram message after %v: title=%q, size=%d bytes, url=%s to channel=%s, error=%v",
+					attemptNum, elapsed, item.Title, item.Enclosure.Length, item.Enclosure.URL, telegramChannel, e)
 				return e
 			}
+			
+			elapsed := time.Since(startTime)
+			log.Printf("[INFO] successfully sent telegram message in %v: title=%q, size=%d bytes",
+				elapsed, item.Title, item.Enclosure.Length)
 			return nil
 		})
 		if err != nil {
-			log.Printf("[WARN] failed to send telegram message, url=%s to channel=%s, %v",
-				item.Enclosure.URL, telegramChannel, err)
+			log.Printf("[WARN] failed to send telegram message after 3 attempts: title=%q, size=%d bytes, url=%s to channel=%s, final_error=%v",
+				item.Title, item.Enclosure.Length, item.Enclosure.URL, telegramChannel, err)
 		}
 
 		if err := p.TwitterNotif.Send(item); err != nil {

@@ -338,22 +338,56 @@ func TestServer_getYoutubeChannelsPageCtrl(t *testing.T) {
 func TestServer_renderErrorPage(t *testing.T) {
 	srv := setupTestServer(t, config.Conf{}, nil, nil)
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", "/test", http.NoBody)
+	tests := []struct {
+		name       string
+		err        error
+		statusCode int
+		wantBody   []string
+		notWant    []string
+	}{
+		{
+			name:       "404 error",
+			err:        fmt.Errorf("test error message"),
+			statusCode: 404,
+			wantBody:   []string{"404", "test error message", "Something went wrong!"},
+			notWant:    []string{"©"},
+		},
+		{
+			name:       "500 error",
+			err:        fmt.Errorf("internal server error"),
+			statusCode: 500,
+			wantBody:   []string{"500", "internal server error", "Something went wrong!"},
+			notWant:    []string{"©"},
+		},
+		{
+			name:       "403 with detailed message",
+			err:        fmt.Errorf("forbidden: insufficient permissions"),
+			statusCode: 403,
+			wantBody:   []string{"403", "forbidden: insufficient permissions", "Something went wrong!"},
+			notWant:    []string{"©"},
+		},
+	}
 
-	testErr := fmt.Errorf("test error message")
-	srv.renderErrorPage(rec, req, testErr, 404)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest("GET", "/test", http.NoBody)
 
-	assert.Equal(t, http.StatusOK, rec.Code)
-	body := rec.Body.String()
+			srv.renderErrorPage(rec, req, tt.err, tt.statusCode)
 
-	// check error page content
-	assert.Contains(t, body, "404")
-	assert.Contains(t, body, "test error message")
-	assert.Contains(t, body, "Something went wrong!")
+			// renderErrorPage doesn't set status code, it just renders template
+			assert.Equal(t, http.StatusOK, rec.Code)
+			body := rec.Body.String()
 
-	// error page doesn't have footer, but should still accept Year parameter
-	assert.NotContains(t, body, "©") // no footer in error template
+			for _, want := range tt.wantBody {
+				assert.Contains(t, body, want)
+			}
+
+			for _, notWant := range tt.notWant {
+				assert.NotContains(t, body, notWant)
+			}
+		})
+	}
 }
 
 func TestTemplateCurrentYear(t *testing.T) {

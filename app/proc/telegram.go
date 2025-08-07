@@ -102,8 +102,13 @@ func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Mes
 }
 
 func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Message, error) {
+	downloadStart := time.Now()
+	log.Printf("[DEBUG] starting audio download: size=%d bytes, timeout=%v, url=%s", 
+		item.Enclosure.Length, client.Timeout, item.Enclosure.URL)
+	
 	httpBody, err := item.DownloadAudio(client.Timeout)
 	if err != nil {
+		log.Printf("[DEBUG] download failed after %v: %v", time.Since(downloadStart), err)
 		return nil, err
 	}
 	defer httpBody.Close() // nolint
@@ -115,9 +120,16 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 	}
 	defer os.Remove(tmpFile.Name())
 
-	if _, err = io.Copy(tmpFile, httpBody); err != nil {
+	copyStart := time.Now()
+	written, err := io.Copy(tmpFile, httpBody)
+	if err != nil {
+		log.Printf("[DEBUG] failed to copy %d bytes to temp file after %v: %v", 
+			written, time.Since(copyStart), err)
 		return nil, err
 	}
+	log.Printf("[DEBUG] downloaded %d bytes in %v (copy took %v)", 
+		written, time.Since(downloadStart), time.Since(copyStart))
+	
 	if closeErr := tmpFile.Close(); closeErr != nil {
 		return nil, closeErr
 	}
