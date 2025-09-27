@@ -111,14 +111,14 @@ func (p *Processor) processFeed(name, url, telegramChannel string, maximum int, 
 			startTime := time.Now()
 			log.Printf("[DEBUG] sending telegram message (attempt %d/3): title=%q, size=%d bytes, url=%s to channel=%s",
 				attemptNum, item.Title, item.Enclosure.Length, item.Enclosure.URL, telegramChannel)
-			
+
 			if e := p.TelegramNotif.Send(telegramChannel, item); e != nil {
 				elapsed := time.Since(startTime)
 				log.Printf("[WARN] failed attempt %d/3 to send telegram message after %v: title=%q, size=%d bytes, url=%s to channel=%s, error=%v",
 					attemptNum, elapsed, item.Title, item.Enclosure.Length, item.Enclosure.URL, telegramChannel, e)
 				return e
 			}
-			
+
 			elapsed := time.Since(startTime)
 			log.Printf("[INFO] successfully sent telegram message in %v: title=%q, size=%d bytes",
 				elapsed, item.Title, item.Enclosure.Length)

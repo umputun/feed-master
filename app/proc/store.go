@@ -94,25 +94,35 @@ func (b BoltDB) Load(fmFeed string, maximum int, skipJunk bool) ([]feed.Item, er
 }
 
 func (b BoltDB) removeOld(fmFeed string, keep int) (int, error) {
+	var toDelete [][]byte
 	deleted := 0
+
 	err := b.DB.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(fmFeed))
 		if bucket == nil {
 			return fmt.Errorf("no bucket for %s", fmFeed)
 		}
+
 		recs := 0
 		c := bucket.Cursor()
-		var err error
 		for k, _ := c.Last(); k != nil; k, _ = c.Prev() {
 			recs++
 			if recs > keep {
-				if e := bucket.Delete(k); e != nil {
-					err = e
-				}
-				deleted++
+				keyCopy := make([]byte, len(k))
+				copy(keyCopy, k)
+				toDelete = append(toDelete, keyCopy)
 			}
 		}
-		return err
+
+		for _, k := range toDelete {
+			if e := bucket.Delete(k); e != nil {
+				return e
+			}
+			deleted++
+		}
+
+		return nil
 	})
+
 	return deleted, err
 }

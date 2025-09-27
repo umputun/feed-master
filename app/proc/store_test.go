@@ -178,3 +178,64 @@ func TestRemoveOld(t *testing.T) {
 		})
 	}
 }
+
+func TestRemoveOldKeepsNewestItems(t *testing.T) {
+	tmpfile, _ := os.CreateTemp("", "")
+	defer os.Remove(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	defer db.Close()
+	bdb := &BoltDB{DB: db}
+
+	baseTime := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	for i := 0; i < 100; i++ {
+		itemTime := baseTime.Add(time.Duration(i) * time.Hour)
+		item := feed.Item{PubDate: itemTime.Format(time.RFC1123Z), GUID: "item-" + strconv.Itoa(i), Title: "Item " + strconv.Itoa(i)}
+		_, err = bdb.Save("test-feed", item)
+		require.NoError(t, err)
+	}
+
+	count, err := bdb.removeOld("test-feed", 50)
+	require.NoError(t, err)
+	assert.Equal(t, 50, count)
+
+	items, err := bdb.Load("test-feed", 100, false)
+	require.NoError(t, err)
+	require.Equal(t, 50, len(items))
+
+	for i, item := range items {
+		expectedGUID := "item-" + strconv.Itoa(99-i)
+		assert.Equal(t, expectedGUID, item.GUID, "item at position %d should be %s but got %s", i, expectedGUID, item.GUID)
+	}
+}
+
+func TestRemoveOldRepeatedCycles(t *testing.T) {
+	tmpfile, _ := os.CreateTemp("", "")
+	defer os.Remove(tmpfile.Name())
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	require.NoError(t, err)
+	defer db.Close()
+	bdb := &BoltDB{DB: db}
+
+	baseTime := time.Date(2024, 12, 29, 0, 0, 0, 0, time.UTC)
+	item1 := feed.Item{PubDate: baseTime.Format(time.RFC1123Z), GUID: "item-old-1", Title: "Old Item 1"}
+	item2 := feed.Item{PubDate: baseTime.Add(1 * time.Hour).Format(time.RFC1123Z), GUID: "item-old-2", Title: "Old Item 2"}
+
+	for cycle := 0; cycle < 5; cycle++ {
+		created1, err := bdb.Save("test-feed", item1)
+		require.NoError(t, err)
+		created2, err := bdb.Save("test-feed", item2)
+		require.NoError(t, err)
+
+		if cycle == 0 {
+			assert.True(t, created1, "cycle %d: item1 should be created on first cycle", cycle)
+			assert.True(t, created2, "cycle %d: item2 should be created on first cycle", cycle)
+		} else {
+			assert.False(t, created1, "cycle %d: item1 should NOT be recreated, but created=%v", cycle, created1)
+			assert.False(t, created2, "cycle %d: item2 should NOT be recreated, but created=%v", cycle, created2)
+		}
+
+		_, err = bdb.removeOld("test-feed", 5)
+		require.NoError(t, err)
+	}
+}
