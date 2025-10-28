@@ -29,7 +29,7 @@ RUN \
     chown -R app:app /srv && \
     chmod +x /srv/feed-master
 RUN apk --no-cache add ca-certificates ffmpeg python3 py3-pip deno
-RUN pip3 install --break-system-packages --no-cache-dir --no-deps -U yt-dlp
+RUN pip3 install --break-system-packages --no-cache-dir --no-deps -U yt-dlp bgutil-ytdlp-pot-provider
 WORKDIR /srv
 
 CMD ["/srv/feed-master"]

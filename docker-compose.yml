@@ -5,6 +5,20 @@ volumes:
         driver: local
 
 services:
+    bgutil-provider:
+        image: brainicism/bgutil-ytdlp-pot-provider:latest
+        container_name: bgutil-provider
+        hostname: bgutil-provider
+        restart: always
+        init: true
+        ports:
+            - "4416:4416"
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "5"
+
     feed-master:
         build:
             context: .
@@ -15,6 +29,8 @@ services:
         container_name: feed-master
         hostname: feed-master
         restart: always
+        depends_on:
+            - bgutil-provider
 
         logging:
             driver: json-file
