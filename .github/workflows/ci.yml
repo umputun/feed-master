@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
       - name: set up go
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
         id: go
-
-      - name: checkout
-        uses: actions/checkout@v4
 
       - name: build and test
         run: |
@@ -31,7 +31,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v7
         with:
-          version: v2.3.0
+          version: v2.6
 
       - name: submit coverage
         run: |
