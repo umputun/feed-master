@@ -5,6 +5,7 @@ package feed
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -13,7 +14,6 @@ import (
 	"time"
 
 	log "github.com/go-pkgz/lgr"
-	"github.com/pkg/errors"
 )
 
 // Rss2 feed
@@ -116,11 +116,11 @@ func Parse(uri string) (result Rss2, err error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return result, errors.Wrapf(err, "failed to read body, url: %s", uri)
+		return result, fmt.Errorf("failed to read body, url: %s: %w", uri, err)
 	}
 	result, err = parseFeedContent(body)
 	if err != nil {
-		return Rss2{}, errors.Wrap(err, "parsing error")
+		return Rss2{}, fmt.Errorf("parsing error: %w", err)
 	}
 
 	return result.Normalize()
@@ -152,7 +152,7 @@ func parseAtom(content []byte) (Rss2, error) {
 	a := Atom1{}
 	err := xml.Unmarshal(content, &a)
 	if err != nil {
-		return Rss2{}, errors.Wrap(err, "can't parse atom1")
+		return Rss2{}, fmt.Errorf("can't parse atom1: %w", err)
 	}
 	return atom1ToRss2(a), nil
 }
@@ -165,7 +165,7 @@ func parseFeedContent(content []byte) (Rss2, error) {
 			// try Atom 1.0
 			return parseAtom(content)
 		}
-		return v, errors.Wrap(err, "can't parse feed content")
+		return v, fmt.Errorf("can't parse feed content: %w", err)
 	}
 
 	if v.Version == "2.0" {

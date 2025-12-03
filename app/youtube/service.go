@@ -17,7 +17,6 @@ import (
 	"github.com/bogem/id3v2/v2"
 	log "github.com/go-pkgz/lgr"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 
 	rssfeed "github.com/umputun/feed-master/app/feed"
 	ytfeed "github.com/umputun/feed-master/app/youtube/feed"
@@ -104,7 +103,7 @@ func (s *Service) Do(ctx context.Context) error {
 	defer tick.Stop()
 
 	if err := s.procChannels(ctx); err != nil {
-		return errors.Wrap(err, "failed to process channels")
+		return fmt.Errorf("failed to process channels: %w", err)
 	}
 
 	for {
@@ -118,7 +117,7 @@ func (s *Service) Do(ctx context.Context) error {
 				s.execYtdlpUpdate(ctx, s.YtDlpUpdCommand)
 			}
 			if err := s.procChannels(ctx); err != nil {
-				return errors.Wrap(err, "failed to process channels")
+				return fmt.Errorf("failed to process channels: %w", err)
 			}
 		}
 	}
@@ -128,7 +127,7 @@ func (s *Service) Do(ctx context.Context) error {
 func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 	entries, err := s.Store.Load(fi.ID, s.keep(fi))
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get channel entries")
+		return "", fmt.Errorf("failed to get channel entries: %w", err)
 	}
 
 	if len(entries) == 0 {
@@ -197,7 +196,7 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 
 	b, err := xml.MarshalIndent(&rss, "", "  ")
 	if err != nil {
-		return "", errors.Wrap(err, "failed to marshal rss")
+		return "", fmt.Errorf("failed to marshal rss: %w", err)
 	}
 
 	res := string(b)
@@ -235,7 +234,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 			}
 			isAllowed, err := s.isAllowed(entry, feedInfo)
 			if err != nil {
-				return errors.Wrapf(err, "failed to check if entry %s is relevant", entry.VideoID)
+				return fmt.Errorf("failed to check if entry %s is relevant: %w", entry.VideoID, err)
 			}
 			if !isAllowed {
 				log.Printf("[DEBUG] skipping filtered %s", entry.String())
@@ -245,7 +244,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 
 			ok, err := s.isNew(entry, feedInfo)
 			if err != nil {
-				return errors.Wrapf(err, "failed to check if entry %s exists", entry.VideoID)
+				return fmt.Errorf("failed to check if entry %s exists: %w", entry.VideoID, err)
 			}
 			if !ok {
 				allStats.skipped++
@@ -312,7 +311,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 
 			ok, saveErr := s.Store.Save(entry)
 			if saveErr != nil {
-				return errors.Wrapf(saveErr, "failed to save entry %+v", entry)
+				return fmt.Errorf("failed to save entry %+v: %w", entry, saveErr)
 			}
 			if !ok {
 				log.Printf("[WARN] attempt to save dup entry %+v", entry)
@@ -359,10 +358,10 @@ func (s *Service) StoreRSS(chanID, rss string) error {
 // RemoveEntry deleted entry from store. Doesn't removes file
 func (s *Service) RemoveEntry(entry ytfeed.Entry) error {
 	if err := s.Store.ResetProcessed(entry); err != nil {
-		return errors.Wrapf(err, "failed to reset processed entry %s", entry.VideoID)
+		return fmt.Errorf("failed to reset processed entry %s: %w", entry.VideoID, err)
 	}
 	if err := s.Store.Remove(entry); err != nil {
-		return errors.Wrapf(err, "failed to remove entry %s", entry.VideoID)
+		return fmt.Errorf("failed to remove entry %s: %w", entry.VideoID, err)
 	}
 	return nil
 }
@@ -375,7 +374,7 @@ func (s *Service) isNew(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
 	// to avoid false-positives on old entries what never got set with SetProcessed
 	exists, exErr := s.Store.Exist(entry)
 	if exErr != nil {
-		return false, errors.Wrapf(exErr, "failed to check if entry %s exists", entry.VideoID)
+		return false, fmt.Errorf("failed to check if entry %s exists: %w", entry.VideoID, exErr)
 	}
 	if exists {
 		return false, nil
@@ -402,7 +401,7 @@ func (s *Service) isAllowed(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error
 	if fi.Filter.Include != "" {
 		matchedIncludeFilter, err = regexp.MatchString(fi.Filter.Include, entry.Title)
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to check if entry %s matches include filter", entry.VideoID)
+			return false, fmt.Errorf("failed to check if entry %s matches include filter: %w", entry.VideoID, err)
 		}
 	}
 
@@ -410,7 +409,7 @@ func (s *Service) isAllowed(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error
 	if fi.Filter.Exclude != "" {
 		matchedExcludeFilter, err = regexp.MatchString(fi.Filter.Exclude, entry.Title)
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to check if entry %s matches exclude filter", entry.VideoID)
+			return false, fmt.Errorf("failed to check if entry %s matches exclude filter: %w", entry.VideoID, err)
 		}
 	}
 
@@ -544,7 +543,7 @@ func (s *Service) oldestEntry() ytfeed.Entry {
 func (s *Service) updateMp3Tags(file string, entry ytfeed.Entry, fi FeedInfo) error {
 	fh, err := id3v2.Open(file, id3v2.Options{Parse: false})
 	if err != nil {
-		return errors.Wrapf(err, "failed to open file %s", file)
+		return fmt.Errorf("failed to open file %s: %w", file, err)
 	}
 	defer fh.Close()
 
@@ -556,7 +555,7 @@ func (s *Service) updateMp3Tags(file string, entry ytfeed.Entry, fi FeedInfo) er
 	fh.AddTextFrame(fh.CommonID("Recording time"), fh.DefaultEncoding(), entry.Published.Format("20060102T150405"))
 
 	if err = fh.Save(); err != nil {
-		return errors.Wrapf(err, "failed to close file %s", file)
+		return fmt.Errorf("failed to close file %s: %w", file, err)
 	}
 	return nil
 }

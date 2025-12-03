@@ -3,6 +3,7 @@ package feed
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,8 +12,6 @@ import (
 	"text/template"
 
 	log "github.com/go-pkgz/lgr"
-
-	"github.com/pkg/errors"
 )
 
 // ErrSkip is returned when the file is not downloaded
@@ -42,7 +41,7 @@ func NewDownloader(tmpl string, logOutWriter, logErrWriter io.Writer, destinatio
 func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, err error) {
 
 	if err := os.MkdirAll(d.destination, 0o750); err != nil {
-		return "", errors.Wrapf(err, "failed to create directory %s", d.destination)
+		return "", fmt.Errorf("failed to create directory %s: %w", d.destination, err)
 	}
 
 	tmplParams := struct {

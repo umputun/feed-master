@@ -1,11 +1,11 @@
 package youtube
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
 	log "github.com/go-pkgz/lgr"
-	"github.com/pkg/errors"
 )
 
 // RSSFileStore is a store for RSS feed files
@@ -20,17 +20,17 @@ func (s *RSSFileStore) Save(chanID, rss string) error {
 		return nil
 	}
 	if err := os.MkdirAll(s.Location, 0o750); err != nil {
-		return errors.Wrapf(err, "failed to create dir %s", s.Location)
+		return fmt.Errorf("failed to create dir %s: %w", s.Location, err)
 	}
 
 	fname := filepath.Join(s.Location, chanID+".xml")
 	fh, err := os.Create(fname) //nolint:gosec // tolerable security risk
 	if err != nil {
-		return errors.Wrapf(err, "failed to create file %s", fname)
+		return fmt.Errorf("failed to create file %s: %w", fname, err)
 	}
 	defer fh.Close() // nolint
 	if _, err = fh.WriteString(rss); err != nil {
-		return errors.Wrapf(err, "failed to write to file %s", fname)
+		return fmt.Errorf("failed to write to file %s: %w", fname, err)
 	}
 	log.Printf("[INFO] rss feed file saved to %s", fname)
 	return nil

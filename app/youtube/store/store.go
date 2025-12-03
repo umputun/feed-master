@@ -4,13 +4,13 @@ package store
 import (
 	"crypto/sha1"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/pkg/errors"
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/umputun/feed-master/app/youtube/feed"
@@ -30,13 +30,13 @@ func (s *BoltDB) Save(entry feed.Entry) (bool, error) {
 
 	key, keyErr := s.key(entry)
 	if keyErr != nil {
-		return created, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
+		return created, fmt.Errorf("failed to generate key for %s: %w", entry.VideoID, keyErr)
 	}
 
 	err := s.Update(func(tx *bolt.Tx) error {
 		bucket, e := tx.CreateBucketIfNotExists([]byte(entry.ChannelID))
 		if e != nil {
-			return errors.Wrapf(e, "create bucket %s", entry.ChannelID)
+			return fmt.Errorf("create bucket %s: %w", entry.ChannelID, e)
 		}
 		if bucket.Get(key) != nil {
 			return nil
@@ -44,14 +44,14 @@ func (s *BoltDB) Save(entry feed.Entry) (bool, error) {
 
 		jdata, jerr := json.Marshal(&entry)
 		if jerr != nil {
-			return errors.Wrapf(jerr, "marshal entry %s", entry.VideoID)
+			return fmt.Errorf("marshal entry %s: %w", entry.VideoID, jerr)
 		}
 
 		log.Printf("[INFO] save %s - %s", string(key), entry.String())
 
 		e = bucket.Put(key, jdata)
 		if e != nil {
-			return errors.Wrapf(e, "save entry %s", entry.VideoID)
+			return fmt.Errorf("save entry %s: %w", entry.VideoID, e)
 		}
 
 		created = true
@@ -67,7 +67,7 @@ func (s *BoltDB) Exist(entry feed.Entry) (bool, error) {
 
 	key, keyErr := s.key(entry)
 	if keyErr != nil {
-		return false, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
+		return false, fmt.Errorf("failed to generate key for %s: %w", entry.VideoID, keyErr)
 	}
 
 	err := s.View(func(tx *bolt.Tx) error {
@@ -118,7 +118,7 @@ func (s *BoltDB) Last() (feed.Entry, error) {
 	for _, channel := range s.Channels {
 		last, err := s.Load(channel, 1)
 		if err != nil {
-			return feed.Entry{}, errors.Wrapf(err, "can't load last entry for %s", channel)
+			return feed.Entry{}, fmt.Errorf("can't load last entry for %s: %w", channel, err)
 		}
 		if len(last) > 0 {
 			entries = append(entries, last[0])
@@ -157,7 +157,7 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 					continue
 				}
 				if err := bucket.Delete(k); err != nil {
-					errs = multierror.Append(errs, errors.Wrapf(err, "failed to delete %s (%s)", string(k), item.File))
+					errs = multierror.Append(errs, fmt.Errorf("failed to delete %s (%s): %w", string(k), item.File, err))
 					continue
 				}
 				res = append(res, item.File)
@@ -187,7 +187,7 @@ func (s *BoltDB) Remove(entry feed.Entry) error {
 			}
 			if item.VideoID == entry.VideoID {
 				if err := bucket.Delete(k); err != nil {
-					return errors.Wrapf(err, "failed to delete %s (%s)", string(k), item.VideoID)
+					return fmt.Errorf("failed to delete %s (%s): %w", string(k), item.VideoID, err)
 				}
 				log.Printf("[INFO] delete %s - %s", string(k), item.String())
 			}
@@ -204,13 +204,13 @@ func (s *BoltDB) SetProcessed(entry feed.Entry) error {
 
 	key, keyErr := s.procKey(entry)
 	if keyErr != nil {
-		return errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
+		return fmt.Errorf("failed to generate key for %s: %w", entry.VideoID, keyErr)
 	}
 
 	err := s.Update(func(tx *bolt.Tx) error {
 		bucket, e := tx.CreateBucketIfNotExists(processedBkt)
 		if e != nil {
-			return errors.Wrapf(e, "create bucket %s", processedBkt)
+			return fmt.Errorf("create bucket %s: %w", processedBkt, e)
 		}
 		if bucket.Get(key) != nil {
 			return nil
@@ -220,7 +220,7 @@ func (s *BoltDB) SetProcessed(entry feed.Entry) error {
 
 		e = bucket.Put(key, []byte(entry.Published.Format(time.RFC3339)))
 		if e != nil {
-			return errors.Wrapf(e, "save processed %s", entry.VideoID)
+			return fmt.Errorf("save processed %s: %w", entry.VideoID, e)
 		}
 		return e
 	})
@@ -233,13 +233,13 @@ func (s *BoltDB) ResetProcessed(entry feed.Entry) error {
 
 	key, keyErr := s.procKey(entry)
 	if keyErr != nil {
-		return errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
+		return fmt.Errorf("failed to generate key for %s: %w", entry.VideoID, keyErr)
 	}
 
 	err := s.Update(func(tx *bolt.Tx) error {
 		bucket, e := tx.CreateBucketIfNotExists(processedBkt)
 		if e != nil {
-			return errors.Wrapf(e, "create bucket %s", processedBkt)
+			return fmt.Errorf("create bucket %s: %w", processedBkt, e)
 		}
 		if bucket.Get(key) == nil {
 			return nil
@@ -249,7 +249,7 @@ func (s *BoltDB) ResetProcessed(entry feed.Entry) error {
 
 		e = bucket.Delete(key)
 		if e != nil {
-			return errors.Wrapf(e, "reset processed %s", entry.VideoID)
+			return fmt.Errorf("reset processed %s: %w", entry.VideoID, e)
 		}
 		return e
 	})
@@ -263,7 +263,7 @@ func (s *BoltDB) CheckProcessed(entry feed.Entry) (found bool, ts time.Time, err
 
 	key, keyErr := s.procKey(entry)
 	if keyErr != nil {
-		return false, time.Time{}, errors.Wrapf(keyErr, "failed to generate key for %s", entry.VideoID)
+		return false, time.Time{}, fmt.Errorf("failed to generate key for %s: %w", entry.VideoID, keyErr)
 	}
 
 	err = s.View(func(tx *bolt.Tx) error {

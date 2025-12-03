@@ -1,13 +1,13 @@
 package proc
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/denisbrodbeck/striphtmltags"
 	log "github.com/go-pkgz/lgr"
-	"github.com/pkg/errors"
 
 	"github.com/umputun/feed-master/app/feed"
 )
@@ -49,7 +49,7 @@ func (t *TwitterClient) Send(item feed.Item) error {
 	v.Set("tweet_mode", "extended")
 	msg := t.formatter(item)
 	if _, err := t.tweetPoster.PostTweet(msg, v); err != nil {
-		return errors.Wrap(err, "can't send to twitter")
+		return fmt.Errorf("can't send to twitter: %w", err)
 	}
 	log.Printf("[DEBUG] published to twitter %s", strings.ReplaceAll(msg, "\n", " "))
 	return nil

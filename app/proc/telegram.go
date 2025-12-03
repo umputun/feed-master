@@ -11,7 +11,6 @@ import (
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/pkg/errors"
 	"golang.org/x/net/html"
 	tb "gopkg.in/tucnak/telebot.v2"
 
@@ -83,7 +82,7 @@ func (client TelegramClient) Send(channelID string, item feed.Item) (err error) 
 	}
 
 	if err != nil {
-		return errors.Wrapf(err, "can't send to telegram for %+v", item.Enclosure)
+		return fmt.Errorf("can't send to telegram for %+v: %w", item.Enclosure, err)
 	}
 
 	log.Printf("[DEBUG] telegram message sent: \n%s", message.Text)

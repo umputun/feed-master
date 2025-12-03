@@ -15,16 +15,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/didip/tollbooth/v7"
-	"github.com/didip/tollbooth_chi"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/render"
 	"github.com/go-pkgz/lcw/v2"
 	log "github.com/go-pkgz/lgr"
 	"github.com/go-pkgz/rest"
 	"github.com/go-pkgz/rest/logger"
-	"github.com/pkg/errors"
+	"github.com/go-pkgz/routegroup"
 
 	"github.com/umputun/feed-master/app/config"
 	"github.com/umputun/feed-master/app/feed"
@@ -119,37 +114,34 @@ func (s *Server) loadTemplates() {
 	s.templates = template.Must(template.New("").Funcs(funcMap).ParseGlob(s.TemplLocation))
 }
 
-func (s *Server) router() *chi.Mux {
-	router := chi.NewRouter()
-	router.Use(middleware.RealIP, rest.Recoverer(log.Default()), middleware.GetHead)
-	router.Use(middleware.Throttle(1000), middleware.Timeout(60*time.Second))
+func (s *Server) router() http.Handler {
+	router := routegroup.New(http.NewServeMux())
+	router.Use(rest.RealIP, rest.Recoverer(log.Default()))
+	router.Use(rest.Throttle(1000), timeout(60*time.Second))
 	router.Use(rest.AppInfo("feed-master", "umputun", s.Version), rest.Ping)
-	router.Use(tollbooth_chi.LimitHandler(tollbooth.NewLimiter(5, nil)))
+	router.Use(rest.Throttle(5)) // rate limiter, replaces tollbooth
 
-	router.Group(func(rimg chi.Router) {
+	router.Group().Route(func(rimg *routegroup.Bundle) {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[DEBUG]"), logger.IPfn(logger.AnonymizeIP))
 		rimg.Use(l.Handler)
-		rimg.Get("/images/{name}", s.getImageCtrl)
-		rimg.Get("/image/{name}", s.getImageCtrl)
-		rimg.Get("/image/{name}.png", s.getImageCtrl)
+		rimg.HandleFunc("GET /images/{name}", s.getImageCtrl)
+		rimg.HandleFunc("GET /image/{name...}", s.getImageCtrl) // handles both /image/foo and /image/foo.png
 	})
 
-	router.Group(func(rrss chi.Router) {
+	router.Group().Route(func(rrss *routegroup.Bundle) {
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"), logger.IPfn(logger.AnonymizeIP))
 		rrss.Use(l.Handler)
-		rrss.Get("/rss/{name}", s.getFeedCtrl)
-		rrss.Head("/rss/{name}", s.getFeedCtrl)
-		rrss.Get("/list", s.getListCtrl)
-		rrss.Get("/feed/{name}", s.getFeedPageCtrl)
-		rrss.Get("/feed/{name}/sources", s.getSourcesPageCtrl)
-		rrss.Get("/feed/{name}/source/{source}", s.getFeedSourceCtrl)
-		rrss.Get("/feeds", s.getFeedsPageCtrl)
+		rrss.HandleFunc("GET /rss/{name}", s.getFeedCtrl)
+		rrss.HandleFunc("GET /list", s.getListCtrl)
+		rrss.HandleFunc("GET /feed/{name}", s.getFeedPageCtrl)
+		rrss.HandleFunc("GET /feed/{name}/sources", s.getSourcesPageCtrl)
+		rrss.HandleFunc("GET /feed/{name}/source/{source}", s.getFeedSourceCtrl)
+		rrss.HandleFunc("GET /feeds", s.getFeedsPageCtrl)
 	})
 
-	router.Get("/config", func(w http.ResponseWriter, _ *http.Request) { rest.RenderJSON(w, s.Conf) })
+	router.HandleFunc("GET /config", func(w http.ResponseWriter, _ *http.Request) { rest.RenderJSON(w, s.Conf) })
 
-	router.Route("/yt", func(r chi.Router) {
-
+	router.Mount("/yt").Route(func(r *routegroup.Bundle) {
 		auth := rest.BasicAuth(func(user, passwd string) bool {
 			return (subtle.ConstantTimeCompare([]byte(s.AdminPasswd), []byte(passwd)) +
 				subtle.ConstantTimeCompare([]byte("admin"), []byte(user))) == 2
@@ -157,10 +149,10 @@ func (s *Server) router() *chi.Mux {
 
 		l := logger.New(logger.Log(log.Default()), logger.Prefix("[INFO]"), logger.IPfn(logger.AnonymizeIP))
 		r.Use(l.Handler)
-		r.Get("/rss/{channel}", s.getYoutubeFeedCtrl)
-		r.Get("/channels", s.getYoutubeChannelsPageCtrl)
-		r.With(auth).Post("/rss/generate", s.regenerateRSSCtrl)
-		r.With(auth).Delete("/entry/{channel}/{video}", s.removeEntryCtrl)
+		r.HandleFunc("GET /rss/{channel}", s.getYoutubeFeedCtrl)
+		r.HandleFunc("GET /channels", s.getYoutubeChannelsPageCtrl)
+		r.With(auth).HandleFunc("POST /rss/generate", s.regenerateRSSCtrl)
+		r.With(auth).HandleFunc("DELETE /entry/{channel}/{video}", s.removeEntryCtrl)
 	})
 
 	if s.Conf.YouTube.BaseURL != "" {
@@ -175,7 +167,7 @@ func (s *Server) router() *chi.Mux {
 
 		ytfs, fsErr := rest.NewFileServer(baseYtURL.Path, s.Conf.YouTube.FilesLocation)
 		if fsErr == nil {
-			router.Mount(baseYtURL.Path, ytfs)
+			router.Handle(baseYtURL.Path+"/{file...}", ytfs)
 		} else {
 			log.Printf("[WARN] can't start static file server for yt, %v", fsErr)
 		}
@@ -183,7 +175,7 @@ func (s *Server) router() *chi.Mux {
 
 	fs, err := rest.NewFileServer("/static", filepath.Join("webapp", "static"))
 	if err == nil {
-		router.Mount("/static", fs)
+		router.Handle("/static/{file...}", fs)
 	} else {
 		log.Printf("[WARN] can't start static file server, %v", err)
 	}
@@ -192,7 +184,7 @@ func (s *Server) router() *chi.Mux {
 
 // GET /rss/{name} - returns rss for given feeds set
 func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
-	feedName := chi.URLParam(r, "name")
+	feedName := r.PathValue("name")
 
 	data, err := s.cache.Get("feed::"+feedName, func() ([]byte, error) {
 		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, true)
@@ -241,7 +233,7 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 		b, err := xml.MarshalIndent(&rss, "", "  ")
 		if err != nil {
 			rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to marshal rss")
-			return nil, errors.Wrapf(err, "failed to marshal rss for %s", feedName)
+			return nil, fmt.Errorf("failed to marshal rss for %s: %w", feedName, err)
 		}
 
 		res := `<?xml version="1.0" encoding="UTF-8"?>` + "\n" + string(b)
@@ -264,7 +256,7 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 
 // GET /image/{name}
 func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
-	fm := chi.URLParam(r, "name")
+	fm := r.PathValue("name")
 	fm = strings.TrimSuffix(fm, ".png")
 	feedConf, found := s.Conf.Feeds[fm]
 	if !found {
@@ -276,7 +268,7 @@ func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
 	b, err := os.ReadFile(feedConf.Image)
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusBadRequest,
-			errors.New("can't read  "+chi.URLParam(r, "name")), "failed to read image")
+			fmt.Errorf("can't read %s", r.PathValue("name")), "failed to read image")
 		return
 	}
 	w.Header().Set("Content-Type", "image/png")
@@ -285,15 +277,15 @@ func (s *Server) getImageCtrl(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /list - returns feed's image
-func (s *Server) getListCtrl(w http.ResponseWriter, r *http.Request) {
+// GET /list - returns list of feeds
+func (s *Server) getListCtrl(w http.ResponseWriter, _ *http.Request) {
 	feeds := s.feeds()
-	render.JSON(w, r, feeds)
+	rest.RenderJSON(w, feeds)
 }
 
 // GET /yt/rss/{channel} - returns rss for given youtube channel
 func (s *Server) getYoutubeFeedCtrl(w http.ResponseWriter, r *http.Request) {
-	channel := chi.URLParam(r, "channel")
+	channel := r.PathValue("channel")
 
 	fi := youtube.FeedInfo{ID: channel}
 	for _, f := range s.Conf.YouTube.Channels {
@@ -333,12 +325,12 @@ func (s *Server) regenerateRSSCtrl(w http.ResponseWriter, r *http.Request) {
 
 // DELETE /yt/entry/{channel}/{video} - deletes entry from youtube channel and videID
 func (s *Server) removeEntryCtrl(w http.ResponseWriter, r *http.Request) {
-	err := s.YoutubeSvc.RemoveEntry(ytfeed.Entry{ChannelID: chi.URLParam(r, "channel"), VideoID: chi.URLParam(r, "video")})
+	err := s.YoutubeSvc.RemoveEntry(ytfeed.Entry{ChannelID: r.PathValue("channel"), VideoID: r.PathValue("video")})
 	if err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to remove entry")
 		return
 	}
-	rest.RenderJSON(w, rest.JSON{"status": "ok", "removed": chi.URLParam(r, "video")})
+	rest.RenderJSON(w, rest.JSON{"status": "ok", "removed": r.PathValue("video")})
 }
 
 func (s *Server) feeds() []string {
@@ -347,4 +339,11 @@ func (s *Server) feeds() []string {
 		feeds = append(feeds, k)
 	}
 	return feeds
+}
+
+// timeout wraps http.TimeoutHandler as middleware
+func timeout(dt time.Duration) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return http.TimeoutHandler(h, dt, "timeout")
+	}
 }

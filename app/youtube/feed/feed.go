@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"sort"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // Feed represents a YouTube channel feed.
@@ -36,27 +34,27 @@ func (c *Feed) Get(ctx context.Context, id string, feedType Type) ([]Entry, erro
 
 	feedURL, err := c.url(id, feedType)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get feed url")
+		return nil, fmt.Errorf("failed to get feed url: %w", err)
 	}
 
 	req, err := http.NewRequest("GET", feedURL, http.NoBody)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create request for %s", id)
+		return nil, fmt.Errorf("failed to create request for %s: %w", id, err)
 	}
 	resp, err := c.Client.Do(req.WithContext(ctx))
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get channel %s", id)
+		return nil, fmt.Errorf("failed to get channel %s: %w", id, err)
 	}
 	defer resp.Body.Close() // nolint
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("failed to get %s: %s", id, resp.Status)
+		return nil, fmt.Errorf("failed to get %s: %s", id, resp.Status)
 	}
 	data := struct {
 		Entry []Entry `xml:"entry"`
 	}{}
 
 	if err := xml.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, errors.Wrapf(err, "failed to decode %s", id)
+		return nil, fmt.Errorf("failed to decode %s: %w", id, err)
 	}
 
 	sort.Slice(data.Entry, func(i, j int) bool {
@@ -78,7 +76,7 @@ func (c *Feed) url(id string, feedType Type) (string, error) {
 	case FTPlaylist:
 		return c.PlaylistBaseURL + id, nil
 	}
-	return "", errors.Errorf("unknown feed type %s", feedType)
+	return "", fmt.Errorf("unknown feed type %s", feedType)
 }
 
 // Entry represents a YouTube channel entry.

@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/render"
 	"github.com/go-pkgz/rest"
 
 	"github.com/umputun/feed-master/app/config"
@@ -21,7 +19,7 @@ import (
 
 // GET /feed/{name} - renders page with list of items
 func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
-	feedName := chi.URLParam(r, "name")
+	feedName := r.PathValue("name")
 
 	data, err := s.cache.Get(feedName, func() ([]byte, error) {
 		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, false)
@@ -84,8 +82,8 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 // GET /feed/{name}/source/{source} - renders feed's source page with list of items
 func (s *Server) getFeedSourceCtrl(w http.ResponseWriter, r *http.Request) {
-	feedName := chi.URLParam(r, "name")
-	sourceNameRaw := chi.URLParam(r, "source")
+	feedName := r.PathValue("name")
+	sourceNameRaw := r.PathValue("source")
 	var err error
 
 	sourceName, err := url.QueryUnescape(sourceNameRaw)
@@ -270,7 +268,7 @@ func (s *Server) getYoutubeChannelsPageCtrl(w http.ResponseWriter, r *http.Reque
 
 // GET /feed/{name}/sources - renders page with feed's list of sources
 func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
-	feedName := chi.URLParam(r, "name")
+	feedName := r.PathValue("name")
 	data, err := s.cache.Get(feedName+"-sources", func() ([]byte, error) {
 		if _, ok := s.Conf.Feeds[feedName]; !ok {
 			return nil, fmt.Errorf("feed %s not found", feedName)
@@ -311,15 +309,15 @@ func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(data) // nolint
 }
 
-func (s *Server) renderErrorPage(w http.ResponseWriter, r *http.Request, err error, errCode int) { // nolint
+func (s *Server) renderErrorPage(w http.ResponseWriter, _ *http.Request, err error, errCode int) { // nolint
 	tmplData := struct {
 		Status int
 		Error  string
 	}{Status: errCode, Error: err.Error()}
 
 	if err := s.templates.ExecuteTemplate(w, "error.tmpl", &tmplData); err != nil {
-		render.Status(r, http.StatusInternalServerError)
-		render.JSON(w, r, rest.JSON{"error": err.Error()})
+		w.WriteHeader(http.StatusInternalServerError)
+		rest.RenderJSON(w, rest.JSON{"error": err.Error()})
 		return
 	}
 }

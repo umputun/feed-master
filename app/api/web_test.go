@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/go-pkgz/lcw/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -254,9 +253,9 @@ func TestServer_getFeedSourceCtrl(t *testing.T) {
 
 	srv := setupTestServer(t, conf, nil, ytStoreMock)
 
-	router := chi.NewRouter()
-	router.Get("/feed/{name}/source/{source}", srv.getFeedSourceCtrl)
-	ts := httptest.NewServer(router)
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /feed/{name}/source/{source}", srv.getFeedSourceCtrl)
+	ts := httptest.NewServer(mux)
 	defer ts.Close()
 
 	client := http.Client{Timeout: time.Second}
@@ -307,9 +306,9 @@ func TestServer_getYoutubeChannelsPageCtrl(t *testing.T) {
 
 	srv := setupTestServer(t, conf, nil, ytStoreMock)
 
-	router := chi.NewRouter()
-	router.Get("/yt/channels", srv.getYoutubeChannelsPageCtrl)
-	ts := httptest.NewServer(router)
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /yt/channels", srv.getYoutubeChannelsPageCtrl)
+	ts := httptest.NewServer(mux)
 	defer ts.Close()
 
 	client := http.Client{Timeout: time.Second}
