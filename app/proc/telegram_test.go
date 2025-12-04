@@ -12,16 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tb "gopkg.in/tucnak/telebot.v2"
 
 	"github.com/umputun/feed-master/app/duration"
-	"github.com/umputun/feed-master/app/proc/mocks"
-
 	"github.com/umputun/feed-master/app/feed"
+	"github.com/umputun/feed-master/app/proc/mocks"
 )
 
 func TestNewTelegramClientIfTokenEmpty(t *testing.T) {
@@ -362,32 +359,32 @@ func mockTelegramServer(h http.HandlerFunc) *httptest.Server {
 			h(w, r)
 		}))
 	}
-	router := chi.NewRouter()
+	mux := http.NewServeMux()
 
-	router.Post("/bottest-token/getMe", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("POST /bottest-token/getMe", func(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(getMeResp))
 	})
 
-	router.Get("/download/some.mp3", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("GET /download/some.mp3", func(w http.ResponseWriter, _ *http.Request) {
 		// taken from https://github.com/mathiasbynens/small/blob/master/mp3.mp3
 		smallMP3File := []byte{54, 53, 53, 48, 55, 54, 51, 52, 48, 48, 51, 49, 56, 52, 51, 50, 48, 55, 54, 49, 54, 55, 49, 55, 49, 55, 55, 49, 53, 49, 49, 56, 51, 51, 49, 52, 51, 56, 50, 49, 50, 56, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48}
 
 		_, _ = w.Write(smallMP3File)
 	})
 
-	router.Post("/bottest-token/sendMessage", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("POST /bottest-token/sendMessage", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"ok": true, "result": {"text": "Some test message"}}`))
 	})
 
-	router.Post("/bot/sendAudio", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("POST /bot/sendAudio", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"ok": true, "result": {"id": 1}}`))
 	})
 
-	router.Post("/bot/getMe", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("POST /bot/getMe", func(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(getMeResp))
 	})
 
-	return httptest.NewServer(router)
+	return httptest.NewServer(mux)
 }

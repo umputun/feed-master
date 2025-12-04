@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/go-pkgz/repeater"
-	"github.com/pkg/errors"
 )
 
 // Item for rss
@@ -41,7 +40,7 @@ func (item Item) DownloadAudio(timeout time.Duration) (res io.ReadCloser, err er
 	err = rp.Do(context.Background(), func() error {
 		resp, e := clientHTTP.Get(item.Enclosure.URL)
 		if e != nil {
-			return errors.Wrapf(e, "can't download %s", item.Enclosure.URL)
+			return fmt.Errorf("can't download %s: %w", item.Enclosure.URL, e)
 		}
 		if resp.StatusCode != http.StatusOK {
 			_ = resp.Body.Close()
