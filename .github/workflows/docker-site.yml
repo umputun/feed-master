@@ -1,0 +1,135 @@
+name: docker-site
+
+on:
+  workflow_run:
+    workflows: [site]
+    types: [completed]
+
+jobs:
+  build:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.head_branch == 'master' ||
+       startsWith(github.event.workflow_run.head_branch, 'v'))
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            artifact: linux-amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            artifact: linux-arm64
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.PKG_TOKEN }}
+
+      - name: build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.site
+          platforms: ${{ matrix.platform }}
+          no-cache: true
+          outputs: type=image,name=ghcr.io/${{ github.actor }}/feed-master-site,push-by-digest=true,name-canonical=true,push=true
+
+      - name: export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-site-${{ matrix.artifact }}
+          path: /tmp/digests/*
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-site-*
+          merge-multiple: true
+
+      - name: verify all digests present
+        run: |
+          expected=2
+          actual=$(find /tmp/digests -maxdepth 1 -type f | wc -l)
+          if [ "$actual" -ne "$expected" ]; then
+            echo "Expected $expected digests, found $actual"
+            ls -la /tmp/digests
+            exit 1
+          fi
+          echo "All $expected digests present"
+
+      - name: set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.PKG_TOKEN }}
+
+      - name: set docker tag
+        id: tag
+        env:
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          if [[ "$HEAD_BRANCH" == v* ]]; then
+            echo "tag=${HEAD_BRANCH}" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${HEAD_BRANCH}" >> $GITHUB_OUTPUT
+            echo "is_release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: create manifest and push
+        working-directory: /tmp/digests
+        run: |
+          if [[ "${{ steps.tag.outputs.is_release }}" == "true" ]]; then
+            docker buildx imagetools create \
+              -t ghcr.io/${{ github.actor }}/feed-master-site:${{ steps.tag.outputs.tag }} \
+              -t ghcr.io/${{ github.actor }}/feed-master-site:latest \
+              $(printf 'ghcr.io/${{ github.actor }}/feed-master-site@sha256:%s ' *)
+          else
+            docker buildx imagetools create \
+              -t ghcr.io/${{ github.actor }}/feed-master-site:${{ steps.tag.outputs.tag }} \
+              $(printf 'ghcr.io/${{ github.actor }}/feed-master-site@sha256:%s ' *)
+          fi
+
+      - name: remote site deployment from master
+        if: ${{ github.event.workflow_run.head_branch == 'master' }}
+        env:
+          UPDATER_KEY: ${{ secrets.UPDATER_KEY }}
+        run: curl https://jess.umputun.com/update/feed-master-site/${UPDATER_KEY}
