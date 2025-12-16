@@ -316,8 +316,7 @@ func (s *Server) renderErrorPage(w http.ResponseWriter, _ *http.Request, err err
 	}{Status: errCode, Error: err.Error()}
 
 	if err := s.templates.ExecuteTemplate(w, "error.tmpl", &tmplData); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		rest.RenderJSON(w, rest.JSON{"error": err.Error()})
+		_ = rest.EncodeJSON(w, http.StatusInternalServerError, rest.JSON{"error": err.Error()})
 		return
 	}
 }
