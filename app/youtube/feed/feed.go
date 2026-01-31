@@ -31,21 +31,20 @@ const (
 // Get xml/rss feed for channel
 // https://www.youtube.com/feeds/videos.xml?channel_id=UCPU28A9z_ka_R5dQfecHJlA
 func (c *Feed) Get(ctx context.Context, id string, feedType Type) ([]Entry, error) {
-
 	feedURL, err := c.url(id, feedType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get feed url: %w", err)
 	}
 
-	req, err := http.NewRequest("GET", feedURL, http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, feedURL, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for %s: %w", id, err)
 	}
-	resp, err := c.Client.Do(req.WithContext(ctx))
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get channel %s: %w", id, err)
 	}
-	defer resp.Body.Close() // nolint
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get %s: %s", id, resp.Status)
 	}

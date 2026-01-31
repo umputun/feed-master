@@ -7,4 +7,6 @@ target
 *.bdb
 var/
 .vscode/
+.idea/
+.DS_Store
 user-test.yml

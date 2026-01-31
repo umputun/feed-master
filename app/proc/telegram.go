@@ -58,7 +58,7 @@ func NewTelegramClient(token, apiURL string, timeout time.Duration, ds DurationS
 		Client: &http.Client{Timeout: timeout},
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create telegram bot: %w", err)
 	}
 
 	result := TelegramClient{
@@ -67,7 +67,7 @@ func NewTelegramClient(token, apiURL string, timeout time.Duration, ds DurationS
 		DurationService: ds,
 		TelegramSender:  tgs,
 	}
-	return &result, err
+	return &result, nil
 }
 
 // Send message, skip if telegram token empty
@@ -96,8 +96,10 @@ func (client TelegramClient) sendText(channelID string, item feed.Item) (*tb.Mes
 		tb.ModeHTML,
 		tb.NoPreview,
 	)
-
-	return message, err
+	if err != nil {
+		return nil, fmt.Errorf("send text to %s: %w", channelID, err)
+	}
+	return message, nil
 }
 
 func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Message, error) {
@@ -108,29 +110,29 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 	httpBody, err := item.DownloadAudio(client.Timeout)
 	if err != nil {
 		log.Printf("[DEBUG] download failed after %v: %v", time.Since(downloadStart), err)
-		return nil, err
+		return nil, fmt.Errorf("download audio: %w", err)
 	}
-	defer httpBody.Close() // nolint
+	defer httpBody.Close()
 
 	// download audio to the temp file
 	tmpFile, err := os.CreateTemp(os.TempDir(), "feed-master-*.mp3")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create temp file: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 
 	copyStart := time.Now()
 	written, err := io.Copy(tmpFile, httpBody)
 	if err != nil {
 		log.Printf("[DEBUG] failed to copy %d bytes to temp file after %v: %v",
 			written, time.Since(copyStart), err)
-		return nil, err
+		return nil, fmt.Errorf("copy audio to temp file: %w", err)
 	}
 	log.Printf("[DEBUG] downloaded %d bytes in %v (copy took %v)",
 		written, time.Since(downloadStart), time.Since(copyStart))
 
 	if closeErr := tmpFile.Close(); closeErr != nil {
-		return nil, closeErr
+		return nil, fmt.Errorf("close temp file: %w", closeErr)
 	}
 
 	var dur int
@@ -152,7 +154,11 @@ func (client TelegramClient) sendAudio(channelID string, item feed.Item) (*tb.Me
 		Duration:  dur,
 	}
 
-	return client.TelegramSender.Send(audio, client.Bot, recipient{chatID: channelID}, &tb.SendOptions{ParseMode: tb.ModeHTML})
+	msg, err := client.TelegramSender.Send(audio, client.Bot, recipient{chatID: channelID}, &tb.SendOptions{ParseMode: tb.ModeHTML})
+	if err != nil {
+		return nil, fmt.Errorf("send audio to %s: %w", channelID, err)
+	}
+	return msg, nil
 }
 
 // https://core.telegram.org/bots/api#html-style
@@ -169,13 +175,13 @@ func (client TelegramClient) getMessageHTML(item feed.Item, params htmlMessagePa
 	var header, footer string
 	title := strings.TrimSpace(item.Title)
 	if title != "" && item.Link == "" {
-		header = fmt.Sprintf("%s\n\n", title)
+		header = title + "\n\n"
 	} else if title != "" && item.Link != "" {
 		header = fmt.Sprintf("<a href=%q>%s</a>\n\n", item.Link, title)
 	}
 
 	if params.WithMp3Link {
-		footer += fmt.Sprintf("\n\n%s", item.Enclosure.URL)
+		footer += "\n\n" + item.Enclosure.URL
 	}
 
 	description := string(item.Description)
@@ -218,5 +224,9 @@ type TelegramSenderImpl struct{}
 
 // Send sends a message to Telegram
 func (tg *TelegramSenderImpl) Send(audio tb.Audio, bot *tb.Bot, rcp tb.Recipient, opts *tb.SendOptions) (*tb.Message, error) {
-	return audio.Send(bot, rcp, opts)
+	msg, err := audio.Send(bot, rcp, opts)
+	if err != nil {
+		return nil, fmt.Errorf("send audio: %w", err)
+	}
+	return msg, nil
 }

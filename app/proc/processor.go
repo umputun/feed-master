@@ -4,6 +4,7 @@ package proc
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	log "github.com/go-pkgz/lgr"
@@ -42,7 +43,7 @@ func (p *Processor) Do(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return fmt.Errorf("processor stopped: %w", ctx.Err())
 		default:
 			p.processFeeds(ctx)
 		}
@@ -54,7 +55,6 @@ func (p *Processor) processFeeds(ctx context.Context) {
 	swg := syncs.NewSizedGroup(p.Conf.System.Concurrent, syncs.Preemptive, syncs.Context(ctx))
 	for name, fm := range p.Conf.Feeds {
 		for _, src := range fm.Sources {
-			name, src, fm := name, src, fm
 			swg.Go(func(context.Context) {
 				p.processFeed(name, src.URL, fm.TelegramChannel, p.Conf.System.MaxItems, fm.Filter)
 			})
@@ -73,10 +73,7 @@ func (p *Processor) processFeed(name, url, telegramChannel string, maximum int, 
 	}
 
 	// up to MaxItems (5) items from each feed
-	upto := maximum
-	if len(rss.ItemList) <= maximum {
-		upto = len(rss.ItemList)
-	}
+	upto := min(len(rss.ItemList), maximum)
 
 	for _, item := range rss.ItemList[:upto] {
 		// skip 1y and older
@@ -116,7 +113,7 @@ func (p *Processor) processFeed(name, url, telegramChannel string, maximum int, 
 				elapsed := time.Since(startTime)
 				log.Printf("[WARN] failed attempt %d/3 to send telegram message after %v: title=%q, size=%d bytes, url=%s to channel=%s, error=%v",
 					attemptNum, elapsed, item.Title, item.Enclosure.Length, item.Enclosure.URL, telegramChannel, e)
-				return e
+				return fmt.Errorf("telegram send: %w", e)
 			}
 
 			elapsed := time.Since(startTime)

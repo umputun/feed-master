@@ -37,8 +37,13 @@ func (item Item) DownloadAudio(timeout time.Duration) (res io.ReadCloser, err er
 	clientHTTP := &http.Client{Timeout: timeout}
 
 	rp := repeater.NewDefault(10, time.Second)
-	err = rp.Do(context.Background(), func() error {
-		resp, e := clientHTTP.Get(item.Enclosure.URL)
+	ctx := context.Background()
+	err = rp.Do(ctx, func() error {
+		req, e := http.NewRequestWithContext(ctx, http.MethodGet, item.Enclosure.URL, http.NoBody)
+		if e != nil {
+			return fmt.Errorf("can't create request for %s: %w", item.Enclosure.URL, e)
+		}
+		resp, e := clientHTTP.Do(req)
 		if e != nil {
 			return fmt.Errorf("can't download %s: %w", item.Enclosure.URL, e)
 		}
@@ -50,7 +55,10 @@ func (item Item) DownloadAudio(timeout time.Duration) (res io.ReadCloser, err er
 		return nil
 	})
 
-	return res, err
+	if err != nil {
+		return nil, fmt.Errorf("download audio %s: %w", item.Enclosure.URL, err)
+	}
+	return res, nil
 }
 
 // GetFilename returns the filename for Item's Enclosure.URL

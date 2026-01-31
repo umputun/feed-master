@@ -2,6 +2,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"time"
@@ -99,13 +100,13 @@ type YTChannel struct {
 // Load config from file
 func Load(fname string) (res *Conf, err error) {
 	res = &Conf{}
-	data, err := os.ReadFile(fname) // nolint
+	data, err := os.ReadFile(fname) //nolint:gosec // config file path from CLI args, not user input
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read config %s: %w", fname, err)
 	}
 
 	if err := yaml.Unmarshal(data, res); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse config %s: %w", fname, err)
 	}
 	res.setDefaults()
 	return res, nil
@@ -168,7 +169,6 @@ func (c *Conf) setDefaults() {
 		if f.Keep == 0 {
 			c.YouTube.Channels[idx].Keep = c.System.MaxItems
 		}
-
 	}
 	if c.YouTube.BaseURL == "" {
 		c.YouTube.BaseURL = c.System.BaseURL + "/yt/media"
@@ -193,5 +193,4 @@ func (c *Conf) setDefaults() {
 	if c.YouTube.RSSLocation == "" {
 		c.YouTube.RSSLocation = "var/rss"
 	}
-
 }

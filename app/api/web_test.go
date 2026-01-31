@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -346,21 +347,21 @@ func TestServer_renderErrorPage(t *testing.T) {
 	}{
 		{
 			name:       "404 error",
-			err:        fmt.Errorf("test error message"),
+			err:        errors.New("test error message"),
 			statusCode: 404,
 			wantBody:   []string{"404", "test error message", "Something went wrong!"},
 			notWant:    []string{"©"},
 		},
 		{
 			name:       "500 error",
-			err:        fmt.Errorf("internal server error"),
+			err:        errors.New("internal server error"),
 			statusCode: 500,
 			wantBody:   []string{"500", "internal server error", "Something went wrong!"},
 			notWant:    []string{"©"},
 		},
 		{
 			name:       "403 with detailed message",
-			err:        fmt.Errorf("forbidden: insufficient permissions"),
+			err:        errors.New("forbidden: insufficient permissions"),
 			statusCode: 403,
 			wantBody:   []string{"403", "forbidden: insufficient permissions", "Something went wrong!"},
 			notWant:    []string{"©"},

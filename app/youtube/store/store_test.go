@@ -1,7 +1,6 @@
 package store
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -14,9 +13,7 @@ import (
 )
 
 func TestStore_SaveAndLoad(t *testing.T) {
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
-	defer os.Remove(tmpfile)
-
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 5 * time.Second})
 	require.NoError(t, err)
 
@@ -39,7 +36,7 @@ func TestStore_SaveAndLoad(t *testing.T) {
 
 	res, err := s.Load("chan1", 100)
 	require.NoError(t, err)
-	assert.Equal(t, 1, len(res))
+	assert.Len(t, res, 1)
 	assert.Equal(t, "vid1", res[0].VideoID)
 
 	entry2 := feed.Entry{
@@ -54,19 +51,17 @@ func TestStore_SaveAndLoad(t *testing.T) {
 
 	res, err = s.Load("chan1", 100)
 	require.NoError(t, err)
-	assert.Equal(t, 2, len(res))
+	assert.Len(t, res, 2)
 	assert.Equal(t, "vid2", res[0].VideoID)
 
 	res, err = s.Load("chan1", 1)
 	require.NoError(t, err)
-	assert.Equal(t, 1, len(res))
+	assert.Len(t, res, 1)
 	assert.Equal(t, "vid2", res[0].VideoID)
 }
 
 func TestStore_Remove(t *testing.T) {
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
-	defer os.Remove(tmpfile)
-
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 
@@ -95,21 +90,19 @@ func TestStore_Remove(t *testing.T) {
 
 	res, err := s.Load("chan1", 100)
 	require.NoError(t, err)
-	assert.Equal(t, 2, len(res))
+	assert.Len(t, res, 2)
 	assert.Equal(t, "vid2", res[0].VideoID)
 
 	err = s.Remove(feed.Entry{ChannelID: "chan1", VideoID: "vid2"})
 	require.NoError(t, err)
 	res, err = s.Load("chan1", 10)
 	require.NoError(t, err)
-	assert.Equal(t, 1, len(res))
+	assert.Len(t, res, 1)
 	assert.Equal(t, "vid1", res[0].VideoID)
 }
 
 func TestStore_Exist(t *testing.T) {
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
-	defer os.Remove(tmpfile)
-
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 
@@ -133,13 +126,10 @@ func TestStore_Exist(t *testing.T) {
 	ok, err = s.Exist(feed.Entry{ChannelID: "chan2", VideoID: "vid2"})
 	require.NoError(t, err)
 	assert.False(t, ok)
-
 }
 
 func TestBoldDB_RemoveOld(t *testing.T) {
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
-	defer os.Remove(tmpfile)
-
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 
@@ -187,9 +177,7 @@ func TestBoldDB_RemoveOld(t *testing.T) {
 }
 
 func TestBoltDB_SetProcessed(t *testing.T) {
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
-	defer os.Remove(tmpfile)
-
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 
@@ -248,7 +236,7 @@ func TestBoltDB_SetProcessed(t *testing.T) {
 
 	lst, err := s.ListProcessed()
 	require.NoError(t, err)
-	assert.Equal(t, 3, len(lst))
+	assert.Len(t, lst, 3)
 	assert.Equal(t, "dbff863dbc922f727afb93e949704da777739489 / 2022-03-21T16:45:22Z", lst[0])
 	assert.Equal(t, "ae9a2ed8bbf505091e35b9d54ccb9dc58e35c205 / 2022-03-21T18:45:22Z", lst[1])
 	assert.Equal(t, "a8fd9875c236fb27e26183b6df87f0cecb7a683f / 2022-03-21T17:45:22Z", lst[2])
@@ -258,19 +246,16 @@ func TestBoltDB_SetProcessed(t *testing.T) {
 	found, _, err = s.CheckProcessed(feed.Entry{ChannelID: "chan1", VideoID: "vid2"})
 	require.NoError(t, err)
 	assert.False(t, found)
-
 }
 
 func TestBoltDB_Last(t *testing.T) {
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
-	defer os.Remove(tmpfile)
-
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 
 	s := BoltDB{DB: db, Channels: []string{"chan1", "chan2"}}
 	_, err = s.Last()
-	assert.EqualError(t, err, "can't load last entry for chan1: no bucket for chan1")
+	require.EqualError(t, err, "can't load last entry for chan1: view store: no bucket for chan1")
 
 	{
 		entry := feed.Entry{

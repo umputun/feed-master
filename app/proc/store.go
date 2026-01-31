@@ -24,13 +24,13 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
 	key, err := func() ([]byte, error) {
 		ts, err := time.Parse(time.RFC1123Z, item.PubDate)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("parse pubdate %s: %w", item.PubDate, err)
 		}
 		h := sha1.New()
 		if _, err = h.Write([]byte(item.GUID)); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("hash guid %s: %w", item.GUID, err)
 		}
-		return []byte(fmt.Sprintf("%d-%x", ts.Unix(), h.Sum(nil))), nil
+		return fmt.Appendf(nil, "%d-%x", ts.Unix(), h.Sum(nil)), nil
 	}()
 
 	if err != nil {
@@ -40,7 +40,7 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
 	err = b.DB.Update(func(tx *bolt.Tx) error {
 		bucket, e := tx.CreateBucketIfNotExists([]byte(fmFeed))
 		if e != nil {
-			return e
+			return fmt.Errorf("create bucket %s: %w", fmFeed, e)
 		}
 		if bucket.Get(key) != nil {
 			return nil
@@ -48,20 +48,23 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
 
 		jdata, jerr := json.Marshal(&item)
 		if jerr != nil {
-			return jerr
+			return fmt.Errorf("marshal item %s: %w", item.GUID, jerr)
 		}
 
 		log.Printf("[INFO] save %s - %s - %s - %s", string(key), fmFeed, item.Title, item.GUID)
 		e = bucket.Put(key, jdata)
 		if e != nil {
-			return e
+			return fmt.Errorf("put item %s: %w", item.GUID, e)
 		}
 
 		created = true
-		return e
+		return nil
 	})
 
-	return created, err
+	if err != nil {
+		return created, fmt.Errorf("update db: %w", err)
+	}
+	return created, nil
 }
 
 // Load from bold for given feed, up to max
@@ -90,7 +93,10 @@ func (b BoltDB) Load(fmFeed string, maximum int, skipJunk bool) ([]feed.Item, er
 		}
 		return nil
 	})
-	return result, err
+	if err != nil {
+		return result, fmt.Errorf("view db: %w", err)
+	}
+	return result, nil
 }
 
 func (b BoltDB) removeOld(fmFeed string, keep int) (int, error) {
@@ -116,7 +122,7 @@ func (b BoltDB) removeOld(fmFeed string, keep int) (int, error) {
 
 		for _, k := range toDelete {
 			if e := bucket.Delete(k); e != nil {
-				return e
+				return fmt.Errorf("delete key: %w", e)
 			}
 			deleted++
 		}
@@ -124,5 +130,8 @@ func (b BoltDB) removeOld(fmFeed string, keep int) (int, error) {
 		return nil
 	})
 
-	return deleted, err
+	if err != nil {
+		return deleted, fmt.Errorf("update db: %w", err)
+	}
+	return deleted, nil
 }

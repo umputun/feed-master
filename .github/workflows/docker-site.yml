@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
@@ -59,7 +59,7 @@ jobs:
           touch "/tmp/digests/${digest#sha256:}"
 
       - name: upload digest
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: digests-site-${{ matrix.artifact }}
           path: /tmp/digests/*
@@ -74,7 +74,7 @@ jobs:
 
     steps:
       - name: download digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: /tmp/digests
           pattern: digests-site-*

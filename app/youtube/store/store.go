@@ -55,10 +55,13 @@ func (s *BoltDB) Save(entry feed.Entry) (bool, error) {
 		}
 
 		created = true
-		return e
+		return nil
 	})
 
-	return created, err
+	if err != nil {
+		return created, fmt.Errorf("update store: %w", err)
+	}
+	return created, nil
 }
 
 // Exist checks if entry exists
@@ -83,7 +86,10 @@ func (s *BoltDB) Exist(entry feed.Entry) (bool, error) {
 		return nil
 	})
 
-	return found, err
+	if err != nil {
+		return found, fmt.Errorf("view store: %w", err)
+	}
+	return found, nil
 }
 
 // Load entries from bolt for a given channel, up to max in reverse order (from newest to oldest)
@@ -109,7 +115,10 @@ func (s *BoltDB) Load(channelID string, maximum int) ([]feed.Entry, error) {
 		}
 		return nil
 	})
-	return result, err
+	if err != nil {
+		return result, fmt.Errorf("view store: %w", err)
+	}
+	return result, nil
 }
 
 // Last returns last (newest) entry across all channels
@@ -167,12 +176,14 @@ func (s *BoltDB) RemoveOld(channelID string, keep int) ([]string, error) {
 		return errs.ErrorOrNil()
 	})
 
-	return res, err
+	if err != nil {
+		return res, fmt.Errorf("update store: %w", err)
+	}
+	return res, nil
 }
 
 // Remove entry matched by vidoID and channelID
 func (s *BoltDB) Remove(entry feed.Entry) error {
-
 	err := s.Update(func(tx *bolt.Tx) (e error) {
 		bucket := tx.Bucket([]byte(entry.ChannelID))
 		if bucket == nil {
@@ -196,12 +207,14 @@ func (s *BoltDB) Remove(entry feed.Entry) error {
 		return nil
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("update store: %w", err)
+	}
+	return nil
 }
 
 // SetProcessed sets processed status with ts for a given channel+video
 func (s *BoltDB) SetProcessed(entry feed.Entry) error {
-
 	key, keyErr := s.procKey(entry)
 	if keyErr != nil {
 		return fmt.Errorf("failed to generate key for %s: %w", entry.VideoID, keyErr)
@@ -222,15 +235,17 @@ func (s *BoltDB) SetProcessed(entry feed.Entry) error {
 		if e != nil {
 			return fmt.Errorf("save processed %s: %w", entry.VideoID, e)
 		}
-		return e
+		return nil
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("update store: %w", err)
+	}
+	return nil
 }
 
 // ResetProcessed resets processed status for a given channel+video
 func (s *BoltDB) ResetProcessed(entry feed.Entry) error {
-
 	key, keyErr := s.procKey(entry)
 	if keyErr != nil {
 		return fmt.Errorf("failed to generate key for %s: %w", entry.VideoID, keyErr)
@@ -251,16 +266,18 @@ func (s *BoltDB) ResetProcessed(entry feed.Entry) error {
 		if e != nil {
 			return fmt.Errorf("reset processed %s: %w", entry.VideoID, e)
 		}
-		return e
+		return nil
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("update store: %w", err)
+	}
+	return nil
 }
 
 // CheckProcessed get processed status and returns timestamp for a given channel+video
 // returns found=true if was set before and also the timestamp from stored entry.Published
 func (s *BoltDB) CheckProcessed(entry feed.Entry) (found bool, ts time.Time, err error) {
-
 	key, keyErr := s.procKey(entry)
 	if keyErr != nil {
 		return false, time.Time{}, fmt.Errorf("failed to generate key for %s: %w", entry.VideoID, keyErr)
@@ -280,15 +297,20 @@ func (s *BoltDB) CheckProcessed(entry feed.Entry) (found bool, ts time.Time, err
 		found = true
 		var tsErr error
 		ts, tsErr = time.Parse(time.RFC3339, string(res))
-		return tsErr
+		if tsErr != nil {
+			return fmt.Errorf("parse timestamp: %w", tsErr)
+		}
+		return nil
 	})
 
-	return found, ts, err
+	if err != nil {
+		return found, ts, fmt.Errorf("view store: %w", err)
+	}
+	return found, ts, nil
 }
 
 // CountProcessed returns the number of processed entries stored in processedBkt
 func (s *BoltDB) CountProcessed() (count int) {
-
 	_ = s.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(processedBkt)
 		if bucket == nil {
@@ -303,7 +325,6 @@ func (s *BoltDB) CountProcessed() (count int) {
 
 // ListProcessed returns processed entries stored in processedBkt
 func (s *BoltDB) ListProcessed() (res []string, err error) {
-
 	err = s.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(processedBkt)
 		if bucket == nil {
@@ -315,21 +336,24 @@ func (s *BoltDB) ListProcessed() (res []string, err error) {
 		}
 		return nil
 	})
-	return res, err
+	if err != nil {
+		return res, fmt.Errorf("view store: %w", err)
+	}
+	return res, nil
 }
 
 func (s *BoltDB) key(entry feed.Entry) ([]byte, error) {
 	h := sha1.New()
 	if _, err := h.Write([]byte(entry.VideoID)); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("hash video id: %w", err)
 	}
-	return []byte(fmt.Sprintf("%d-%x", entry.Published.Unix(), h.Sum(nil))), nil
+	return fmt.Appendf(nil, "%d-%x", entry.Published.Unix(), h.Sum(nil)), nil
 }
 
 func (s *BoltDB) procKey(entry feed.Entry) ([]byte, error) {
 	h := sha1.New()
 	if _, err := h.Write([]byte(entry.ChannelID + "::" + entry.VideoID)); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("hash channel+video id: %w", err)
 	}
-	return []byte(fmt.Sprintf("%x", h.Sum(nil))), nil
+	return fmt.Appendf(nil, "%x", h.Sum(nil)), nil
 }

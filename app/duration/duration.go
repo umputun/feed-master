@@ -2,6 +2,7 @@
 package duration
 
 import (
+	"errors"
 	"io"
 	"os"
 
@@ -14,12 +15,12 @@ type Service struct{}
 
 // File scans MP3 file from provided file and returns its duration in seconds, ignoring possible errors
 func (s *Service) File(fname string) int {
-	fh, err := os.Open(fname) //nolint:gosec // this is not an inclusion as file was created by us
+	fh, err := os.Open(fname) //nolint:gosec // file path is internal, not from user input
 	if err != nil {
 		log.Printf("[WARN] can't get duration, failed to open file %s: %v", fname, err)
 		return 0
 	}
-	defer fh.Close() // nolint
+	defer fh.Close()
 	return s.reader(fh)
 }
 
@@ -33,7 +34,7 @@ func (s *Service) reader(r io.Reader) int {
 	var err error
 
 	for err == nil {
-		if err = d.Decode(&f, &skipped); err != nil && err != io.EOF {
+		if err = d.Decode(&f, &skipped); err != nil && !errors.Is(err, io.EOF) {
 			log.Printf("[WARN] can't get duration for provided stream: %v", err)
 			return 0
 		}

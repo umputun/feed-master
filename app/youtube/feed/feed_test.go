@@ -19,9 +19,9 @@ func TestChannel_Get(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Logf("req: %v", r.URL.String())
-		require.Equal(t, "/blah?channel_id=UCPU28A9z_ka_R5dQfecHJlA", r.URL.String())
+		assert.Equal(t, "/blah?channel_id=UCPU28A9z_ka_R5dQfecHJlA", r.URL.String())
 		_, e := w.Write(feedXML)
-		require.NoError(t, e)
+		assert.NoError(t, e)
 	}))
 
 	c := Feed{Client: &http.Client{Timeout: time.Second},
@@ -29,7 +29,7 @@ func TestChannel_Get(t *testing.T) {
 
 	res, err := c.Get(context.Background(), "UCPU28A9z_ka_R5dQfecHJlA", FTChannel)
 	require.NoError(t, err)
-	assert.Equal(t, 15, len(res))
+	assert.Len(t, res, 15)
 
 	first := res[0]
 	assert.Equal(t, "UCPU28A9z_ka_R5dQfecHJlA", first.ChannelID)

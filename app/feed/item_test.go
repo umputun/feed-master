@@ -23,8 +23,6 @@ func TestGetFilename(t *testing.T) {
 	}
 
 	for i, tt := range tbl {
-		i := i
-		tt := tt
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			item := Item{Enclosure: Enclosure{URL: tt.url}}
 			fname := item.GetFilename()
@@ -45,14 +43,14 @@ func TestDownloadAudioIfRequestError(t *testing.T) {
 	got, err := item.DownloadAudio(time.Minute)
 
 	assert.Nil(t, got)
-	assert.EqualError(t, err, fmt.Sprintf("can't download %s: Get %q: EOF", ts.URL, ts.URL))
+	assert.EqualError(t, err, fmt.Sprintf("download audio %s: can't download %s: Get %q: EOF", ts.URL, ts.URL, ts.URL))
 }
 
 func TestDownloadAudio(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Length", "4")
-		fmt.Fprint(w, "abcd")
+		_, _ = fmt.Fprint(w, "abcd")
 	}))
 	defer ts.Close()
 
@@ -60,5 +58,5 @@ func TestDownloadAudio(t *testing.T) {
 	got, err := item.DownloadAudio(time.Minute)
 
 	assert.NotNil(t, got)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }

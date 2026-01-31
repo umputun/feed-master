@@ -24,7 +24,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 	data, err := s.cache.Get(feedName, func() ([]byte, error) {
 		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, false)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("load feed %s: %w", feedName, err)
 		}
 
 		// fill formatted duration
@@ -77,7 +77,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data) // nolint
+	_, _ = w.Write(data)
 }
 
 // GET /feed/{name}/source/{source} - renders feed's source page with list of items
@@ -110,7 +110,7 @@ func (s *Server) getFeedSourceCtrl(w http.ResponseWriter, r *http.Request) {
 
 		items, er := s.YoutubeStore.Load(feedInfo.ID, s.Conf.YouTube.MaxItems)
 		if er != nil {
-			return nil, er
+			return nil, fmt.Errorf("load youtube feed %s: %w", feedInfo.ID, er)
 		}
 
 		// fill formatted duration and file path
@@ -158,13 +158,12 @@ func (s *Server) getFeedSourceCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data) // nolint
+	_, _ = w.Write(data)
 }
 
 // GET /feeds - renders page with list of feeds
 func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 	data, err := s.cache.Get("feeds", func() ([]byte, error) {
-
 		feeds := s.feeds()
 
 		type feedItem struct {
@@ -211,7 +210,7 @@ func (s *Server) getFeedsPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data) // nolint
+	_, _ = w.Write(data)
 }
 
 // GET /yt/channels - renders page with list of YouTube channels
@@ -263,7 +262,7 @@ func (s *Server) getYoutubeChannelsPageCtrl(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data) // nolint
+	_, _ = w.Write(data)
 }
 
 // GET /feed/{name}/sources - renders page with feed's list of sources
@@ -306,10 +305,10 @@ func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data) // nolint
+	_, _ = w.Write(data)
 }
 
-func (s *Server) renderErrorPage(w http.ResponseWriter, _ *http.Request, err error, errCode int) { // nolint
+func (s *Server) renderErrorPage(w http.ResponseWriter, _ *http.Request, err error, errCode int) {
 	tmplData := struct {
 		Status int
 		Error  string

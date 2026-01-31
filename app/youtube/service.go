@@ -4,13 +4,16 @@ package youtube
 import (
 	"context"
 	"crypto/sha1"
+	"encoding/hex"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -109,7 +112,7 @@ func (s *Service) Do(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return fmt.Errorf("youtube service stopped: %w", ctx.Err())
 		case <-tick.C:
 			if s.YtDlpUpdDuration > 0 && time.Since(lastYtDlpUpdate) > s.YtDlpUpdDuration && s.YtDlpUpdCommand != "" {
 				// update yt-dlp binary once in a while
@@ -136,7 +139,6 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 
 	items := []rssfeed.Item{}
 	for _, entry := range entries {
-
 		fileURL := s.RootURL + "/" + path.Base(entry.File)
 
 		var fileSize int
@@ -148,7 +150,7 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 
 		duration := ""
 		if entry.Duration > 0 {
-			duration = fmt.Sprintf("%d", entry.Duration)
+			duration = strconv.Itoa(entry.Duration)
 		}
 
 		items = append(items, rssfeed.Item{
@@ -207,8 +209,9 @@ func (s *Service) RSSFeed(fi FeedInfo) (string, error) {
 }
 
 // procChannels processes all channels, downloads audio, updates metadata and stores RSS
+//
+//nolint:gocyclo // complex but clear sequential processing logic
 func (s *Service) procChannels(ctx context.Context) error {
-
 	var allStats stats
 
 	for _, feedInfo := range s.Feeds {
@@ -220,11 +223,10 @@ func (s *Service) procChannels(ctx context.Context) error {
 		log.Printf("[INFO] got %d entries for %s, limit to %d", len(entries), feedInfo.Name, s.keep(feedInfo))
 		changed, processed := false, 0
 		for i, entry := range entries {
-
 			// exit right away if context is done
 			select {
 			case <-ctx.Done():
-				return ctx.Err()
+				return fmt.Errorf("processing channels stopped: %w", ctx.Err())
 			default:
 			}
 
@@ -271,7 +273,7 @@ func (s *Service) procChannels(ctx context.Context) error {
 			file, downErr := s.Downloader.Get(ctx, entry.VideoID, s.makeFileName(entry))
 			if downErr != nil {
 				allStats.ignored++
-				if downErr == ytfeed.ErrSkip { // downloader decided to skip this entry
+				if errors.Is(downErr, ytfeed.ErrSkip) { // downloader decided to skip this entry
 					log.Printf("[INFO] skipping %s", entry.String())
 					continue
 				}
@@ -368,7 +370,6 @@ func (s *Service) RemoveEntry(entry ytfeed.Entry) error {
 
 // isNew checks if entry already processed
 func (s *Service) isNew(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
-
 	// check if entry already exists in store
 	// this method won't work after migration to locally altered published ts but have to stay for now
 	// to avoid false-positives on old entries what never got set with SetProcessed
@@ -396,7 +397,6 @@ func (s *Service) isNew(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
 
 // isAllowed checks if entry matches all filters for the channel feed
 func (s *Service) isAllowed(entry ytfeed.Entry, fi FeedInfo) (ok bool, err error) {
-
 	matchedIncludeFilter := true
 	if fi.Filter.Include != "" {
 		matchedIncludeFilter, err = regexp.MatchString(fi.Filter.Include, entry.Title)
@@ -484,7 +484,7 @@ func (s *Service) makeFileName(entry ytfeed.Entry) string {
 	if _, err := h.Write([]byte(entry.UID())); err != nil {
 		return uuid.New().String()
 	}
-	return fmt.Sprintf("%x", h.Sum(nil))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // totalEntriesToKeep returns total number of entries to keep, summing all channels' keep values
@@ -562,7 +562,7 @@ func (s *Service) updateMp3Tags(file string, entry ytfeed.Entry, fi FeedInfo) er
 
 func (s *Service) execYtdlpUpdate(ctx context.Context, updCmd string) {
 	log.Printf("[INFO] executing yt-dlp update command %s", s.YtDlpUpdCommand)
-	cmd := exec.CommandContext(ctx, "sh", "-c", updCmd) // nolint
+	cmd := exec.CommandContext(ctx, "sh", "-c", updCmd)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = log.ToWriter(log.Default(), "DEBUG")
 	cmd.Stderr = log.ToWriter(log.Default(), "INFO")

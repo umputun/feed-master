@@ -1,7 +1,7 @@
 package feed
 
 import (
-	"fmt"
+	"errors"
 	"html/template"
 	"net/http"
 	"net/http/httptest"
@@ -77,9 +77,9 @@ func TestFeedParse(t *testing.T) {
 		assert.NoError(t, err)
 	}))
 	r, err := Parse(ts.URL)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "Еженедельные импровизации на хай–тек темы", r.Description)
-	require.Equal(t, 1, len(r.ItemList))
+	require.Len(t, r.ItemList, 1)
 	assert.Equal(t, "podcast@radio-t.com (Umputun, Bobuk, Gray, Ksenks, Alek.sys)", r.ItemList[0].Author)
 }
 
@@ -90,7 +90,7 @@ func TestFeedParseBadBody(t *testing.T) {
 		assert.NoError(t, err)
 	}))
 	r, err := Parse(ts.URL)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Empty(t, r)
 }
 
@@ -111,14 +111,14 @@ func TestParseDateTime(t *testing.T) {
 		err error
 		out string
 	}{
-		{"", fmt.Errorf("can't parse empty date-time"), time.Now().Format(time.RFC822Z)},
+		{"", errors.New("can't parse empty date-time"), time.Now().Format(time.RFC822Z)},
 		{"05 Mar 14 22:08 +0400", nil, "05 Mar 14 22:08 +0400"},           // RFC822Z
 		{"05 Mar 14 22:08 MST", nil, "05 Mar 14 22:08 +0000"},             // RFC822
 		{"Mon, 02 Jan 2006 15:04:05 -0700", nil, "02 Jan 06 15:04 -0700"}, // RFC1123Z
 		{"Mon, 02 Jan 2006 15:04:05 MST", nil, "02 Jan 06 15:04 +0000"},   // RFC1123
 		{"2006-01-02 15:04:05 -0700", nil, "02 Jan 06 15:04 -0700"},
 		{"2017-09-30T14:11:48-0500", nil, "30 Sep 17 14:11 -0500"},
-		{"100500", fmt.Errorf("can't parse timestamp 100500"), time.Now().Format(time.RFC822Z)},
+		{"100500", errors.New("can't parse timestamp 100500"), time.Now().Format(time.RFC822Z)},
 	}
 
 	rss := Rss2{}
@@ -139,8 +139,6 @@ func TestNormalizeIfLastBuildDateAndPubDateInvalidFormat(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		i := i
-		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			rss := Rss2{
 				LastBuildDate: tc.lastBuildDate,
@@ -149,8 +147,8 @@ func TestNormalizeIfLastBuildDateAndPubDateInvalidFormat(t *testing.T) {
 
 			got, err := rss.Normalize()
 
-			assert.NoError(t, err)
-			assert.Equal(t, got.PubDate, "Mon, 02 Jan 2006 15:04:00 +0000")
+			require.NoError(t, err)
+			assert.Equal(t, "Mon, 02 Jan 2006 15:04:00 +0000", got.PubDate)
 		})
 	}
 }
@@ -196,12 +194,12 @@ func TestParseAtom(t *testing.T) {
 
 	got, err := parseAtom([]byte(atom1))
 
-	assert.NoError(t, err)
-	assert.Equal(t, got.Title, "Example Feed")
-	assert.Equal(t, got.Description, "")
+	require.NoError(t, err)
+	assert.Equal(t, "Example Feed", got.Title)
+	assert.Empty(t, got.Description)
 
 	assert.Len(t, got.ItemList, 2)
-	assert.Equal(t, got.ItemList[0].Title, "Atom-Powered Robots Run Amok")
+	assert.Equal(t, "Atom-Powered Robots Run Amok", got.ItemList[0].Title)
 	assert.Equal(t, got.ItemList[0].Description, template.HTML("Some text."))
 
 	assert.Equal(t, got.ItemList[1].Description, template.HTML("Example content"))
@@ -232,8 +230,8 @@ func TestParseFeedContentIfAtom1_0(t *testing.T) {
 
 	got, err := parseFeedContent([]byte(atom1))
 
-	assert.NoError(t, err)
-	assert.Equal(t, got.Title, "Example Feed")
+	require.NoError(t, err)
+	assert.Equal(t, "Example Feed", got.Title)
 }
 
 func TestParseFeedContentIfNotAtom1_0(t *testing.T) {
@@ -267,7 +265,7 @@ func TestParseFeedContentIfRSSVersionEmptyContent(t *testing.T) {
 
 	got, err := parseFeedContent([]byte(rss))
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, got.ItemList[0].Content, template.HTML("Content"))
 	assert.Equal(t, got.ItemList[0].Description, template.HTML("Content"))
 }

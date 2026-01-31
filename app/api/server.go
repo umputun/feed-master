@@ -189,14 +189,14 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 	data, err := s.cache.Get("feed::"+feedName, func() ([]byte, error) {
 		items, err := s.Store.Load(feedName, s.Conf.System.MaxTotal, true)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("load feed %s: %w", feedName, err)
 		}
 
 		for i, itm := range items {
 			// add ts suffix to titles
 			switch s.Conf.Feeds[feedName].ExtendDateTitle {
 			case "yyyyddmm":
-				items[i].Title = fmt.Sprintf("%s (%s)", itm.Title, itm.DT.Format("2006-02-01")) // nolint
+				items[i].Title = fmt.Sprintf("%s (%s)", itm.Title, itm.DT.Format("2006-02-01")) //nolint:govet // intentional yyyy-dd-mm format
 			case "yyyymmdd":
 				items[i].Title = fmt.Sprintf("%s (%s)", itm.Title, itm.DT.Format("2006-01-02"))
 			}
@@ -308,7 +308,6 @@ func (s *Server) getYoutubeFeedCtrl(w http.ResponseWriter, r *http.Request) {
 
 // POST /yt/rss/generate - generates rss for all (each) youtube channels
 func (s *Server) regenerateRSSCtrl(w http.ResponseWriter, r *http.Request) {
-
 	for _, f := range s.Conf.YouTube.Channels {
 		res, err := s.YoutubeSvc.RSSFeed(youtube.FeedInfo{ID: f.ID})
 		if err != nil {

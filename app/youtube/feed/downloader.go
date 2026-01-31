@@ -39,7 +39,6 @@ func NewDownloader(tmpl string, logOutWriter, logErrWriter io.Writer, destinatio
 // Get downloads a video from youtube and extracts audio.
 // yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.Filename}}
 func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, err error) {
-
 	if err := os.MkdirAll(d.destination, 0o750); err != nil {
 		return "", fmt.Errorf("failed to create directory %s: %w", d.destination, err)
 	}
@@ -52,18 +51,18 @@ func (d *Downloader) Get(ctx context.Context, id, fname string) (file string, er
 		FileName: fname,
 	}
 	b1 := bytes.Buffer{}
-	if err := template.Must(template.New("youtube-dl").Parse(d.ytTemplate)).Execute(&b1, tmplParams); err != nil { // nolint
-		return "", fmt.Errorf("failed to parse template: %v", err)
+	if err := template.Must(template.New("youtube-dl").Parse(d.ytTemplate)).Execute(&b1, tmplParams); err != nil {
+		return "", fmt.Errorf("failed to parse template: %w", err)
 	}
 
-	cmd := exec.CommandContext(ctx, "sh", "-c", b1.String()) // nolint
+	cmd := exec.CommandContext(ctx, "sh", "-c", b1.String()) //nolint:gosec // command template from config
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = d.logOutWriter
 	cmd.Stderr = d.logErrWriter
 	cmd.Dir = d.destination
 	log.Printf("[DEBUG] executing command: %s", b1.String())
 	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("failed to execute command: %v", err)
+		return "", fmt.Errorf("failed to execute command: %w", err)
 	}
 
 	file = filepath.Join(d.destination, fname+".mp3")

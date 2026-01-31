@@ -20,7 +20,7 @@ func TestSaveIfInvalidPubDate(t *testing.T) {
 	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
 
-	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 	bdb := &BoltDB{DB: db}
 
@@ -29,13 +29,13 @@ func TestSaveIfInvalidPubDate(t *testing.T) {
 	}
 	created, err := bdb.Save("radio-t", item)
 	assert.False(t, created)
-	assert.EqualError(t, err, "parsing time \"100500\" as \"Mon, 02 Jan 2006 15:04:05 -0700\": cannot parse \"100500\" as \"Mon\"")
+	assert.EqualError(t, err, "parse pubdate 100500: parsing time \"100500\" as \"Mon, 02 Jan 2006 15:04:05 -0700\": cannot parse \"100500\" as \"Mon\"")
 }
 
 func TestSave(t *testing.T) {
 	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
-	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 	bdb := &BoltDB{DB: db}
 
@@ -52,7 +52,7 @@ func TestSave(t *testing.T) {
 func TestSaveIfItemIsExists(t *testing.T) {
 	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
-	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 	bdb := &BoltDB{DB: db}
 
@@ -71,20 +71,20 @@ func TestSaveIfItemIsExists(t *testing.T) {
 func TestLoadIfNotBucket(t *testing.T) {
 	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
-	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 	bdb := &BoltDB{DB: db}
 
 	feedItems, err := bdb.Load("100500", 5, false)
 
-	assert.Equal(t, len(feedItems), 0)
-	assert.EqualError(t, err, "no bucket for 100500")
+	assert.Empty(t, feedItems)
+	assert.EqualError(t, err, "view db: no bucket for 100500")
 }
 
 func TestLoad(t *testing.T) {
 	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
-	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 	bdb := &BoltDB{DB: db}
 
@@ -93,15 +93,15 @@ func TestLoad(t *testing.T) {
 
 	items, err := bdb.Load("radio-t", 5, false)
 
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(items))
-	assert.Equal(t, items[0].PubDate, pubDate)
+	require.NoError(t, err)
+	assert.Len(t, items, 1)
+	assert.Equal(t, pubDate, items[0].PubDate)
 }
 
 func TestLoadChackMax(t *testing.T) {
 	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
-	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 	bdb := &BoltDB{DB: db}
 
@@ -122,13 +122,11 @@ func TestLoadChackMax(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		i := i
-		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			items, err := bdb.Load("radio-t", tc.max, false)
 
-			assert.NoError(t, err)
-			assert.Equal(t, tc.count, len(items))
+			require.NoError(t, err)
+			assert.Len(t, items, tc.count)
 		})
 	}
 }
@@ -136,13 +134,13 @@ func TestLoadChackMax(t *testing.T) {
 func TestRemoveOldIfNotExistsBucket(t *testing.T) {
 	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
-	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 	bdb := &BoltDB{DB: db}
 
 	count, err := bdb.removeOld("radio-t", 5)
 
-	assert.EqualError(t, err, "no bucket for radio-t")
+	require.EqualError(t, err, "update db: no bucket for radio-t")
 	assert.Equal(t, 0, count)
 }
 
@@ -157,12 +155,10 @@ func TestRemoveOld(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		i := i
-		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			tmpfile, _ := os.CreateTemp("", "")
 			defer os.Remove(tmpfile.Name())
-			db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+			db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second})
 			require.NoError(t, err)
 			bdb := &BoltDB{DB: db}
 			_, err = bdb.Save("radio-t", feed.Item{PubDate: pubDate, GUID: "1"})
@@ -173,7 +169,7 @@ func TestRemoveOld(t *testing.T) {
 
 			count, err := bdb.removeOld("radio-t", tc.keep)
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.countDelete, count)
 		})
 	}
@@ -182,13 +178,13 @@ func TestRemoveOld(t *testing.T) {
 func TestRemoveOldKeepsNewestItems(t *testing.T) {
 	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
-	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 	defer db.Close()
 	bdb := &BoltDB{DB: db}
 
 	baseTime := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		itemTime := baseTime.Add(time.Duration(i) * time.Hour)
 		item := feed.Item{PubDate: itemTime.Format(time.RFC1123Z), GUID: "item-" + strconv.Itoa(i), Title: "Item " + strconv.Itoa(i)}
 		_, err = bdb.Save("test-feed", item)
@@ -201,7 +197,7 @@ func TestRemoveOldKeepsNewestItems(t *testing.T) {
 
 	items, err := bdb.Load("test-feed", 100, false)
 	require.NoError(t, err)
-	require.Equal(t, 50, len(items))
+	require.Len(t, items, 50)
 
 	for i, item := range items {
 		expectedGUID := "item-" + strconv.Itoa(99-i)
@@ -212,7 +208,7 @@ func TestRemoveOldKeepsNewestItems(t *testing.T) {
 func TestRemoveOldRepeatedCycles(t *testing.T) {
 	tmpfile, _ := os.CreateTemp("", "")
 	defer os.Remove(tmpfile.Name())
-	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	db, err := bolt.Open(tmpfile.Name(), 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
 	defer db.Close()
 	bdb := &BoltDB{DB: db}
@@ -221,7 +217,7 @@ func TestRemoveOldRepeatedCycles(t *testing.T) {
 	item1 := feed.Item{PubDate: baseTime.Format(time.RFC1123Z), GUID: "item-old-1", Title: "Old Item 1"}
 	item2 := feed.Item{PubDate: baseTime.Add(1 * time.Hour).Format(time.RFC1123Z), GUID: "item-old-2", Title: "Old Item 2"}
 
-	for cycle := 0; cycle < 5; cycle++ {
+	for cycle := range 5 {
 		created1, err := bdb.Save("test-feed", item1)
 		require.NoError(t, err)
 		created2, err := bdb.Save("test-feed", item2)

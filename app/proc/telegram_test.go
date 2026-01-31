@@ -23,7 +23,7 @@ import (
 
 func TestNewTelegramClientIfTokenEmpty(t *testing.T) {
 	client, err := NewTelegramClient("", "", 0, &duration.Service{}, &TelegramSenderImpl{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, client.Bot)
 }
 
@@ -37,11 +37,9 @@ func TestNewTelegramClientCheckTimeout(t *testing.T) {
 	}
 
 	for i, tt := range tbl {
-		i := i
-		tt := tt
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			client, err := NewTelegramClient("", "", tt.timeout, &duration.Service{}, &TelegramSenderImpl{})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.expected, client.Timeout)
 		})
 	}
@@ -130,8 +128,6 @@ func TestFormattedMessage(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		i := i
-		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			htmlMessage := client.getMessageHTML(tc.item, htmlMessageParams{})
 			assert.Equal(t, tc.expectedHTML, htmlMessage)
@@ -182,7 +178,7 @@ func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
 	}
 	for i, entry := range testData {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			got := recipient{chatID: entry.channel} // nolint
+			got := recipient{chatID: entry.channel}
 			assert.Equal(t, entry.expected, got.Recipient())
 		})
 	}
@@ -191,10 +187,10 @@ func TestRecipientChannelIDNotStartWithAt(t *testing.T) {
 func TestTelegramClient_sendAudio(t *testing.T) {
 	ts := mockTelegramServer(func(w http.ResponseWriter, r *http.Request) {
 		t.Logf("req: %+v", r)
-		require.Equal(t, "GET", r.Method)
+		assert.Equal(t, "GET", r.Method)
 		fh, err := os.Open("testdata/audio.mp3")
-		require.NoError(t, err)
-		defer fh.Close() //nolint
+		assert.NoError(t, err)
+		defer fh.Close()
 		_, err = io.Copy(w, fh)
 		assert.NoError(t, err)
 	})
@@ -208,7 +204,7 @@ func TestTelegramClient_sendAudio(t *testing.T) {
 
 	snd := &mocks.TelegramSenderMock{
 		SendFunc: func(tb.Audio, *tb.Bot, tb.Recipient, *tb.SendOptions) (*tb.Message, error) {
-			return nil, nil
+			return &tb.Message{}, nil
 		},
 	}
 
@@ -216,14 +212,14 @@ func TestTelegramClient_sendAudio(t *testing.T) {
 	_, err := client.sendAudio("chan1", feed.Item{Duration: "5678", Enclosure: feed.Enclosure{URL: ts.URL}})
 	require.NoError(t, err)
 
-	assert.Equal(t, 1, len(snd.SendCalls()))
-	assert.Equal(t, 0, len(dur.FileCalls()), "duration service is not used because item has duration")
+	assert.Len(t, snd.SendCalls(), 1)
+	assert.Empty(t, dur.FileCalls(), "duration service is not used because item has duration")
 	assert.Equal(t, 5678, snd.SendCalls()[0].Audio.Duration)
 
 	_, err = client.sendAudio("chan2", feed.Item{Enclosure: feed.Enclosure{URL: ts.URL}})
 	require.NoError(t, err)
-	assert.Equal(t, 2, len(snd.SendCalls()))
-	assert.Equal(t, 1, len(dur.FileCalls()), "duration service used because item has no duration")
+	assert.Len(t, snd.SendCalls(), 2)
+	assert.Len(t, dur.FileCalls(), 1, "duration service used because item has no duration")
 	assert.Equal(t, 12345, snd.SendCalls()[1].Audio.Duration)
 }
 
@@ -249,10 +245,10 @@ func TestSendIfSendAudioFailed(t *testing.T) {
 	assert.NotNil(t, tc)
 
 	err = tc.Send("@channel", feed.Item{Enclosure: feed.Enclosure{URL: ts.URL + "/download/some.mp3"}})
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "can't send to telegram for")
 
-	require.Equal(t, 1, len(snd.SendCalls()))
+	require.Len(t, snd.SendCalls(), 1)
 }
 
 func TestSend(t *testing.T) {
@@ -277,9 +273,9 @@ func TestSend(t *testing.T) {
 	assert.NotNil(t, tc)
 
 	err = tc.Send("@channel", feed.Item{Enclosure: feed.Enclosure{URL: ts.URL + "/download/some.mp3"}})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	require.Equal(t, 1, len(snd.SendCalls()))
+	require.Len(t, snd.SendCalls(), 1)
 	assert.Equal(t, 12345, snd.SendCalls()[0].Audio.Duration)
 	assert.Equal(t, "audio/mpeg", snd.SendCalls()[0].Audio.MIME)
 	assert.Equal(t, "some.mp3", snd.SendCalls()[0].Audio.FileName)
@@ -310,9 +306,9 @@ func TestSendTextIfAudioLarge(t *testing.T) {
 	assert.NotNil(t, tc)
 
 	err = tc.Send("@channel", feed.Item{Enclosure: feed.Enclosure{URL: ts.URL + "/download/some.mp3"}})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	require.Equal(t, 1, len(snd.SendCalls()))
+	require.Len(t, snd.SendCalls(), 1)
 	assert.Equal(t, 12345, snd.SendCalls()[0].Audio.Duration)
 	assert.Equal(t, "audio/mpeg", snd.SendCalls()[0].Audio.MIME)
 	assert.Equal(t, "some.mp3", snd.SendCalls()[0].Audio.FileName)
@@ -330,7 +326,7 @@ func TestTelegramSenderImpl_Send(t *testing.T) {
 	fName := "testdata/audio.mp3"
 	fh, err := os.Open(fName)
 	require.NoError(t, err)
-	defer fh.Close() //nolint
+	defer fh.Close()
 
 	f := tb.File{FileLocal: fName}
 

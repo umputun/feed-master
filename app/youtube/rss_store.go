@@ -28,7 +28,7 @@ func (s *RSSFileStore) Save(chanID, rss string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create file %s: %w", fname, err)
 	}
-	defer fh.Close() // nolint
+	defer fh.Close()
 	if _, err = fh.WriteString(rss); err != nil {
 		return fmt.Errorf("failed to write to file %s: %w", fname, err)
 	}

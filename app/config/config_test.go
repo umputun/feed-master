@@ -19,9 +19,9 @@ func TestLoad(t *testing.T) {
 
 	r.setDefaults()
 
-	assert.Equal(t, 4, len(r.Feeds), "4 sets")
-	assert.Equal(t, 2, len(r.Feeds["first"].Sources), "2 feeds in first")
-	assert.Equal(t, 1, len(r.Feeds["second"].Sources), "1 feed in second")
+	assert.Len(t, r.Feeds, 4, "4 sets")
+	assert.Len(t, r.Feeds["first"].Sources, 2, "2 feeds in first")
+	assert.Len(t, r.Feeds["second"].Sources, 1, "1 feed in second")
 	assert.Equal(t, "https://bbb.com/u1", r.Feeds["second"].Sources[0].URL)
 	assert.Equal(t, "^filterme*", r.Feeds["filtered"].Filter.Title)
 	assert.Equal(t, time.Second*600, r.System.UpdateInterval)
@@ -41,21 +41,21 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, "blah@example.com", r.Feeds["second"].OwnerEmail)
 
 	assert.Equal(t, "(one|two|three)", r.Feeds["filtered2"].Filter.Title)
-	assert.Equal(t, true, r.Feeds["filtered2"].Filter.Invert)
+	assert.True(t, r.Feeds["filtered2"].Filter.Invert)
 }
 
 func TestLoadConfigNotFoundFile(t *testing.T) {
 	r, err := Load("/tmp/29e28b3c-e1a4-4269-a10b-3e9a89a08d45.txt")
 
 	assert.Nil(t, r)
-	assert.EqualError(t, err, "open /tmp/29e28b3c-e1a4-4269-a10b-3e9a89a08d45.txt: no such file or directory")
+	assert.EqualError(t, err, "read config /tmp/29e28b3c-e1a4-4269-a10b-3e9a89a08d45.txt: open /tmp/29e28b3c-e1a4-4269-a10b-3e9a89a08d45.txt: no such file or directory")
 }
 
 func TestLoadConfigInvalidYaml(t *testing.T) {
 	r, err := Load("testdata/file.txt")
 
 	assert.Nil(t, r)
-	assert.EqualError(t, err, "yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `Not Yaml` into config.Conf")
+	assert.EqualError(t, err, "parse config testdata/file.txt: yaml: unmarshal errors:\n  line 1: cannot unmarshal !!str `Not Yaml` into config.Conf")
 }
 
 func TestSingleFeedConf(t *testing.T) {
@@ -68,8 +68,6 @@ func TestSingleFeedConf(t *testing.T) {
 	}
 
 	for i, tc := range cases {
-		i := i
-		tc := tc
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			conf := SingleFeed(tc.feedURL, tc.channel, tc.updateInterval)
 
@@ -79,7 +77,7 @@ func TestSingleFeedConf(t *testing.T) {
 			feed := conf.Feeds["auto"]
 			assert.Equal(t, feed.TelegramChannel, tc.channel)
 			assert.Len(t, feed.Sources, 1)
-			assert.Equal(t, feed.Sources[0].Name, "auto")
+			assert.Equal(t, "auto", feed.Sources[0].Name)
 			assert.Equal(t, feed.Sources[0].URL, tc.feedURL)
 		})
 	}
@@ -183,7 +181,6 @@ func TestFilter(t *testing.T) {
 	}
 
 	for i, tb := range tbl {
-		tb := tb
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			result, err := tb.filter.Skip(tb.inp)
 			assert.Equal(t, tb.out, result)

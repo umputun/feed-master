@@ -100,9 +100,9 @@ type Entry struct {
 // Parse gets url to rss feed and returns Rss2 items
 func Parse(uri string) (result Rss2, err error) {
 	client := http.Client{Timeout: time.Minute * 2}
-	resp, err := client.Get(uri) // nolint
+	resp, err := client.Get(uri) //nolint:noctx // no context needed for feed parsing
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("get feed %s: %w", uri, err)
 	}
 	defer func() {
 		if e := resp.Body.Close(); e != nil {
@@ -138,9 +138,9 @@ func atom1ToRss2(a Atom1) Rss2 {
 		r.ItemList[i].Title = entry.Title
 		r.ItemList[i].Link = entry.Link.Href
 		if entry.Content == "" {
-			r.ItemList[i].Description = template.HTML(entry.Summary) // nolint
+			r.ItemList[i].Description = template.HTML(entry.Summary) //nolint:gosec // HTML content from trusted RSS feed
 		} else {
-			r.ItemList[i].Description = template.HTML(entry.Content) // nolint
+			r.ItemList[i].Description = template.HTML(entry.Content) //nolint:gosec // HTML content from trusted RSS feed
 		}
 	}
 	return r
@@ -184,7 +184,6 @@ func parseFeedContent(content []byte) (Rss2, error) {
 
 // Normalize converts to RFC822 = "02 Jan 06 15:04 MST"
 func (rss *Rss2) Normalize() (Rss2, error) {
-
 	dt, err := rss.parseDateTime(rss.LastBuildDate)
 	if err != nil {
 		log.Printf("[DEBUG] failed to parse LastBuildDate: %v, fallback with PubDate", err)
@@ -207,7 +206,7 @@ func (rss *Rss2) Normalize() (Rss2, error) {
 
 func (rss *Rss2) parseDateTime(dt string) (time.Time, error) {
 	if dt == "" {
-		return time.Now(), fmt.Errorf("can't parse empty date-time")
+		return time.Now(), errors.New("can't parse empty date-time")
 	}
 	if ts, err := time.Parse(time.RFC822, dt); err == nil {
 		return ts, nil

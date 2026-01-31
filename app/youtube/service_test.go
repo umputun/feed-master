@@ -19,7 +19,6 @@ import (
 )
 
 func TestService_Do(t *testing.T) {
-
 	tempDir := t.TempDir()
 	shortVideo := filepath.Join(tempDir, "122b672d10e77708b51c041f852615dc0eedf354.mp3")
 	chans := &mocks.ChannelServiceMock{
@@ -35,7 +34,7 @@ func TestService_Do(t *testing.T) {
 	downloader := &mocks.DownloaderServiceMock{
 		GetFunc: func(_ context.Context, _ string, fname string) (string, error) {
 			fpath := filepath.Join(tempDir, fname+".mp3")
-			_, err := os.Create(fpath) // nolint
+			_, err := os.Create(fpath) //nolint:gosec // test file path is safe
 			require.NoError(t, err)
 			return fpath, nil
 		},
@@ -75,9 +74,9 @@ func TestService_Do(t *testing.T) {
 	defer cancel()
 
 	err = svc.Do(ctx)
-	assert.EqualError(t, err, "context deadline exceeded")
+	require.EqualError(t, err, "youtube service stopped: context deadline exceeded")
 
-	require.Equal(t, 4, len(chans.GetCalls()))
+	require.Len(t, chans.GetCalls(), 4)
 	assert.Equal(t, "channel1", chans.GetCalls()[0].ChanID)
 	assert.Equal(t, ytfeed.FTChannel, chans.GetCalls()[0].FeedType)
 	assert.Equal(t, "channel2", chans.GetCalls()[1].ChanID)
@@ -87,29 +86,29 @@ func TestService_Do(t *testing.T) {
 
 	res, err := boltStore.Load("channel1", 10)
 	require.NoError(t, err)
-	assert.Equal(t, 2, len(res), "two entries for channel1, skipped duplicate")
+	assert.Len(t, res, 2, "two entries for channel1, skipped duplicate")
 	assert.Equal(t, "vid2", res[0].VideoID)
 	assert.Equal(t, "vid1", res[1].VideoID)
 
 	res, err = boltStore.Load("channel2", 10)
 	require.NoError(t, err)
-	assert.Equal(t, 3, len(res), "three entries for channel2, skipped duplicate")
+	assert.Len(t, res, 3, "three entries for channel2, skipped duplicate")
 	assert.Equal(t, "vid3", res[0].VideoID)
 	assert.Equal(t, "vid2", res[1].VideoID)
 	assert.Equal(t, "vid1", res[2].VideoID)
 
-	require.Equal(t, 6, len(downloader.GetCalls()))
+	require.Len(t, downloader.GetCalls(), 6)
 	require.Equal(t, "vid1", downloader.GetCalls()[0].ID)
-	require.True(t, downloader.GetCalls()[0].Fname != "")
+	require.NotEmpty(t, downloader.GetCalls()[0].Fname)
 
-	rssData, err := os.ReadFile(tempDir + "/channel1.xml") // nolint
+	rssData, err := os.ReadFile(tempDir + "/channel1.xml") //nolint:gosec // test file path
 	require.NoError(t, err)
 	t.Logf("%s", string(rssData))
 	assert.Contains(t, string(rssData), "<guid>channel1::vid1</guid>")
 	assert.Contains(t, string(rssData), "<guid>channel1::vid2</guid>")
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
-	rssData, err = os.ReadFile(tempDir + "/channel2.xml") // nolint
+	rssData, err = os.ReadFile(tempDir + "/channel2.xml") //nolint:gosec // test file path
 	require.NoError(t, err)
 	assert.Contains(t, string(rssData), "<guid>channel2::vid1</guid>")
 	assert.Contains(t, string(rssData), "<guid>channel2::vid2</guid>")
@@ -117,7 +116,7 @@ func TestService_Do(t *testing.T) {
 
 	t.Logf("%v", duration.FileCalls())
 	// durationService.File called 11 times: 5 in Service.update(), 6 in Service.isShort()
-	require.Equal(t, 11, len(duration.FileCalls()))
+	require.Len(t, duration.FileCalls(), 11)
 	assert.Equal(t, filepath.Join(tempDir, "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3"), duration.FileCalls()[0].Fname)
 	assert.Equal(t, filepath.Join(tempDir, "4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3"), duration.FileCalls()[2].Fname)
 	assert.Equal(t, filepath.Join(tempDir, "122b672d10e77708b51c041f852615dc0eedf354.mp3"), duration.FileCalls()[4].Fname)
@@ -127,9 +126,7 @@ func TestService_Do(t *testing.T) {
 	assert.FileExists(t, filepath.Join(tempDir, "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3"), "non short video should exist")
 }
 
-// nolint:dupl // test if very similar to TestService_RSSFeed
 func TestService_DoIsAllowedFilter(t *testing.T) {
-
 	chans := &mocks.ChannelServiceMock{
 		GetFunc: func(_ context.Context, chanID string, _ ytfeed.Type) ([]ytfeed.Entry, error) {
 			return []ytfeed.Entry{
@@ -175,9 +172,9 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 	defer cancel()
 
 	err = svc.Do(ctx)
-	assert.EqualError(t, err, "context deadline exceeded")
+	require.EqualError(t, err, "youtube service stopped: context deadline exceeded")
 
-	require.Equal(t, 4, len(chans.GetCalls()))
+	require.Len(t, chans.GetCalls(), 4)
 	assert.Equal(t, "channel1", chans.GetCalls()[0].ChanID)
 	assert.Equal(t, ytfeed.FTChannel, chans.GetCalls()[0].FeedType)
 	assert.Equal(t, "channel2", chans.GetCalls()[1].ChanID)
@@ -187,20 +184,20 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 
 	res, err := boltStore.Load("channel1", 10)
 	require.NoError(t, err)
-	assert.Equal(t, 1, len(res), "one entry for channel1, skipped irrelevant ones")
+	assert.Len(t, res, 1, "one entry for channel1, skipped irrelevant ones")
 	assert.Equal(t, "vid2", res[0].VideoID)
 
 	res, err = boltStore.Load("channel2", 10)
 	require.NoError(t, err)
-	assert.Equal(t, 2, len(res), "two entries for channel2, skipped irrelevant one")
+	assert.Len(t, res, 2, "two entries for channel2, skipped irrelevant one")
 	assert.Equal(t, "vid2", res[0].VideoID)
 	assert.Equal(t, "vid1", res[1].VideoID)
 
-	require.Equal(t, 3, len(downloader.GetCalls()))
+	require.Len(t, downloader.GetCalls(), 3)
 	require.Equal(t, "vid2", downloader.GetCalls()[0].ID)
 	require.Equal(t, "vid1", downloader.GetCalls()[1].ID)
 	require.Equal(t, "vid2", downloader.GetCalls()[2].ID)
-	require.True(t, downloader.GetCalls()[0].Fname != "")
+	require.NotEmpty(t, downloader.GetCalls()[0].Fname)
 
 	rssData, err := os.ReadFile("/tmp/channel1.xml")
 	require.NoError(t, err)
@@ -215,13 +212,12 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 	assert.Contains(t, string(rssData), "<guid>channel2::vid1</guid>")
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
-	require.Equal(t, 3, len(duration.FileCalls()))
+	require.Len(t, duration.FileCalls(), 3)
 	assert.Equal(t, "/tmp/4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3", duration.FileCalls()[0].Fname)
 	assert.Equal(t, "/tmp/3be877c750abb87daee80c005fe87e7a3f824fed.mp3", duration.FileCalls()[1].Fname)
 	assert.Equal(t, "/tmp/648f79b3a05ececb8a37600aa0aee332f0374e01.mp3", duration.FileCalls()[2].Fname)
 }
 
-// nolint:dupl // test if very similar to TestService_RSSFeed
 func TestService_RSSFeed(t *testing.T) {
 	storeSvc := &mocks.StoreServiceMock{
 		LoadFunc: func(string, int) ([]ytfeed.Entry, error) {
@@ -263,10 +259,8 @@ func TestService_RSSFeed(t *testing.T) {
 	assert.Contains(t, res, `<link>http://example.com/c1</link>`)
 	assert.Contains(t, res, `<itunes:image href="http://example.com/thumb.jpg"></itunes:image>`)
 	assert.Contains(t, res, `<media:thumbnail url="http://example.com/thumb.jpg"></media:thumbnail>`)
-
 }
 
-// nolint:dupl // test if very similar to TestService_RSSFeed
 func TestService_RSSFeedPlayList(t *testing.T) {
 	storeSvc := &mocks.StoreServiceMock{
 		LoadFunc: func(string, int) ([]ytfeed.Entry, error) {
@@ -305,7 +299,6 @@ func TestService_RSSFeedPlayList(t *testing.T) {
 }
 
 func TestService_makeFileName(t *testing.T) {
-
 	tbl := []struct {
 		entry ytfeed.Entry
 		res   string
@@ -338,11 +331,9 @@ func TestService_makeFileName(t *testing.T) {
 			assert.Equal(t, tt.res, svc.makeFileName(tt.entry))
 		})
 	}
-
 }
 
 func TestService_update(t *testing.T) {
-
 	duration := &mocks.DurationServiceMock{
 		FileFunc: func(string) int {
 			return 1234
@@ -363,7 +354,7 @@ func TestService_update(t *testing.T) {
 		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "feed1"})
 		t.Logf("%+v", res)
 		assert.Equal(t, 1234, res.Duration)
-		assert.True(t, time.Since(res.Published) < time.Second, "published time was reset")
+		assert.Less(t, time.Since(res.Published), time.Second, "published time was reset")
 		assert.Equal(t, "feed1: something", res.Title)
 	}
 
@@ -378,10 +369,9 @@ func TestService_update(t *testing.T) {
 		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "Сергей Пархоменко"})
 		t.Logf("%+v", res)
 		assert.Equal(t, 1234, res.Duration)
-		assert.True(t, time.Since(res.Published) < time.Second, "published time was reset")
+		assert.Less(t, time.Since(res.Published), time.Second, "published time was reset")
 		assert.Equal(t, "Сергей Пархоменко на канале “Живой Гвоздь” в программме “Персонально ваш”. 06.04.2022", res.Title)
 	}
-
 }
 
 func TestService_totalEntriesToKeep(t *testing.T) {
@@ -398,7 +388,6 @@ func TestService_totalEntriesToKeep(t *testing.T) {
 }
 
 func TestService_countAllEntries(t *testing.T) {
-
 	storeSvc := &mocks.StoreServiceMock{
 		LoadFunc: func(channelID string, _ int) ([]ytfeed.Entry, error) {
 			switch channelID {
@@ -423,7 +412,7 @@ func TestService_countAllEntries(t *testing.T) {
 	}
 
 	assert.Equal(t, 5, svc.countAllEntries())
-	assert.Equal(t, 2, len(storeSvc.LoadCalls()))
+	assert.Len(t, storeSvc.LoadCalls(), 2)
 	assert.Equal(t, 5, storeSvc.LoadCalls()[0].Max)
 	assert.Equal(t, 10, storeSvc.LoadCalls()[1].Max)
 }
@@ -467,7 +456,7 @@ func TestService_oldestEntry(t *testing.T) {
 		assert.Equal(t, "t23", res.Title)
 	}
 
-	assert.Equal(t, 2, len(storeSvc.LoadCalls()))
+	assert.Len(t, storeSvc.LoadCalls(), 2)
 	assert.Equal(t, 5, storeSvc.LoadCalls()[0].Max)
 	assert.Equal(t, 10, storeSvc.LoadCalls()[1].Max)
 }
@@ -511,7 +500,7 @@ func TestService_newestEntry(t *testing.T) {
 		assert.Equal(t, "t21", res.Title)
 	}
 
-	assert.Equal(t, 2, len(storeSvc.LoadCalls()))
+	assert.Len(t, storeSvc.LoadCalls(), 2)
 	assert.Equal(t, 1, storeSvc.LoadCalls()[0].Max)
 	assert.Equal(t, 1, storeSvc.LoadCalls()[1].Max)
 }

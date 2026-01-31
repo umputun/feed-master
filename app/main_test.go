@@ -16,8 +16,8 @@ func TestMakeTwitter(t *testing.T) {
 
 	client := makeTwitter(opts)
 
-	assert.Equal(t, client.ConsumerKey, "a")
-	assert.Equal(t, client.ConsumerSecret, "b")
-	assert.Equal(t, client.AccessToken, "c")
-	assert.Equal(t, client.AccessSecret, "d")
+	assert.Equal(t, "a", client.ConsumerKey)
+	assert.Equal(t, "b", client.ConsumerSecret)
+	assert.Equal(t, "c", client.AccessToken)
+	assert.Equal(t, "d", client.AccessSecret)
 }

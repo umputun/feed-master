@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -104,7 +105,7 @@ func main() {
 		fd := ytfeed.Feed{Client: &http.Client{Timeout: 10 * time.Second},
 			ChannelBaseURL: conf.YouTube.BaseChanURL, PlaylistBaseURL: conf.YouTube.BasePlaylistURL}
 
-		channels := []string{}
+		channels := make([]string, 0, len(conf.YouTube.Channels))
 		for _, c := range conf.YouTube.Channels {
 			channels = append(channels, c.ID)
 		}
@@ -164,23 +165,23 @@ func main() {
 func makeBoltDB(dbFile string) (*bolt.DB, error) {
 	log.Printf("[INFO] bolt (persistent) store, %s", dbFile)
 	if dbFile == "" {
-		return nil, fmt.Errorf("empty db")
+		return nil, errors.New("empty db")
 	}
 	if err := os.MkdirAll(path.Dir(dbFile), 0o700); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create db directory %s: %w", path.Dir(dbFile), err)
 	}
-	db, err := bolt.Open(dbFile, 0o600, &bolt.Options{Timeout: 1 * time.Second}) // nolint
+	db, err := bolt.Open(dbFile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open db %s: %w", dbFile, err)
 	}
 
-	return db, err
+	return db, nil
 }
 
 func makeTwitter(opts options) *proc.TwitterClient {
 	twitterFmtFn := func(item rssfeed.Item) string {
 		b1 := bytes.Buffer{}
-		if err := template.Must(template.New("twi").Parse(opts.TwitterTemplate)).Execute(&b1, item); err != nil { // nolint
+		if err := template.Must(template.New("twi").Parse(opts.TwitterTemplate)).Execute(&b1, item); err != nil {
 			// template failed to parse record, backup predefined format
 			return fmt.Sprintf("%s - %s", item.Title, item.Link)
 		}

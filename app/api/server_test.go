@@ -26,13 +26,13 @@ func TestServer_Run(t *testing.T) {
 	s := Server{Version: "1.0", TemplLocation: "../webapp/templates/*"}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	port := rand.Intn(10000) + 4000 // nolint
+	port := rand.Intn(10000) + 4000 //nolint:gosec // math/rand is fine for test port selection
 	go func() {
 		time.Sleep(time.Millisecond * 100)
 		resp, err := http.Get(fmt.Sprintf("http://localhost:%d/ping", port))
-		require.NoError(t, err)
-		defer resp.Body.Close() // nolint
-		require.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		t.Logf("%+v", resp.Header)
 		assert.Equal(t, "1.0", resp.Header.Get("App-Version"))
 		assert.Equal(t, "feed-master", resp.Header.Get("App-Name"))
@@ -41,7 +41,6 @@ func TestServer_Run(t *testing.T) {
 }
 
 func TestServer_getFeedCtrl(t *testing.T) {
-
 	store := &mocks.StoreMock{
 		LoadFunc: func(string, int, bool) ([]feed.Item, error) {
 			return []feed.Item{
@@ -97,7 +96,7 @@ func TestServer_getFeedCtrl(t *testing.T) {
 
 	resp, err := ts.Client().Get(ts.URL + "/rss/feed1")
 	require.NoError(t, err)
-	defer resp.Body.Close() // nolint
+	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	respBody, err := io.ReadAll(resp.Body)
@@ -119,12 +118,11 @@ func TestServer_getFeedCtrl(t *testing.T) {
 	assert.NotContains(t, body, `<itunes:image href=""></itunes:image>`)
 	assert.NotContains(t, body, `<media:thumbnail url=""></media:thumbnail>`)
 
-	assert.Equal(t, 1, len(store.LoadCalls()))
+	assert.Len(t, store.LoadCalls(), 1)
 	assert.Equal(t, "feed1", store.LoadCalls()[0].FmFeed)
 }
 
 func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
-
 	store := &mocks.StoreMock{
 		LoadFunc: func(string, int, bool) ([]feed.Item, error) {
 			return []feed.Item{
@@ -177,7 +175,7 @@ func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
 
 	resp, err := ts.Client().Get(ts.URL + "/rss/feed1")
 	require.NoError(t, err)
-	defer resp.Body.Close() // nolint
+	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	respBody, err := io.ReadAll(resp.Body)
@@ -191,12 +189,11 @@ func TestServer_getFeedCtrlExtendDateTitle(t *testing.T) {
 	assert.Contains(t, body, "<guid>guid1</guid>")
 	assert.Contains(t, body, "<title>title1 (2022-04-03)</title>")
 
-	assert.Equal(t, 1, len(store.LoadCalls()))
+	assert.Len(t, store.LoadCalls(), 1)
 	assert.Equal(t, "feed1", store.LoadCalls()[0].FmFeed)
 }
 
 func TestServer_getFeedCtrlFeedImage(t *testing.T) {
-
 	store := &mocks.StoreMock{
 		LoadFunc: func(string, int, bool) ([]feed.Item, error) {
 			return []feed.Item{
@@ -252,7 +249,7 @@ func TestServer_getFeedCtrlFeedImage(t *testing.T) {
 
 	resp, err := ts.Client().Get(ts.URL + "/rss/feed1")
 	require.NoError(t, err)
-	defer resp.Body.Close() // nolint
+	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	respBody, err := io.ReadAll(resp.Body)
@@ -265,12 +262,11 @@ func TestServer_getFeedCtrlFeedImage(t *testing.T) {
 	assert.Contains(t, body, `<itunes:image href="http://example.com/images/feed1"></itunes:image>`)
 	assert.Contains(t, body, `<media:thumbnail url="http://example.com/images/feed1"></media:thumbnail>`)
 
-	assert.Equal(t, 1, len(store.LoadCalls()))
+	assert.Len(t, store.LoadCalls(), 1)
 	assert.Equal(t, "feed1", store.LoadCalls()[0].FmFeed)
 }
 
 func TestServer_regenerateRSSCtrl(t *testing.T) {
-
 	yt := &mocks.YoutubeSvcMock{
 		RSSFeedFunc: func(youtube.FeedInfo) (string, error) {
 			return "blah", nil
@@ -297,7 +293,7 @@ func TestServer_regenerateRSSCtrl(t *testing.T) {
 		req.SetBasicAuth("admin", "bad")
 		resp, err := ts.Client().Do(req)
 		require.NoError(t, err)
-		defer resp.Body.Close() // nolint
+		defer resp.Body.Close()
 		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 	}
 
@@ -307,15 +303,15 @@ func TestServer_regenerateRSSCtrl(t *testing.T) {
 		req.SetBasicAuth("admin", "123456")
 		resp, err := ts.Client().Do(req)
 		require.NoError(t, err)
-		defer resp.Body.Close() // nolint
+		defer resp.Body.Close()
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	}
 
-	require.Equal(t, 2, len(yt.RSSFeedCalls()))
+	require.Len(t, yt.RSSFeedCalls(), 2)
 	assert.Equal(t, "chan1", yt.RSSFeedCalls()[0].Cinfo.ID)
 	assert.Equal(t, "chan2", yt.RSSFeedCalls()[1].Cinfo.ID)
 
-	require.Equal(t, 2, len(yt.StoreRSSCalls()))
+	require.Len(t, yt.StoreRSSCalls(), 2)
 	require.Equal(t, "chan1", yt.StoreRSSCalls()[0].ChanID)
 	require.Equal(t, "blah", yt.StoreRSSCalls()[0].Rss)
 	require.Equal(t, "chan2", yt.StoreRSSCalls()[1].ChanID)
@@ -346,7 +342,7 @@ func TestServer_removeEntryCtrl(t *testing.T) {
 		req.SetBasicAuth("admin", "bad")
 		resp, err := ts.Client().Do(req)
 		require.NoError(t, err)
-		defer resp.Body.Close() // nolint
+		defer resp.Body.Close()
 		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 	}
 
@@ -356,17 +352,16 @@ func TestServer_removeEntryCtrl(t *testing.T) {
 		req.SetBasicAuth("admin", "123456")
 		resp, err := ts.Client().Do(req)
 		require.NoError(t, err)
-		defer resp.Body.Close() // nolint
+		defer resp.Body.Close()
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	}
 
-	require.Equal(t, 1, len(yt.RemoveEntryCalls()))
+	require.Len(t, yt.RemoveEntryCalls(), 1)
 	require.Equal(t, "chan1", yt.RemoveEntryCalls()[0].Entry.ChannelID)
 	require.Equal(t, "vid1", yt.RemoveEntryCalls()[0].Entry.VideoID)
 }
 
 func TestServer_configCtrl(t *testing.T) {
-
 	store := &mocks.StoreMock{}
 
 	s := Server{
@@ -395,7 +390,7 @@ func TestServer_configCtrl(t *testing.T) {
 
 	resp, err := ts.Client().Get(ts.URL + "/config")
 	require.NoError(t, err)
-	defer resp.Body.Close() // nolint
+	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	respBody, err := io.ReadAll(resp.Body)

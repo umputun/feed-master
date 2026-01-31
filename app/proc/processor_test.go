@@ -45,7 +45,7 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Length", strconv.Itoa(len(testFeed)))
 		_, e := w.Write(testFeed)
-		require.NoError(t, e)
+		assert.NoError(t, e)
 	}))
 	defer ts.Close()
 
@@ -110,22 +110,22 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 
 	// running processor first time to load items to db
 	err = proc.Do(ctx)
-	assert.EqualError(t, err, "context deadline exceeded")
+	require.EqualError(t, err, "processor stopped: context deadline exceeded")
 
 	res, err := boltStore.Load("feed1", 10, false)
 	require.NoError(t, err)
-	assert.Equal(t, 3, len(res), "all 3 items loaded on the first rss parsing")
+	assert.Len(t, res, 3, "all 3 items loaded on the first rss parsing")
 	assert.Equal(t, "Радио-Т 798", res[0].Title)
 	assert.Equal(t, "Радио-Т 797", res[1].Title)
 	assert.Equal(t, "Радио-Т 796", res[2].Title)
 
-	require.Equal(t, 3, len(tgNotif.SendCalls()))
+	require.Len(t, tgNotif.SendCalls(), 3)
 	assert.Equal(t, "Радио-Т 798", tgNotif.SendCalls()[0].Item.Title)
 	assert.Equal(t, "tgChannel", tgNotif.SendCalls()[0].ChanID)
 	assert.Equal(t, "Радио-Т 797", tgNotif.SendCalls()[1].Item.Title)
 	assert.Equal(t, "Радио-Т 796", tgNotif.SendCalls()[2].Item.Title)
 
-	require.Equal(t, 3, len(twitterNotif.SendCalls()))
+	require.Len(t, twitterNotif.SendCalls(), 3)
 	assert.Equal(t, "Радио-Т 798", twitterNotif.SendCalls()[0].Item.Title)
 	assert.Equal(t, "Радио-Т 797", twitterNotif.SendCalls()[1].Item.Title)
 	assert.Equal(t, "Радио-Т 796", twitterNotif.SendCalls()[2].Item.Title)
@@ -137,31 +137,30 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 	defer cancel2()
 
 	err = proc.Do(ctx2)
-	assert.EqualError(t, err, "context deadline exceeded")
+	require.EqualError(t, err, "processor stopped: context deadline exceeded")
 
 	res, err = boltStore.Load("feed1", 10, false)
 	require.NoError(t, err)
-	assert.Equal(t, 5, len(res), "5 items in the db: new items loaded, old items removed")
+	assert.Len(t, res, 5, "5 items in the db: new items loaded, old items removed")
 	assert.Equal(t, "Радио-Т 801", res[0].Title)
 	assert.Equal(t, "Радио-Т 800", res[1].Title)
 	assert.Equal(t, "Радио-Т 799", res[2].Title)
 	assert.Equal(t, "Радио-Т 798", res[3].Title)
 	assert.Equal(t, "Радио-Т 797", res[4].Title)
 
-	require.Equal(t, 6, len(tgNotif.SendCalls()))
+	require.Len(t, tgNotif.SendCalls(), 6)
 	assert.Equal(t, "Радио-Т 801", tgNotif.SendCalls()[3].Item.Title)
 	assert.Equal(t, "tgChannel", tgNotif.SendCalls()[3].ChanID)
 	assert.Equal(t, "Радио-Т 800", tgNotif.SendCalls()[4].Item.Title)
 	assert.Equal(t, "Радио-Т 799", tgNotif.SendCalls()[5].Item.Title)
 
-	require.Equal(t, 6, len(twitterNotif.SendCalls()))
+	require.Len(t, twitterNotif.SendCalls(), 6)
 	assert.Equal(t, "Радио-Т 801", twitterNotif.SendCalls()[3].Item.Title)
 	assert.Equal(t, "Радио-Т 800", twitterNotif.SendCalls()[4].Item.Title)
 	assert.Equal(t, "Радио-Т 799", twitterNotif.SendCalls()[5].Item.Title)
 }
 
 func TestProcessor_DoLoadMaxItems(t *testing.T) {
-
 	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(string, feed.Item) error {
 		return nil
 	}}
@@ -184,7 +183,7 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Length", strconv.Itoa(len(testFeed)))
 		_, e := w.Write(testFeed)
-		require.NoError(t, e)
+		assert.NoError(t, e)
 	}))
 	defer ts.Close()
 
@@ -249,21 +248,20 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 
 	// running processor first time to load items to db
 	err = proc.Do(ctx)
-	assert.EqualError(t, err, "context deadline exceeded")
+	require.EqualError(t, err, "processor stopped: context deadline exceeded")
 
 	res, err := boltStore.Load("feed1", 10, false)
 	require.NoError(t, err)
-	assert.Equal(t, 3, len(res), "3 items are loaded as per MaxItems")
+	assert.Len(t, res, 3, "3 items are loaded as per MaxItems")
 	assert.Equal(t, "Радио-Т 801", res[0].Title)
 	assert.Equal(t, "Радио-Т 800", res[1].Title)
 	assert.Equal(t, "Радио-Т 799", res[2].Title)
 
-	require.Equal(t, 3, len(tgNotif.SendCalls()))
-	require.Equal(t, 3, len(twitterNotif.SendCalls()))
+	require.Len(t, tgNotif.SendCalls(), 3)
+	require.Len(t, twitterNotif.SendCalls(), 3)
 }
 
 func TestProcessor_DoSkipItems(t *testing.T) {
-
 	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(string, feed.Item) error {
 		return nil
 	}}
@@ -286,7 +284,7 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Length", strconv.Itoa(len(testFeed)))
 		_, e := w.Write(testFeed)
-		require.NoError(t, e)
+		assert.NoError(t, e)
 	}))
 	defer ts.Close()
 
@@ -353,20 +351,20 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 
 	// running processor first time to load items to db
 	err = proc.Do(ctx)
-	assert.EqualError(t, err, "context deadline exceeded")
+	require.EqualError(t, err, "processor stopped: context deadline exceeded")
 
 	res, err := boltStore.Load("feed1", 10, false)
 	require.NoError(t, err)
-	assert.Equal(t, 3, len(res), "all 3 items are loaded")
+	assert.Len(t, res, 3, "all 3 items are loaded")
 	assert.Equal(t, "Радио-Т 798", res[0].Title)
 	assert.Equal(t, "Радио-Т 797", res[1].Title)
 	assert.Equal(t, "Радио-Т 796", res[2].Title)
 
-	require.Equal(t, 2, len(tgNotif.SendCalls()))
+	require.Len(t, tgNotif.SendCalls(), 2)
 	assert.Equal(t, "Радио-Т 798", tgNotif.SendCalls()[0].Item.Title)
 	assert.Equal(t, "Радио-Т 797", tgNotif.SendCalls()[1].Item.Title)
 
-	require.Equal(t, 2, len(twitterNotif.SendCalls()))
+	require.Len(t, twitterNotif.SendCalls(), 2)
 	assert.Equal(t, "Радио-Т 798", twitterNotif.SendCalls()[0].Item.Title)
 	assert.Equal(t, "Радио-Т 797", twitterNotif.SendCalls()[1].Item.Title)
 }
