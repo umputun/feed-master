@@ -235,3 +235,64 @@ func TestRemoveOldRepeatedCycles(t *testing.T) {
 		require.NoError(t, err)
 	}
 }
+
+func TestStore_Remove(t *testing.T) {
+	t.Run("remove existing item", func(t *testing.T) {
+		dbPath := t.TempDir() + "/test.db"
+		db, err := bolt.Open(dbPath, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+		require.NoError(t, err)
+		defer db.Close()
+		bdb := &BoltDB{DB: db}
+
+		// save two items
+		_, err = bdb.Save("test-feed", feed.Item{PubDate: pubDate, GUID: "guid1", Title: "title1"})
+		require.NoError(t, err)
+		_, err = bdb.Save("test-feed", feed.Item{PubDate: pubDate, GUID: "guid2", Title: "title2"})
+		require.NoError(t, err)
+
+		// verify both exist
+		items, err := bdb.Load("test-feed", 10, false)
+		require.NoError(t, err)
+		assert.Len(t, items, 2)
+
+		// remove one item
+		err = bdb.Remove("test-feed", "guid1")
+		require.NoError(t, err)
+
+		// verify only one remains
+		items, err = bdb.Load("test-feed", 10, false)
+		require.NoError(t, err)
+		require.Len(t, items, 1)
+		assert.Equal(t, "guid2", items[0].GUID)
+	})
+
+	t.Run("item not found", func(t *testing.T) {
+		dbPath := t.TempDir() + "/test.db"
+		db, err := bolt.Open(dbPath, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+		require.NoError(t, err)
+		defer db.Close()
+		bdb := &BoltDB{DB: db}
+
+		// save an item
+		_, err = bdb.Save("test-feed", feed.Item{PubDate: pubDate, GUID: "guid1", Title: "title1"})
+		require.NoError(t, err)
+
+		// try to remove non-existent item
+		err = bdb.Remove("test-feed", "non-existent")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "item non-existent not found")
+	})
+
+	t.Run("bucket not found", func(t *testing.T) {
+		dbPath := t.TempDir() + "/test.db"
+		db, err := bolt.Open(dbPath, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+		require.NoError(t, err)
+		defer db.Close()
+		bdb := &BoltDB{DB: db}
+
+		// try to remove from non-existent bucket
+		err = bdb.Remove("non-existent-feed", "guid1")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "no bucket for non-existent-feed")
+	})
+}

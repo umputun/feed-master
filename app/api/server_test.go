@@ -319,34 +319,38 @@ func TestServer_regenerateRSSCtrl(t *testing.T) {
 }
 
 func TestServer_removeEntryCtrl(t *testing.T) {
-	yt := &mocks.YoutubeSvcMock{
-		RemoveEntryFunc: func(ytfeed.Entry) error {
-			return nil
-		},
-	}
+	t.Run("removes from youtube and proc store", func(t *testing.T) {
+		yt := &mocks.YoutubeSvcMock{
+			RemoveEntryFunc: func(ytfeed.Entry) error { return nil },
+		}
 
-	s := Server{
-		Version:       "1.0",
-		TemplLocation: "../webapp/templates/*",
-		YoutubeSvc:    yt,
-		Conf:          config.Conf{},
-		AdminPasswd:   "123456",
-	}
+		store := &mocks.StoreMock{
+			RemoveFunc: func(fmFeed, guid string) error {
+				// simulate: feed1 has the entry, feed2 doesn't
+				if fmFeed == "feed2" {
+					return fmt.Errorf("item %s not found in %s", guid, fmFeed)
+				}
+				return nil
+			},
+		}
 
-	ts := httptest.NewServer(s.router())
-	defer ts.Close()
+		s := Server{
+			Version:       "1.0",
+			TemplLocation: "../webapp/templates/*",
+			YoutubeSvc:    yt,
+			Store:         store,
+			Conf: config.Conf{
+				Feeds: map[string]config.Feed{
+					"feed1": {Title: "feed1"},
+					"feed2": {Title: "feed2"},
+				},
+			},
+			AdminPasswd: "123456",
+		}
 
-	{
-		req, err := http.NewRequest("DELETE", ts.URL+"/yt/entry/chan1/vid1", bytes.NewBuffer(nil))
-		require.NoError(t, err)
-		req.SetBasicAuth("admin", "bad")
-		resp, err := ts.Client().Do(req)
-		require.NoError(t, err)
-		defer resp.Body.Close()
-		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
-	}
+		ts := httptest.NewServer(s.router())
+		defer ts.Close()
 
-	{
 		req, err := http.NewRequest("DELETE", ts.URL+"/yt/entry/chan1/vid1", bytes.NewBuffer(nil))
 		require.NoError(t, err)
 		req.SetBasicAuth("admin", "123456")
@@ -354,11 +358,83 @@ func TestServer_removeEntryCtrl(t *testing.T) {
 		require.NoError(t, err)
 		defer resp.Body.Close()
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
-	}
 
-	require.Len(t, yt.RemoveEntryCalls(), 1)
-	require.Equal(t, "chan1", yt.RemoveEntryCalls()[0].Entry.ChannelID)
-	require.Equal(t, "vid1", yt.RemoveEntryCalls()[0].Entry.VideoID)
+		// verify youtube service was called
+		require.Len(t, yt.RemoveEntryCalls(), 1)
+		assert.Equal(t, "chan1", yt.RemoveEntryCalls()[0].Entry.ChannelID)
+		assert.Equal(t, "vid1", yt.RemoveEntryCalls()[0].Entry.VideoID)
+
+		// verify store.Remove was called for each feed (directly, without Load)
+		require.Len(t, store.RemoveCalls(), 2)
+		// both feeds should be attempted with the same GUID
+		for _, call := range store.RemoveCalls() {
+			assert.Equal(t, "chan1::vid1", call.GUID)
+		}
+	})
+
+	t.Run("auth failure", func(t *testing.T) {
+		yt := &mocks.YoutubeSvcMock{
+			RemoveEntryFunc: func(ytfeed.Entry) error { return nil },
+		}
+
+		s := Server{
+			Version:       "1.0",
+			TemplLocation: "../webapp/templates/*",
+			YoutubeSvc:    yt,
+			Conf:          config.Conf{},
+			AdminPasswd:   "123456",
+		}
+
+		ts := httptest.NewServer(s.router())
+		defer ts.Close()
+
+		req, err := http.NewRequest("DELETE", ts.URL+"/yt/entry/chan1/vid1", bytes.NewBuffer(nil))
+		require.NoError(t, err)
+		req.SetBasicAuth("admin", "bad")
+		resp, err := ts.Client().Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	})
+
+	t.Run("no matching entry in proc store", func(t *testing.T) {
+		yt := &mocks.YoutubeSvcMock{
+			RemoveEntryFunc: func(ytfeed.Entry) error { return nil },
+		}
+
+		store := &mocks.StoreMock{
+			RemoveFunc: func(fmFeed, guid string) error {
+				// simulate: entry not found in any feed
+				return fmt.Errorf("item %s not found in %s", guid, fmFeed)
+			},
+		}
+
+		s := Server{
+			Version:       "1.0",
+			TemplLocation: "../webapp/templates/*",
+			YoutubeSvc:    yt,
+			Store:         store,
+			Conf: config.Conf{
+				Feeds: map[string]config.Feed{"feed1": {Title: "feed1"}},
+			},
+			AdminPasswd: "123456",
+		}
+
+		ts := httptest.NewServer(s.router())
+		defer ts.Close()
+
+		req, err := http.NewRequest("DELETE", ts.URL+"/yt/entry/chan1/vid1", bytes.NewBuffer(nil))
+		require.NoError(t, err)
+		req.SetBasicAuth("admin", "123456")
+		resp, err := ts.Client().Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		// verify store.Remove was called (attempted) even though entry not found
+		require.Len(t, store.RemoveCalls(), 1)
+		assert.Equal(t, "chan1::vid1", store.RemoveCalls()[0].GUID)
+	})
 }
 
 func TestServer_configCtrl(t *testing.T) {

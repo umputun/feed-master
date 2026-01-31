@@ -99,6 +99,36 @@ func (b BoltDB) Load(fmFeed string, maximum int, skipJunk bool) ([]feed.Item, er
 	return result, nil
 }
 
+// Remove deletes item matched by GUID from given feed
+func (b BoltDB) Remove(fmFeed, guid string) error {
+	err := b.DB.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(fmFeed))
+		if bucket == nil {
+			return fmt.Errorf("no bucket for %s", fmFeed)
+		}
+
+		// find the item by GUID
+		c := bucket.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			item := feed.Item{}
+			if err := json.Unmarshal(v, &item); err != nil {
+				log.Printf("[WARN] failed to unmarshal during remove, %v", err)
+				continue
+			}
+			if item.GUID == guid {
+				log.Printf("[INFO] remove %s from %s", guid, fmFeed)
+				return bucket.Delete(k)
+			}
+		}
+
+		return fmt.Errorf("item %s not found in %s", guid, fmFeed)
+	})
+	if err != nil {
+		return fmt.Errorf("update db: %w", err)
+	}
+	return nil
+}
+
 func (b BoltDB) removeOld(fmFeed string, keep int) (int, error) {
 	var toDelete [][]byte
 	deleted := 0

@@ -125,7 +125,7 @@ _See [requests.http](https://github.com/umputun/feed-master/blob/master/requests
 ### admin endpoints
 
 - `POST /yt/rss/generate` - regenerate RSS feed for all youtube channels
-- `DELETE /yt/entry/{channel}/{video}` - delete youtube entry from internal database and remove it from RSS feed
+- `DELETE /yt/entry/{channel}/{video}` - delete youtube entry, remove associated audio file, and remove from combined feeds
 
 ## Web UI
 

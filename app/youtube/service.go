@@ -357,14 +357,46 @@ func (s *Service) StoreRSS(chanID, rss string) error {
 	return s.RSSFileStore.Save(chanID, rss)
 }
 
-// RemoveEntry deleted entry from store. Doesn't removes file
+// RemoveEntry deletes entry from store and removes the associated audio file
 func (s *Service) RemoveEntry(entry ytfeed.Entry) error {
+	// find FeedInfo for this channel to get correct keep limit
+	fi := FeedInfo{ID: entry.ChannelID}
+	for _, f := range s.Feeds {
+		if f.ID == entry.ChannelID {
+			fi = f
+			break
+		}
+	}
+
+	// load full entry to get file path (using channel-specific keep limit)
+	entries, err := s.Store.Load(entry.ChannelID, s.keep(fi))
+	if err != nil {
+		return fmt.Errorf("failed to load entries for %s: %w", entry.ChannelID, err)
+	}
+
+	var fullEntry ytfeed.Entry
+	for _, e := range entries {
+		if e.VideoID == entry.VideoID {
+			fullEntry = e
+			break
+		}
+	}
+
 	if err := s.Store.ResetProcessed(entry); err != nil {
 		return fmt.Errorf("failed to reset processed entry %s: %w", entry.VideoID, err)
 	}
 	if err := s.Store.Remove(entry); err != nil {
 		return fmt.Errorf("failed to remove entry %s: %w", entry.VideoID, err)
 	}
+
+	// delete audio file if exists
+	if fullEntry.File != "" {
+		if err := os.Remove(fullEntry.File); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("failed to remove file %s: %w", fullEntry.File, err)
+		}
+		log.Printf("[INFO] removed audio file %s for %s", fullEntry.File, entry.VideoID)
+	}
+
 	return nil
 }
 
