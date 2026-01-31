@@ -504,3 +504,144 @@ func TestService_newestEntry(t *testing.T) {
 	assert.Equal(t, 1, storeSvc.LoadCalls()[0].Max)
 	assert.Equal(t, 1, storeSvc.LoadCalls()[1].Max)
 }
+
+func TestService_RemoveEntry(t *testing.T) {
+	t.Run("removes entry and deletes file", func(t *testing.T) {
+		tempDir := t.TempDir()
+		audioFile := filepath.Join(tempDir, "test-audio.mp3")
+		err := os.WriteFile(audioFile, []byte("test audio content"), 0o600)
+		require.NoError(t, err)
+
+		storeSvc := &mocks.StoreServiceMock{
+			LoadFunc: func(channelID string, _ int) ([]ytfeed.Entry, error) {
+				if channelID == "chan1" {
+					return []ytfeed.Entry{
+						{ChannelID: "chan1", VideoID: "vid1", Title: "title1", File: audioFile},
+						{ChannelID: "chan1", VideoID: "vid2", Title: "title2", File: "/other/file.mp3"},
+					}, nil
+				}
+				return nil, nil
+			},
+			ResetProcessedFunc: func(ytfeed.Entry) error { return nil },
+			RemoveFunc:         func(ytfeed.Entry) error { return nil },
+		}
+
+		svc := Service{Store: storeSvc, KeepPerChannel: 10}
+
+		err = svc.RemoveEntry(ytfeed.Entry{ChannelID: "chan1", VideoID: "vid1"})
+		require.NoError(t, err)
+
+		// verify file was deleted
+		_, err = os.Stat(audioFile)
+		assert.True(t, os.IsNotExist(err), "audio file should be deleted")
+
+		// verify store methods were called
+		require.Len(t, storeSvc.LoadCalls(), 1)
+		assert.Equal(t, "chan1", storeSvc.LoadCalls()[0].ChannelID)
+		assert.Equal(t, 10, storeSvc.LoadCalls()[0].Max, "should use global KeepPerChannel for unknown channel")
+		require.Len(t, storeSvc.ResetProcessedCalls(), 1)
+		assert.Equal(t, "vid1", storeSvc.ResetProcessedCalls()[0].Entry.VideoID)
+		require.Len(t, storeSvc.RemoveCalls(), 1)
+		assert.Equal(t, "vid1", storeSvc.RemoveCalls()[0].Entry.VideoID)
+	})
+
+	t.Run("uses channel-specific keep limit", func(t *testing.T) {
+		tempDir := t.TempDir()
+		audioFile := filepath.Join(tempDir, "test-audio.mp3")
+		err := os.WriteFile(audioFile, []byte("test audio content"), 0o600)
+		require.NoError(t, err)
+
+		storeSvc := &mocks.StoreServiceMock{
+			LoadFunc: func(channelID string, maxItems int) ([]ytfeed.Entry, error) {
+				// only return entry if requested with correct keep limit
+				if channelID == "chan1" && maxItems >= 20 {
+					return []ytfeed.Entry{
+						{ChannelID: "chan1", VideoID: "vid1", Title: "title1", File: audioFile},
+					}, nil
+				}
+				return []ytfeed.Entry{}, nil
+			},
+			ResetProcessedFunc: func(ytfeed.Entry) error { return nil },
+			RemoveFunc:         func(ytfeed.Entry) error { return nil },
+		}
+
+		svc := Service{
+			Store:          storeSvc,
+			KeepPerChannel: 10,
+			Feeds: []FeedInfo{
+				{ID: "chan1", Name: "Channel 1", Keep: 20}, // channel has higher keep
+			},
+		}
+
+		err = svc.RemoveEntry(ytfeed.Entry{ChannelID: "chan1", VideoID: "vid1"})
+		require.NoError(t, err)
+
+		// verify file was deleted (proves we used correct keep limit)
+		_, err = os.Stat(audioFile)
+		assert.True(t, os.IsNotExist(err), "audio file should be deleted when using channel-specific keep")
+
+		// verify Load was called with channel's keep limit, not global
+		require.Len(t, storeSvc.LoadCalls(), 1)
+		assert.Equal(t, 20, storeSvc.LoadCalls()[0].Max, "should use channel-specific Keep=20, not global KeepPerChannel=10")
+	})
+
+	t.Run("handles non-existent file gracefully", func(t *testing.T) {
+		storeSvc := &mocks.StoreServiceMock{
+			LoadFunc: func(channelID string, _ int) ([]ytfeed.Entry, error) {
+				return []ytfeed.Entry{
+					{ChannelID: "chan1", VideoID: "vid1", Title: "title1", File: "/non/existent/file.mp3"},
+				}, nil
+			},
+			ResetProcessedFunc: func(ytfeed.Entry) error { return nil },
+			RemoveFunc:         func(ytfeed.Entry) error { return nil },
+		}
+
+		svc := Service{Store: storeSvc, KeepPerChannel: 10}
+
+		// should not error when file doesn't exist
+		err := svc.RemoveEntry(ytfeed.Entry{ChannelID: "chan1", VideoID: "vid1"})
+		require.NoError(t, err)
+	})
+
+	t.Run("handles entry with empty file path", func(t *testing.T) {
+		storeSvc := &mocks.StoreServiceMock{
+			LoadFunc: func(channelID string, _ int) ([]ytfeed.Entry, error) {
+				return []ytfeed.Entry{
+					{ChannelID: "chan1", VideoID: "vid1", Title: "title1", File: ""},
+				}, nil
+			},
+			ResetProcessedFunc: func(ytfeed.Entry) error { return nil },
+			RemoveFunc:         func(ytfeed.Entry) error { return nil },
+		}
+
+		svc := Service{Store: storeSvc, KeepPerChannel: 10}
+
+		err := svc.RemoveEntry(ytfeed.Entry{ChannelID: "chan1", VideoID: "vid1"})
+		require.NoError(t, err)
+	})
+
+	t.Run("handles entry not found in store", func(t *testing.T) {
+		storeSvc := &mocks.StoreServiceMock{
+			LoadFunc: func(channelID string, _ int) ([]ytfeed.Entry, error) {
+				return []ytfeed.Entry{
+					{ChannelID: "chan1", VideoID: "vid2", Title: "title2", File: "/some/file.mp3"},
+				}, nil
+			},
+			ResetProcessedFunc: func(ytfeed.Entry) error { return nil },
+			RemoveFunc:         func(ytfeed.Entry) error { return nil },
+		}
+
+		svc := Service{Store: storeSvc, KeepPerChannel: 10}
+
+		// should not error when entry not found - will proceed without file deletion
+		err := svc.RemoveEntry(ytfeed.Entry{ChannelID: "chan1", VideoID: "vid-not-found"})
+		require.NoError(t, err)
+
+		// verify store methods were still called even when entry not found in loaded entries
+		require.Len(t, storeSvc.LoadCalls(), 1)
+		require.Len(t, storeSvc.ResetProcessedCalls(), 1)
+		assert.Equal(t, "vid-not-found", storeSvc.ResetProcessedCalls()[0].Entry.VideoID)
+		require.Len(t, storeSvc.RemoveCalls(), 1)
+		assert.Equal(t, "vid-not-found", storeSvc.RemoveCalls()[0].Entry.VideoID)
+	})
+}

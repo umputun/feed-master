@@ -18,6 +18,9 @@ import (
 //			LoadFunc: func(fmFeed string, maxItems int, skipJunk bool) ([]feed.Item, error) {
 //				panic("mock out the Load method")
 //			},
+//			RemoveFunc: func(fmFeed string, guid string) error {
+//				panic("mock out the Remove method")
+//			},
 //		}
 //
 //		// use mockedStore in code that requires api.Store
@@ -27,6 +30,9 @@ import (
 type StoreMock struct {
 	// LoadFunc mocks the Load method.
 	LoadFunc func(fmFeed string, maxItems int, skipJunk bool) ([]feed.Item, error)
+
+	// RemoveFunc mocks the Remove method.
+	RemoveFunc func(fmFeed string, guid string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -39,8 +45,16 @@ type StoreMock struct {
 			// SkipJunk is the skipJunk argument value.
 			SkipJunk bool
 		}
+		// Remove holds details about calls to the Remove method.
+		Remove []struct {
+			// FmFeed is the fmFeed argument value.
+			FmFeed string
+			// GUID is the guid argument value.
+			GUID string
+		}
 	}
-	lockLoad sync.RWMutex
+	lockLoad   sync.RWMutex
+	lockRemove sync.RWMutex
 }
 
 // Load calls LoadFunc.
@@ -80,5 +94,41 @@ func (mock *StoreMock) LoadCalls() []struct {
 	mock.lockLoad.RLock()
 	calls = mock.calls.Load
 	mock.lockLoad.RUnlock()
+	return calls
+}
+
+// Remove calls RemoveFunc.
+func (mock *StoreMock) Remove(fmFeed string, guid string) error {
+	if mock.RemoveFunc == nil {
+		panic("StoreMock.RemoveFunc: method is nil but Store.Remove was just called")
+	}
+	callInfo := struct {
+		FmFeed string
+		GUID   string
+	}{
+		FmFeed: fmFeed,
+		GUID:   guid,
+	}
+	mock.lockRemove.Lock()
+	mock.calls.Remove = append(mock.calls.Remove, callInfo)
+	mock.lockRemove.Unlock()
+	return mock.RemoveFunc(fmFeed, guid)
+}
+
+// RemoveCalls gets all the calls that were made to Remove.
+// Check the length with:
+//
+//	len(mockedStore.RemoveCalls())
+func (mock *StoreMock) RemoveCalls() []struct {
+	FmFeed string
+	GUID   string
+} {
+	var calls []struct {
+		FmFeed string
+		GUID   string
+	}
+	mock.lockRemove.RLock()
+	calls = mock.calls.Remove
+	mock.lockRemove.RUnlock()
 	return calls
 }

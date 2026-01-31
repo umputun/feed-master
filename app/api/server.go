@@ -56,6 +56,7 @@ type YoutubeSvc interface {
 // Store provides access to feed data
 type Store interface {
 	Load(fmFeed string, maxItems int, skipJunk bool) ([]feed.Item, error)
+	Remove(fmFeed string, guid string) error
 }
 
 // YoutubeStore provides access to YouTube channel data
@@ -322,14 +323,29 @@ func (s *Server) regenerateRSSCtrl(w http.ResponseWriter, r *http.Request) {
 	rest.RenderJSON(w, rest.JSON{"status": "ok", "feeds": len(s.Conf.YouTube.Channels)})
 }
 
-// DELETE /yt/entry/{channel}/{video} - deletes entry from youtube channel and videID
+// DELETE /yt/entry/{channel}/{video} - deletes entry from youtube channel and videoID
 func (s *Server) removeEntryCtrl(w http.ResponseWriter, r *http.Request) {
-	err := s.YoutubeSvc.RemoveEntry(ytfeed.Entry{ChannelID: r.PathValue("channel"), VideoID: r.PathValue("video")})
-	if err != nil {
+	channelID := r.PathValue("channel")
+	videoID := r.PathValue("video")
+
+	// remove from youtube store (and delete audio file)
+	if err := s.YoutubeSvc.RemoveEntry(ytfeed.Entry{ChannelID: channelID, VideoID: videoID}); err != nil {
 		rest.SendErrorJSON(w, r, log.Default(), http.StatusInternalServerError, err, "failed to remove entry")
 		return
 	}
-	rest.RenderJSON(w, rest.JSON{"status": "ok", "removed": r.PathValue("video")})
+
+	// remove from proc store (combined feed) - GUID format is "channelID::videoID"
+	guid := channelID + "::" + videoID
+	for _, feedName := range s.feeds() {
+		if err := s.Store.Remove(feedName, guid); err != nil {
+			// "not found" errors are expected - item may not exist in this feed
+			if !strings.Contains(err.Error(), "not found") {
+				log.Printf("[WARN] failed to remove %s from %s: %v", guid, feedName, err)
+			}
+		}
+	}
+
+	rest.RenderJSON(w, rest.JSON{"status": "ok", "removed": videoID})
 }
 
 func (s *Server) feeds() []string {
