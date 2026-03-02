@@ -39,8 +39,9 @@ type Conf struct {
 		SkipShorts      time.Duration      `yaml:"skip_shorts"`
 		DisableUpdates  bool               `yaml:"disable_updates"`
 		YtDlpUpdate     struct {
-			Interval time.Duration `yaml:"interval"`
-			Command  string        `yaml:"command"`
+			Interval       time.Duration `yaml:"interval"`
+			Command        string        `yaml:"command"`
+			ForceOnStartup bool          `yaml:"force_on_startup"`
 		} `yaml:"ytdlp_update"`
 	} `yaml:"youtube"`
 }
