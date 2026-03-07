@@ -45,6 +45,7 @@ type Service struct {
 
 	YtDlpUpdDuration time.Duration
 	YtDlpUpdCommand  string
+	YtDlpUpdOnStart  bool
 }
 
 // FeedInfo contains channel or feed ID, readable name and other per-feed info
@@ -94,6 +95,9 @@ type DurationService interface {
 // Do is a blocking function that downloads audio from youtube channels and updates metadata
 func (s *Service) Do(ctx context.Context) error {
 	log.Printf("[INFO] starting youtube service")
+	if s.YtDlpUpdOnStart && s.YtDlpUpdCommand != "" {
+		s.execYtdlpUpdate(ctx, s.YtDlpUpdCommand)
+	}
 	lastYtDlpUpdate := time.Now()
 	if s.SkipShorts > 0 {
 		log.Printf("[DEBUG] skip youtube episodes shorter than %v", s.SkipShorts)

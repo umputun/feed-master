@@ -68,6 +68,7 @@ youtube: # youtube configuration, optional
   ytdlp_update: 
     interval: 24h # update interval for yt-dlp. If not set, yt-dlp will not be updated 
     command: "pip3 install --break-system-packages -U yt-dlp" # update yt-dlp command
+    force_on_startup: true # force yt-dlp update on startup, before the first channel processing. Default: false
 
 system: # system configuration
   update: 1m # update interval for checking source feeds

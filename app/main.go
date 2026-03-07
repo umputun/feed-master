@@ -131,6 +131,7 @@ func main() {
 			log.Printf("[INFO] yt-dlp updater enabled, interval %s", conf.YouTube.YtDlpUpdate.Interval)
 			ytSvc.YtDlpUpdCommand = conf.YouTube.YtDlpUpdate.Command
 			ytSvc.YtDlpUpdDuration = conf.YouTube.YtDlpUpdate.Interval
+			ytSvc.YtDlpUpdOnStart = conf.YouTube.YtDlpUpdate.ForceOnStartup
 		} else {
 			log.Printf("[INFO] yt-dlp updater is disabled")
 		}
