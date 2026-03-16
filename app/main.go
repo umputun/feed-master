@@ -127,13 +127,13 @@ func main() {
 			DurationService: &duration.Service{},
 			SkipShorts:      conf.YouTube.SkipShorts,
 		}
+		ytSvc.YtDlpUpdCommand = conf.YouTube.YtDlpUpdate.Command
+		ytSvc.YtDlpUpdOnStart = conf.YouTube.YtDlpUpdate.ForceOnStartup
 		if conf.YouTube.YtDlpUpdate.Interval > 0 {
 			log.Printf("[INFO] yt-dlp updater enabled, interval %s", conf.YouTube.YtDlpUpdate.Interval)
-			ytSvc.YtDlpUpdCommand = conf.YouTube.YtDlpUpdate.Command
 			ytSvc.YtDlpUpdDuration = conf.YouTube.YtDlpUpdate.Interval
-			ytSvc.YtDlpUpdOnStart = conf.YouTube.YtDlpUpdate.ForceOnStartup
 		} else {
-			log.Printf("[INFO] yt-dlp updater is disabled")
+			log.Printf("[INFO] yt-dlp periodic updater is disabled")
 		}
 
 		go func() {
