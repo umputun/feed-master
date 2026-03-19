@@ -18,6 +18,66 @@ import (
 	"github.com/umputun/feed-master/app/youtube/mocks"
 )
 
+func TestService_DoYtDlpUpdateOnStartup(t *testing.T) {
+	tempDir := t.TempDir()
+	markerFile := filepath.Join(tempDir, "ytdlp-updated")
+
+	chans := &mocks.ChannelServiceMock{
+		GetFunc: func(_ context.Context, chanID string, _ ytfeed.Type) ([]ytfeed.Entry, error) {
+			return []ytfeed.Entry{}, nil
+		},
+	}
+
+	tmpfile := filepath.Join(tempDir, "test.db")
+	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+	require.NoError(t, err)
+	boltStore := &store.BoltDB{DB: db}
+
+	t.Run("runs update on startup when enabled", func(t *testing.T) {
+		os.Remove(markerFile)
+		svc := Service{
+			Feeds:           []FeedInfo{{ID: "ch1", Name: "n1", Type: ytfeed.FTChannel}},
+			Downloader:      &mocks.DownloaderServiceMock{},
+			ChannelService:  chans,
+			Store:           boltStore,
+			CheckDuration:   time.Millisecond * 500,
+			KeepPerChannel:  10,
+			RSSFileStore:    RSSFileStore{Enabled: false},
+			DurationService: &mocks.DurationServiceMock{FileFunc: func(string) int { return 0 }},
+			YtDlpUpdOnStart: true,
+			YtDlpUpdCommand: "touch " + markerFile,
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*600)
+		defer cancel()
+		_ = svc.Do(ctx)
+
+		assert.FileExists(t, markerFile, "yt-dlp update command should run on startup")
+	})
+
+	t.Run("skips update on startup when disabled", func(t *testing.T) {
+		os.Remove(markerFile)
+		svc := Service{
+			Feeds:           []FeedInfo{{ID: "ch1", Name: "n1", Type: ytfeed.FTChannel}},
+			Downloader:      &mocks.DownloaderServiceMock{},
+			ChannelService:  chans,
+			Store:           boltStore,
+			CheckDuration:   time.Millisecond * 500,
+			KeepPerChannel:  10,
+			RSSFileStore:    RSSFileStore{Enabled: false},
+			DurationService: &mocks.DurationServiceMock{FileFunc: func(string) int { return 0 }},
+			YtDlpUpdOnStart: false,
+			YtDlpUpdCommand: "touch " + markerFile,
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*600)
+		defer cancel()
+		_ = svc.Do(ctx)
+
+		assert.NoFileExists(t, markerFile, "yt-dlp update command should not run when force_on_startup is false")
+	})
+}
+
 func TestService_Do(t *testing.T) {
 	tempDir := t.TempDir()
 	shortVideo := filepath.Join(tempDir, "122b672d10e77708b51c041f852615dc0eedf354.mp3")
