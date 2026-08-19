@@ -323,25 +323,6 @@ func (s *BoltDB) CountProcessed() (count int) {
 	return count
 }
 
-// ListProcessed returns processed entries stored in processedBkt
-func (s *BoltDB) ListProcessed() (res []string, err error) {
-	err = s.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket(processedBkt)
-		if bucket == nil {
-			return nil
-		}
-		c := bucket.Cursor()
-		for k, v := c.Last(); k != nil; k, v = c.Prev() {
-			res = append(res, string(k)+" / "+string(v))
-		}
-		return nil
-	})
-	if err != nil {
-		return res, fmt.Errorf("view store: %w", err)
-	}
-	return res, nil
-}
-
 func (s *BoltDB) key(entry feed.Entry) ([]byte, error) {
 	h := sha1.New()
 	if _, err := h.Write([]byte(entry.VideoID)); err != nil {
