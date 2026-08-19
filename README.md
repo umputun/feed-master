@@ -115,15 +115,28 @@ In both configuration modes, user can specify a list of telegram and twitter acc
 
 _See [requests.http](https://github.com/umputun/feed-master/blob/master/requests.http)_
 
+All `GET` endpoints are public and require no authentication. The two endpoints which modify state are protected by Basic authentication with the user `admin` and the password set by `--admin-passwd`; if that option is not set, a random password is generated on startup and the protected endpoints become unreachable.
+
 ### public endpoints
 
-- `GET /rss/{name}` - returns feed-set for given feed name
-- `GET /list` - returns list of feed-sets (json)
-- `GET /image/{name}` - returns image for given feed name
-- `GET /feed/{name}/sources` - returns list of sources for given feed name
-- `GET /yt/rss/{channel}` - return RSS feed for given youtube channel
+- `GET /rss/{name}` - returns the generated RSS feed for the given feed name
+- `GET /list` - returns the list of feed-sets (json)
+- `GET /config` - returns the currently loaded configuration (json)
+- `GET /image/{name}` and `GET /images/{name}` - returns the image for the given feed name
+- `GET /feeds` - renders the page listing all feeds
+- `GET /feed/{name}` - renders the page with items of the given feed
+- `GET /feed/{name}/sources` - renders the page listing sources of the given feed
+- `GET /feed/{name}/source/{source}` - renders the page with items of the given feed coming from a single source
+- `GET /yt/rss/{channel}` - returns the RSS feed for the given youtube channel or playlist
+- `GET /yt/channels` - renders the page listing all youtube channels and playlists
+- `GET /static/{file...}` - serves the static assets of the web UI
+- `GET /ping` - health check, responds with `pong`
+
+The downloaded youtube audio files are served from the path of `youtube.base_url`, which defaults to `<system.base_url>/yt/media`.
 
 ### admin endpoints
+
+Both require Basic authentication, see above.
 
 - `POST /yt/rss/generate` - regenerate RSS feed for all youtube channels
 - `DELETE /yt/entry/{channel}/{video}` - delete youtube entry, remove associated audio file, and remove from combined feeds
