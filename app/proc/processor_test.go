@@ -31,11 +31,11 @@ func TestProcessor_DoRemoveOldItems(t *testing.T) {
 		return nil
 	}}
 
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
-	defer os.Remove(tmpfile)
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
 
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 2 * time.Second})
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
 	boltStore := &BoltDB{DB: db}
 
 	testFeed, err := os.ReadFile("./testdata/rss1.xml")
@@ -170,11 +170,11 @@ func TestProcessor_DoLoadMaxItems(t *testing.T) {
 		return nil
 	}}
 
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
-	defer os.Remove(tmpfile)
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
 
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
 	boltStore := &BoltDB{DB: db}
 
 	testFeed, err := os.ReadFile("./testdata/rss2.xml")
@@ -272,11 +272,11 @@ func TestProcessor_DoSkipItems(t *testing.T) {
 		return nil
 	}}
 
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
-	defer os.Remove(tmpfile)
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
 
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
 	boltStore := &BoltDB{DB: db}
 
 	testFeed, err := os.ReadFile("./testdata/rss1.xml")
