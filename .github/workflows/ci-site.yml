@@ -18,13 +18,16 @@ on:
       - "README.md"
       - "Dockerfile.site"
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: validate site files
         run: |
