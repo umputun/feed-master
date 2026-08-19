@@ -5,6 +5,9 @@ on:
     workflows: [build]
     types: [completed]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     if: >-
@@ -29,29 +32,29 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: login to ghcr.io
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.PKG_TOKEN }}
 
       - name: login to dockerhub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: umputun
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: build and push to ghcr.io by digest
         id: build-ghcr
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
@@ -63,7 +66,7 @@ jobs:
 
       - name: build and push to dockerhub by digest
         id: build-dockerhub
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
@@ -82,14 +85,14 @@ jobs:
           touch "/tmp/digests/dockerhub/${digest_dockerhub#sha256:}"
 
       - name: upload ghcr digest
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: digests-ghcr-${{ matrix.artifact }}
           path: /tmp/digests/ghcr/*
           retention-days: 1
 
       - name: upload dockerhub digest
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: digests-dockerhub-${{ matrix.artifact }}
           path: /tmp/digests/dockerhub/*
@@ -104,14 +107,14 @@ jobs:
 
     steps:
       - name: download ghcr digests
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: /tmp/digests/ghcr
           pattern: digests-ghcr-*
           merge-multiple: true
 
       - name: download dockerhub digests
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: /tmp/digests/dockerhub
           pattern: digests-dockerhub-*
@@ -131,17 +134,17 @@ jobs:
           echo "All digests present: ghcr=$actual_ghcr, dockerhub=$actual_dockerhub"
 
       - name: set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: login to ghcr.io
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.PKG_TOKEN }}
 
       - name: login to dockerhub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: umputun
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
