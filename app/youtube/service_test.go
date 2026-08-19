@@ -208,8 +208,7 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 		},
 	}
 
-	tmpfile := filepath.Join(os.TempDir(), "test.db")
-	defer os.Remove(tmpfile)
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
 
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 5 * time.Second})
 	require.NoError(t, err)

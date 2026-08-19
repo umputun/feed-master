@@ -30,7 +30,9 @@ func TestServer_Run(t *testing.T) {
 	go func() {
 		time.Sleep(time.Millisecond * 100)
 		resp, err := http.Get(fmt.Sprintf("http://localhost:%d/ping", port))
-		assert.NoError(t, err)
+		if !assert.NoError(t, err) {
+			return
+		}
 		defer resp.Body.Close()
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 		t.Logf("%+v", resp.Header)
