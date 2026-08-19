@@ -27,9 +27,12 @@ func TestServer_Run(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	port := rand.Intn(10000) + 4000 //nolint:gosec // math/rand is fine for test port selection
+	done := make(chan struct{})
 	go func() {
+		defer close(done)
 		time.Sleep(time.Millisecond * 100)
-		resp, err := http.Get(fmt.Sprintf("http://localhost:%d/ping", port))
+		client := &http.Client{Timeout: 5 * time.Second}
+		resp, err := client.Get(fmt.Sprintf("http://localhost:%d/ping", port))
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -40,6 +43,7 @@ func TestServer_Run(t *testing.T) {
 		assert.Equal(t, "feed-master", resp.Header.Get("App-Name"))
 	}()
 	s.Run(ctx, port)
+	<-done
 }
 
 func TestServer_getFeedCtrl(t *testing.T) {

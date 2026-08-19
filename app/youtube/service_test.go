@@ -31,6 +31,7 @@ func TestService_DoYtDlpUpdateOnStartup(t *testing.T) {
 	tmpfile := filepath.Join(tempDir, "test.db")
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
 	boltStore := &store.BoltDB{DB: db}
 
 	t.Run("runs update on startup when enabled", func(t *testing.T) {
@@ -114,6 +115,7 @@ func TestService_Do(t *testing.T) {
 
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
 	boltStore := &store.BoltDB{DB: db}
 	svc := Service{
 		Feeds: []FeedInfo{
@@ -187,6 +189,8 @@ func TestService_Do(t *testing.T) {
 }
 
 func TestService_DoIsAllowedFilter(t *testing.T) {
+	tempDir := t.TempDir()
+
 	chans := &mocks.ChannelServiceMock{
 		GetFunc: func(_ context.Context, chanID string, _ ytfeed.Type) ([]ytfeed.Entry, error) {
 			return []ytfeed.Entry{
@@ -198,7 +202,7 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 	}
 	downloader := &mocks.DownloaderServiceMock{
 		GetFunc: func(_ context.Context, _ string, fname string) (string, error) {
-			return "/tmp/" + fname + ".mp3", nil
+			return filepath.Join(tempDir, fname+".mp3"), nil
 		},
 	}
 
@@ -208,10 +212,11 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 		},
 	}
 
-	tmpfile := filepath.Join(t.TempDir(), "test.db")
+	tmpfile := filepath.Join(tempDir, "test.db")
 
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 5 * time.Second})
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
 	boltStore := &store.BoltDB{DB: db}
 	svc := Service{
 		Feeds: []FeedInfo{
@@ -223,7 +228,7 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 		Store:           boltStore,
 		CheckDuration:   time.Millisecond * 500,
 		KeepPerChannel:  10,
-		RSSFileStore:    RSSFileStore{Enabled: true, Location: "/tmp"},
+		RSSFileStore:    RSSFileStore{Enabled: true, Location: tempDir},
 		DurationService: duration,
 	}
 
@@ -258,13 +263,13 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 	require.Equal(t, "vid2", downloader.GetCalls()[2].ID)
 	require.NotEmpty(t, downloader.GetCalls()[0].Fname)
 
-	rssData, err := os.ReadFile("/tmp/channel1.xml")
+	rssData, err := os.ReadFile(filepath.Join(tempDir, "channel1.xml")) //nolint:gosec // test file path
 	require.NoError(t, err)
 	t.Logf("%s", string(rssData))
 	assert.Contains(t, string(rssData), "<guid>channel1::vid2</guid>")
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
-	rssData, err = os.ReadFile("/tmp/channel2.xml")
+	rssData, err = os.ReadFile(filepath.Join(tempDir, "channel2.xml")) //nolint:gosec // test file path
 	require.NoError(t, err)
 	t.Logf("%s", string(rssData))
 	assert.Contains(t, string(rssData), "<guid>channel2::vid2</guid>")
@@ -272,9 +277,9 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 	assert.Contains(t, string(rssData), "<itunes:duration>1234</itunes:duration>")
 
 	require.Len(t, duration.FileCalls(), 3)
-	assert.Equal(t, "/tmp/4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3", duration.FileCalls()[0].Fname)
-	assert.Equal(t, "/tmp/3be877c750abb87daee80c005fe87e7a3f824fed.mp3", duration.FileCalls()[1].Fname)
-	assert.Equal(t, "/tmp/648f79b3a05ececb8a37600aa0aee332f0374e01.mp3", duration.FileCalls()[2].Fname)
+	assert.Equal(t, filepath.Join(tempDir, "4308c33c7ddb107c2d0c13a905e4c6962001bab4.mp3"), duration.FileCalls()[0].Fname)
+	assert.Equal(t, filepath.Join(tempDir, "3be877c750abb87daee80c005fe87e7a3f824fed.mp3"), duration.FileCalls()[1].Fname)
+	assert.Equal(t, filepath.Join(tempDir, "648f79b3a05ececb8a37600aa0aee332f0374e01.mp3"), duration.FileCalls()[2].Fname)
 }
 
 func TestService_RSSFeed(t *testing.T) {
