@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -49,11 +50,15 @@ func TestService_DoYtDlpUpdateOnStartup(t *testing.T) {
 			YtDlpUpdCommand: "touch " + markerFile,
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*600)
-		defer cancel()
-		_ = svc.Do(ctx)
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+		go func() { defer close(done); _ = svc.Do(ctx) }()
+		t.Cleanup(func() { cancel(); <-done })
 
-		assert.FileExists(t, markerFile, "yt-dlp update command should run on startup")
+		require.Eventually(t, func() bool { _, e := os.Stat(markerFile); return e == nil },
+			time.Second*5, time.Millisecond*10, "yt-dlp update command should run on startup")
+		cancel()
+		<-done
 	})
 
 	t.Run("skips update on startup when disabled", func(t *testing.T) {
@@ -71,15 +76,64 @@ func TestService_DoYtDlpUpdateOnStartup(t *testing.T) {
 			YtDlpUpdCommand: "touch " + markerFile,
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*600)
-		defer cancel()
-		_ = svc.Do(ctx)
+		before := len(chans.GetCalls())
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+		go func() { defer close(done); _ = svc.Do(ctx) }()
+		t.Cleanup(func() { cancel(); <-done })
+
+		require.Eventually(t, func() bool { return len(chans.GetCalls()) > before },
+			time.Second*5, time.Millisecond*10, "startup update decision happens before the first channel poll")
+		cancel()
+		<-done
 
 		assert.NoFileExists(t, markerFile, "yt-dlp update command should not run when force_on_startup is false")
 	})
 }
 
 func TestService_Do(t *testing.T) {
+	run := func(t *testing.T, checkDuration time.Duration, wantPolls int32) {
+		var polls atomic.Int32
+		chans := &mocks.ChannelServiceMock{
+			GetFunc: func(_ context.Context, _ string, _ ytfeed.Type) ([]ytfeed.Entry, error) {
+				polls.Add(1)
+				return nil, nil
+			},
+		}
+
+		tempDir := t.TempDir()
+		db, err := bolt.Open(filepath.Join(tempDir, "test.db"), 0o600, &bolt.Options{Timeout: 5 * time.Second})
+		require.NoError(t, err)
+		t.Cleanup(func() { _ = db.Close() })
+
+		svc := Service{
+			Feeds:           []FeedInfo{{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel}},
+			Downloader:      &mocks.DownloaderServiceMock{},
+			ChannelService:  chans,
+			Store:           &store.BoltDB{DB: db},
+			CheckDuration:   checkDuration,
+			KeepPerChannel:  10,
+			DurationService: &mocks.DurationServiceMock{FileFunc: func(string) int { return 0 }},
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		res := make(chan error, 1)
+		done := make(chan struct{})
+		go func() { defer close(done); res <- svc.Do(ctx) }()
+		t.Cleanup(func() { cancel(); <-done })
+
+		require.Eventually(t, func() bool { return polls.Load() >= wantPolls },
+			time.Second*5, time.Millisecond*5)
+		cancel()
+		<-done
+		require.ErrorIs(t, <-res, context.Canceled)
+	}
+
+	t.Run("processes channels before the first tick", func(t *testing.T) { run(t, time.Hour, 1) })
+	t.Run("polls again on each tick", func(t *testing.T) { run(t, time.Millisecond*10, 3) })
+}
+
+func TestService_procChannels(t *testing.T) {
 	tempDir := t.TempDir()
 	shortVideo := filepath.Join(tempDir, "122b672d10e77708b51c041f852615dc0eedf354.mp3")
 	chans := &mocks.ChannelServiceMock{
@@ -125,18 +179,14 @@ func TestService_Do(t *testing.T) {
 		Downloader:      downloader,
 		ChannelService:  chans,
 		Store:           boltStore,
-		CheckDuration:   time.Millisecond * 500,
 		KeepPerChannel:  10,
 		RSSFileStore:    RSSFileStore{Enabled: true, Location: tempDir},
 		DurationService: duration,
 		SkipShorts:      time.Second * 60,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*900)
-	defer cancel()
-
-	err = svc.Do(ctx)
-	require.EqualError(t, err, "youtube service stopped: context deadline exceeded")
+	require.NoError(t, svc.procChannels(context.Background()))
+	require.NoError(t, svc.procChannels(context.Background()))
 
 	require.Len(t, chans.GetCalls(), 4)
 	assert.Equal(t, "channel1", chans.GetCalls()[0].ChanID)
@@ -188,7 +238,7 @@ func TestService_Do(t *testing.T) {
 	assert.FileExists(t, filepath.Join(tempDir, "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3"), "non short video should exist")
 }
 
-func TestService_DoIsAllowedFilter(t *testing.T) {
+func TestService_procChannelsIsAllowedFilter(t *testing.T) {
 	tempDir := t.TempDir()
 
 	chans := &mocks.ChannelServiceMock{
@@ -226,17 +276,13 @@ func TestService_DoIsAllowedFilter(t *testing.T) {
 		Downloader:      downloader,
 		ChannelService:  chans,
 		Store:           boltStore,
-		CheckDuration:   time.Millisecond * 500,
 		KeepPerChannel:  10,
 		RSSFileStore:    RSSFileStore{Enabled: true, Location: tempDir},
 		DurationService: duration,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*900)
-	defer cancel()
-
-	err = svc.Do(ctx)
-	require.EqualError(t, err, "youtube service stopped: context deadline exceeded")
+	require.NoError(t, svc.procChannels(context.Background()))
+	require.NoError(t, svc.procChannels(context.Background()))
 
 	require.Len(t, chans.GetCalls(), 4)
 	assert.Equal(t, "channel1", chans.GetCalls()[0].ChanID)

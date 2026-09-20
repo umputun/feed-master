@@ -24,7 +24,7 @@ func TestChannel_Get(t *testing.T) {
 		assert.NoError(t, e)
 	}))
 
-	c := Feed{Client: &http.Client{Timeout: time.Second},
+	c := Feed{Client: &http.Client{},
 		ChannelBaseURL: ts.URL + "/blah?channel_id=", PlaylistBaseURL: ts.URL + "/blah?playlist_id="}
 
 	res, err := c.Get(context.Background(), "UCPU28A9z_ka_R5dQfecHJlA", FTChannel)
