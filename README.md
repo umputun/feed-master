@@ -66,7 +66,7 @@ youtube: # youtube configuration, optional
       - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel", lang: "ru-ru", "keep": 10}
       - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru", filter: {include: "ТОЧКА", exclude: "STAR'цы Live"}} 
   ytdlp_update: 
-    interval: 24h # update interval for yt-dlp. If not set, yt-dlp will not be updated 
+    interval: 24h # update interval for yt-dlp. If not set, only force_on_startup can trigger an update 
     command: "pip3 install --break-system-packages -U yt-dlp" # update yt-dlp command
     force_on_startup: true # force yt-dlp update on startup, before the first channel processing. Default: false
 
