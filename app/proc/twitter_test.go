@@ -67,6 +67,11 @@ func TestCleanText(t *testing.T) {
 		{"test 12345 aaaa", "test ...", 10},
 		{"<b>test 12345 aaaa</b>", "test ...", 10},
 		{"<b>test12345 aaaa</b>", "test12 ...", 10},
+		// a limit under 4 leaves no room for the " ..." suffix and used to index negative
+		{"hello", "hel", 3},
+		{"hello", "h", 1},
+		{"hello", "", 0},
+		{"hello", "", -47},
 	}
 
 	for i, tt := range tbl {
