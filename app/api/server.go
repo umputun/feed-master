@@ -252,7 +252,7 @@ func (s *Server) getFeedCtrl(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/xml; charset=UTF-8")
-	_, _ = fmt.Fprintf(w, "%s", data)
+	_, _ = fmt.Fprintf(w, "%s", data) //nolint:gosec // encoding/xml output served as application/xml
 }
 
 // GET /image/{name}
