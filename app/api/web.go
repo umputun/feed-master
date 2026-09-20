@@ -77,7 +77,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data)
+	_, _ = w.Write(data) //nolint:gosec // html/template output; feed.tmpl descriptions use quoted title attributes
 }
 
 // GET /feed/{name}/source/{source} - renders feed's source page with list of items
@@ -158,7 +158,7 @@ func (s *Server) getFeedSourceCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data)
+	_, _ = w.Write(data) //nolint:gosec // html/template output; source.tmpl descriptions use quoted title attributes
 }
 
 // GET /feeds - renders page with list of feeds
@@ -305,7 +305,7 @@ func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(data)
+	_, _ = w.Write(data) //nolint:gosec // html/template escapes source names and URLs
 }
 
 func (s *Server) renderErrorPage(w http.ResponseWriter, _ *http.Request, err error, errCode int) {

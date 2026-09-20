@@ -598,7 +598,7 @@ func (s *Service) updateMp3Tags(file string, entry ytfeed.Entry, fi FeedInfo) er
 
 func (s *Service) execYtdlpUpdate(ctx context.Context, updCmd string) {
 	log.Printf("[INFO] executing yt-dlp update command %s", s.YtDlpUpdCommand)
-	cmd := exec.CommandContext(ctx, "sh", "-c", updCmd)
+	cmd := exec.CommandContext(ctx, "sh", "-c", updCmd) //nolint:gosec // shell command from operator-controlled config
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = log.ToWriter(log.Default(), "DEBUG")
 	cmd.Stderr = log.ToWriter(log.Default(), "INFO")
