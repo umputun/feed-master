@@ -59,9 +59,18 @@ func (t *TwitterClient) Send(item feed.Item) error {
 // CleanText removes html tags and shrinks result
 func CleanText(inp string, maximum int) string {
 	res := striphtmltags.StripTags(inp)
-	if len([]rune(res)) > maximum {
+	runes := []rune(res)
+	if len(runes) > maximum {
+		// the branch below reserves 4 symbols for the " ..." suffix, so a smaller limit has no room
+		// for it and would index negative
+		if maximum < 4 {
+			if maximum <= 0 {
+				return ""
+			}
+			return string(runes[:maximum])
+		}
 		// 4 symbols reserved for space and three dots on the end
-		snippet := []rune(res)[:maximum-4]
+		snippet := runes[:maximum-4]
 		// go back in snippet and found first space
 		for i := range slices.Backward(snippet) {
 			if snippet[i] == ' ' {
