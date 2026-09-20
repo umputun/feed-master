@@ -55,7 +55,7 @@ youtube: # youtube configuration, optional
   base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id=" # base url for youtube playlist
   update: 60s # update interval for youtube feeds
   skip_shorts: 120s # skip videos (and audios) shorter than this value, optional
-  max_per_channel: 2 # max number of the latest videos per yt channel to download and process
+  max_per_channel: 2 # item limit for the channel source page and fallback RSS generation, not a download limit
   files_location: ./var/yt # location for downloaded youtube files
   rss_location: ./var/rss # location for generated youtube channel's RSS
   channels: # list of youtube channels to download and process
@@ -73,13 +73,22 @@ youtube: # youtube configuration, optional
 system: # system configuration
   update: 1m # update interval for checking source feeds
   http_response_timeout: 30s # http response timeout
-  max_per_feed: 10 # max items per feed to be processed and inclueded in the final RSS
+  max_per_feed: 10 # max items per feed to be processed and included in the final RSS, also the default keep for yt channels
   max_total: 50 # max total items to be included in the final RSS
   max_keep: 1000 # max items to be kept in the internal database 
   base_url: http://localhost:8080 # base url for the generated RSS and media files
 ```
 
 _see [examples](https://github.com/umputun/feed-master/tree/master/_example/etc) for more details._
+
+**YouTube item limits.** Each channel's `keep` is the limit that matters. It caps how many entries are
+processed per poll and how many items `/yt/rss/{channel}` returns, and retention cleanup keeps up to
+`keep + 1` stored entries. A channel with no explicit `keep` falls back to `system.max_per_feed`, not to
+`youtube.max_per_channel`.
+
+The upstream YouTube feed returns only a window of recent entries per channel, so a limit above that
+window does not fetch more videos in a single poll. It raises how many collected entries are retained
+and served over time.
 
 ### Single-feed configuration
 
