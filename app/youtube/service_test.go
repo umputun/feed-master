@@ -114,6 +114,7 @@ func TestService_Do(t *testing.T) {
 			CheckDuration:   checkDuration,
 			KeepPerChannel:  10,
 			DurationService: &mocks.DurationServiceMock{FileFunc: func(string) int { return 0 }},
+			SkipShorts:      time.Second * 60,
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
