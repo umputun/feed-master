@@ -84,3 +84,77 @@ func TestFeed_url(t *testing.T) {
 		})
 	}
 }
+
+func TestFeed_GetFallsBackToAPI(t *testing.T) {
+	apiJSON, err := os.ReadFile("testdata/playlist_items.json")
+	require.NoError(t, err)
+
+	feedSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer feedSrv.Close()
+
+	var gotPlaylistID, gotKey string
+	apiSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/playlistItems", r.URL.Path)
+		assert.Empty(t, r.URL.Query().Get("key"), "api key must not be in the url")
+		gotPlaylistID = r.URL.Query().Get("playlistId")
+		gotKey = r.Header.Get("X-Goog-Api-Key")
+		if gotKey != "good-key" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		_, e := w.Write(apiJSON)
+		assert.NoError(t, e)
+	}))
+	defer apiSrv.Close()
+
+	tbl := []struct {
+		name           string
+		id             string
+		feedType       Type
+		apiKey         string
+		wantPlaylistID string
+		wantErr        bool
+	}{
+		{name: "channel", id: "UCPU28A9z_ka_R5dQfecHJlA", feedType: FTChannel, apiKey: "good-key",
+			wantPlaylistID: "UUPU28A9z_ka_R5dQfecHJlA"},
+		{name: "default type is a channel", id: "UCPU28A9z_ka_R5dQfecHJlA", feedType: FTDefault, apiKey: "good-key",
+			wantPlaylistID: "UUPU28A9z_ka_R5dQfecHJlA"},
+		{name: "playlist", id: "PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab", feedType: FTPlaylist, apiKey: "good-key",
+			wantPlaylistID: "PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab"},
+		{name: "no api key keeps the feed error", id: "UCPU28A9z_ka_R5dQfecHJlA", feedType: FTChannel, wantErr: true},
+		{name: "api error", id: "UCPU28A9z_ka_R5dQfecHJlA", feedType: FTChannel, apiKey: "bad-key", wantErr: true},
+	}
+
+	for _, tt := range tbl {
+		t.Run(tt.name, func(t *testing.T) {
+			gotPlaylistID, gotKey = "", ""
+			c := Feed{Client: &http.Client{}, ChannelBaseURL: feedSrv.URL + "/?channel_id=",
+				PlaylistBaseURL: feedSrv.URL + "/?playlist_id=", APIKey: tt.apiKey, APIBaseURL: apiSrv.URL}
+
+			res, err := c.Get(context.Background(), tt.id, tt.feedType)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantPlaylistID, gotPlaylistID)
+			assert.Equal(t, tt.apiKey, gotKey)
+
+			require.Len(t, res, 2, "private video without a publish date is skipped")
+			first := res[0]
+			assert.Equal(t, "vid3", first.VideoID, "newest first")
+			assert.Equal(t, tt.id, first.ChannelID)
+			assert.Equal(t, "Newer video", first.Title)
+			assert.Equal(t, "2026-09-25T13:35:02Z", first.Published.Format(time.RFC3339))
+			assert.Equal(t, first.Published, first.Updated)
+			assert.Equal(t, "https://www.youtube.com/watch?v=vid3", first.Link.Href)
+			assert.Equal(t, "https://i.ytimg.com/vi/vid3/hqdefault.jpg", first.Media.Thumbnail.URL)
+			assert.Equal(t, "Test Channel", first.Author.Name)
+			assert.Equal(t, "https://www.youtube.com/channel/UCPU28A9z_ka_R5dQfecHJlA", first.Author.URI)
+			assert.Equal(t, "vid1", res[1].VideoID)
+			assert.Equal(t, "first line &amp; second", string(res[1].Media.Description))
+		})
+	}
+}

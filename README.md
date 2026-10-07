@@ -53,6 +53,7 @@ youtube: # youtube configuration, optional
   dl_template: yt-dlp --extract-audio --audio-format=mp3 --audio-quality=0 -f m4a/bestaudio "https://www.youtube.com/watch?v={{.ID}}" --no-progress -o {{.FileName}} # template for youtube-dl
   base_chan_url: "https://www.youtube.com/feeds/videos.xml?channel_id=" # base url for youtube channel
   base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id=" # base url for youtube playlist
+  api_key: "" # youtube data api key, optional. used to read channels/playlists when the RSS feed request fails
   update: 60s # update interval for youtube feeds
   skip_shorts: 120s # skip videos (and audios) shorter than this value, optional
   max_per_channel: 2 # item limit for the channel source page and fallback RSS generation, not a download limit

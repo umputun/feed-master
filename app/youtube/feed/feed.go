@@ -3,12 +3,17 @@ package feed
 
 import (
 	"context"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"sort"
+	"strings"
 	"time"
+
+	log "github.com/go-pkgz/lgr"
 )
 
 // Feed represents a YouTube channel feed.
@@ -16,7 +21,13 @@ type Feed struct {
 	Client          *http.Client
 	ChannelBaseURL  string
 	PlaylistBaseURL string
+	// APIKey is an optional YouTube Data API key, used to read the same videos through the API
+	// when the RSS feed request fails
+	APIKey     string
+	APIBaseURL string // defaults to youtubeAPIBaseURL, overridden in tests
 }
+
+const youtubeAPIBaseURL = "https://www.googleapis.com/youtube/v3"
 
 // Type represents the type of YouTube feed.
 type Type string
@@ -46,6 +57,11 @@ func (c *Feed) Get(ctx context.Context, id string, feedType Type) ([]Entry, erro
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
+		if c.APIKey != "" {
+			// youtube's feeds/videos.xml can return 404 for every channel; fall back to the data api
+			log.Printf("[WARN] feed for %s returned %s, reading it with the youtube api", id, resp.Status)
+			return c.getFromAPI(ctx, id, feedType)
+		}
 		return nil, fmt.Errorf("failed to get %s: %s", id, resp.Status)
 	}
 	data := struct {
@@ -66,6 +82,86 @@ func (c *Feed) Get(ctx context.Context, id string, feedType Type) ([]Entry, erro
 	}
 
 	return data.Entry, nil
+}
+
+// getFromAPI reads the latest videos of a channel (its uploads playlist) or playlist with the
+// youtube data api playlistItems.list call (1 quota unit) and returns them as feed entries
+func (c *Feed) getFromAPI(ctx context.Context, id string, feedType Type) ([]Entry, error) {
+	playlistID := id
+	if feedType != FTPlaylist {
+		// a channel's uploads playlist id is its channel id with UC replaced by UU
+		playlistID = "UU" + strings.TrimPrefix(id, "UC")
+	}
+
+	baseURL := c.APIBaseURL
+	if baseURL == "" {
+		baseURL = youtubeAPIBaseURL
+	}
+	query := url.Values{}
+	query.Set("part", "snippet,contentDetails")
+	query.Set("maxResults", "50")
+	query.Set("playlistId", playlistID)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL+"/playlistItems?"+query.Encode(), http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create api request for %s: %w", id, err)
+	}
+	req.Header.Set("X-Goog-Api-Key", c.APIKey) // header, so the key never shows up in logged urls
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get %s from youtube api: %w", id, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get %s from youtube api: %s", id, resp.Status)
+	}
+
+	data := struct {
+		Items []struct {
+			Snippet struct {
+				Title                  string `json:"title"`
+				Description            string `json:"description"`
+				VideoOwnerChannelTitle string `json:"videoOwnerChannelTitle"`
+				VideoOwnerChannelID    string `json:"videoOwnerChannelId"`
+				Thumbnails             map[string]struct {
+					URL string `json:"url"`
+				} `json:"thumbnails"`
+			} `json:"snippet"`
+			ContentDetails struct {
+				VideoID          string    `json:"videoId"`
+				VideoPublishedAt time.Time `json:"videoPublishedAt"`
+			} `json:"contentDetails"`
+		} `json:"items"`
+	}{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, fmt.Errorf("failed to decode youtube api response for %s: %w", id, err)
+	}
+
+	entries := make([]Entry, 0, len(data.Items))
+	for _, item := range data.Items {
+		// private and deleted videos stay in playlists without a publish date
+		if item.ContentDetails.VideoPublishedAt.IsZero() {
+			continue
+		}
+		e := Entry{
+			ChannelID: id,
+			VideoID:   item.ContentDetails.VideoID,
+			Title:     item.Snippet.Title,
+			Published: item.ContentDetails.VideoPublishedAt,
+			Updated:   item.ContentDetails.VideoPublishedAt,
+		}
+		e.Link.Href = "https://www.youtube.com/watch?v=" + item.ContentDetails.VideoID
+		e.Media.Description = template.HTML(template.HTMLEscapeString(item.Snippet.Description)) //nolint:gosec // escaped above
+		e.Media.Thumbnail.URL = item.Snippet.Thumbnails["high"].URL
+		e.Author.Name = item.Snippet.VideoOwnerChannelTitle
+		e.Author.URI = "https://www.youtube.com/channel/" + item.Snippet.VideoOwnerChannelID
+		entries = append(entries, e)
+	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Published.After(entries[j].Published)
+	})
+	return entries, nil
 }
 
 func (c *Feed) url(id string, feedType Type) (string, error) {

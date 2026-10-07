@@ -1,0 +1,33 @@
+{
+  "kind": "youtube#playlistItemListResponse",
+  "items": [
+    {
+      "snippet": {
+        "title": "Older video",
+        "description": "first line & second",
+        "videoOwnerChannelTitle": "Test Channel",
+        "videoOwnerChannelId": "UCPU28A9z_ka_R5dQfecHJlA",
+        "thumbnails": {"high": {"url": "https://i.ytimg.com/vi/vid1/hqdefault.jpg"}}
+      },
+      "contentDetails": {"videoId": "vid1", "videoPublishedAt": "2026-09-18T17:12:53Z"}
+    },
+    {
+      "snippet": {
+        "title": "Private video",
+        "description": "This video is private.",
+        "thumbnails": {}
+      },
+      "contentDetails": {"videoId": "vid2"}
+    },
+    {
+      "snippet": {
+        "title": "Newer video",
+        "description": "",
+        "videoOwnerChannelTitle": "Test Channel",
+        "videoOwnerChannelId": "UCPU28A9z_ka_R5dQfecHJlA",
+        "thumbnails": {"high": {"url": "https://i.ytimg.com/vi/vid3/hqdefault.jpg"}}
+      },
+      "contentDetails": {"videoId": "vid3", "videoPublishedAt": "2026-09-25T13:35:02Z"}
+    }
+  ]
+}

@@ -103,7 +103,8 @@ func main() {
 		errWr := log.ToWriter(log.Default(), "INFO")
 		dwnl := ytfeed.NewDownloader(conf.YouTube.DlTemplate, outWr, errWr, conf.YouTube.FilesLocation)
 		fd := ytfeed.Feed{Client: &http.Client{Timeout: 10 * time.Second},
-			ChannelBaseURL: conf.YouTube.BaseChanURL, PlaylistBaseURL: conf.YouTube.BasePlaylistURL}
+			ChannelBaseURL: conf.YouTube.BaseChanURL, PlaylistBaseURL: conf.YouTube.BasePlaylistURL,
+			APIKey: conf.YouTube.APIKey}
 
 		channels := make([]string, 0, len(conf.YouTube.Channels))
 		for _, c := range conf.YouTube.Channels {

@@ -30,6 +30,7 @@ type Conf struct {
 		DlTemplate      string             `yaml:"dl_template"`
 		BaseChanURL     string             `yaml:"base_chan_url"`
 		BasePlaylistURL string             `yaml:"base_playlist_url"`
+		APIKey          string             `yaml:"api_key"`
 		Channels        []youtube.FeedInfo `yaml:"channels"`
 		BaseURL         string             `yaml:"base_url"`
 		UpdateInterval  time.Duration      `yaml:"update"`
