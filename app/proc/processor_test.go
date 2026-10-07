@@ -21,6 +21,69 @@ import (
 	"github.com/umputun/feed-master/app/youtube"
 )
 
+func TestProcessor_ProcessAtomFeed(t *testing.T) {
+	published := time.Now().UTC().Truncate(time.Second)
+	timestamp := published.Format(time.RFC3339)
+	content := `<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Example feed</title>
+  <id>urn:example:feed</id>
+  <updated>` + timestamp + `</updated>
+  <entry>
+    <title>First entry</title>
+    <id>urn:example:first</id>
+    <link href="https://example.org/first"/>
+    <updated>` + timestamp + `</updated>
+    <summary>First content</summary>
+  </entry>
+  <entry>
+    <title>Second entry</title>
+    <id>urn:example:second</id>
+    <link href="https://example.org/second"/>
+    <updated>` + timestamp + `</updated>
+    <summary>Second content</summary>
+  </entry>
+</feed>`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/atom+xml")
+		_, err := w.Write([]byte(content))
+		assert.NoError(t, err)
+	}))
+	defer ts.Close()
+
+	db, err := bolt.Open(filepath.Join(t.TempDir(), "atom.db"), 0o600, &bolt.Options{Timeout: time.Second})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
+	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(string, feed.Item) error { return nil }}
+	twitterNotif := &mocks.TwitterNotifMock{SendFunc: func(feed.Item) error { return nil }}
+	conf := &config.Conf{}
+	conf.System.MaxKeepInDB = 10
+	processor := Processor{
+		Conf:          conf,
+		Store:         &BoltDB{DB: db},
+		TelegramNotif: tgNotif,
+		TwitterNotif:  twitterNotif,
+	}
+
+	processor.processFeed("atom", ts.URL, "channel", 10, config.Filter{})
+	items, err := processor.Store.Load("atom", 10, false)
+	require.NoError(t, err)
+	require.Len(t, items, 2)
+	assert.ElementsMatch(t, []string{"urn:example:first", "urn:example:second"}, []string{items[0].GUID, items[1].GUID})
+	for _, item := range items {
+		assert.Equal(t, published.Format(time.RFC1123Z), item.PubDate)
+		assert.True(t, published.Equal(item.DT), "got stored time %s", item.DT)
+	}
+	require.Len(t, tgNotif.SendCalls(), 2)
+	require.Len(t, twitterNotif.SendCalls(), 2)
+
+	processor.processFeed("atom", ts.URL, "channel", 10, config.Filter{})
+	items, err = processor.Store.Load("atom", 10, false)
+	require.NoError(t, err)
+	assert.Len(t, items, 2)
+	assert.Len(t, tgNotif.SendCalls(), 2)
+	assert.Len(t, twitterNotif.SendCalls(), 2)
+}
+
 func TestProcessor_DoRemoveOldItems(t *testing.T) {
 	lgr.Setup(lgr.Debug)
 	tgNotif := &mocks.TelegramNotifMock{SendFunc: func(string, feed.Item) error {
