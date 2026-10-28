@@ -17,7 +17,8 @@ type BoltDB struct {
 	DB *bolt.DB
 }
 
-// Save to bolt, skip if found
+// Save to bolt, skip if found. An item with a non-empty GUID already stored under another
+// pubdate counts as found, so a re-dated entry keeps its first copy and is not reported as created.
 func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
 	var created bool
 
@@ -45,6 +46,10 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
 		if bucket.Get(key) != nil {
 			return nil
 		}
+		if item.GUID != "" && b.hasGUID(bucket, item.GUID) {
+			log.Printf("[DEBUG] skip %s - %s, guid already stored under another pubdate", fmFeed, item.GUID)
+			return nil
+		}
 
 		jdata, jerr := json.Marshal(&item)
 		if jerr != nil {
@@ -65,6 +70,20 @@ func (b BoltDB) Save(fmFeed string, item feed.Item) (bool, error) {
 		return created, fmt.Errorf("update db: %w", err)
 	}
 	return created, nil
+}
+
+func (b BoltDB) hasGUID(bucket *bolt.Bucket, guid string) bool {
+	c := bucket.Cursor()
+	for _, v := c.First(); v != nil; _, v = c.Next() {
+		var rec struct{ GUID string }
+		if err := json.Unmarshal(v, &rec); err != nil {
+			continue
+		}
+		if rec.GUID == guid {
+			return true
+		}
+	}
+	return false
 }
 
 // Load from bold for given feed, up to max
