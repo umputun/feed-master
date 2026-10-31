@@ -248,6 +248,37 @@ func TestBoltDB_SetProcessed(t *testing.T) {
 	assert.False(t, found)
 }
 
+func TestBoltDB_FirstSeen(t *testing.T) {
+	tmpfile := filepath.Join(t.TempDir(), "test.db")
+	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})
+	require.NoError(t, err)
+	s := BoltDB{DB: db}
+
+	entry := feed.Entry{ChannelID: "chan1", VideoID: "vid1", Published: time.Date(2026, time.October, 27, 19, 11, 44, 0, time.UTC)}
+	first := time.Date(2026, time.October, 27, 19, 17, 36, 123, time.UTC)
+
+	found, _, err := s.CheckFirstSeen(entry)
+	require.NoError(t, err)
+	assert.False(t, found)
+
+	require.NoError(t, s.SetFirstSeen(entry, first))
+	require.NoError(t, s.SetFirstSeen(entry, first.Add(26*time.Hour)))
+
+	found, ts, err := s.CheckFirstSeen(entry)
+	require.NoError(t, err)
+	assert.True(t, found)
+	assert.True(t, ts.Equal(first), "first sighting kept, got %v", ts)
+
+	found, _, err = s.CheckFirstSeen(feed.Entry{ChannelID: "chan1", VideoID: "vid2"})
+	require.NoError(t, err)
+	assert.False(t, found)
+
+	require.NoError(t, s.SetProcessed(entry))
+	found, _, err = s.CheckFirstSeen(entry)
+	require.NoError(t, err)
+	assert.False(t, found, "processed entry drops first sighting")
+}
+
 func TestBoltDB_Last(t *testing.T) {
 	tmpfile := filepath.Join(t.TempDir(), "test.db")
 	db, err := bolt.Open(tmpfile, 0o600, &bolt.Options{Timeout: 1 * time.Second})

@@ -85,6 +85,8 @@ type StoreService interface {
 	ResetProcessed(entry ytfeed.Entry) error
 	CheckProcessed(entry ytfeed.Entry) (found bool, ts time.Time, err error)
 	CountProcessed() (count int)
+	SetFirstSeen(entry ytfeed.Entry, ts time.Time) error
+	CheckFirstSeen(entry ytfeed.Entry) (found bool, ts time.Time, err error)
 }
 
 // DurationService is an interface for getting duration of audio file
@@ -273,6 +275,9 @@ func (s *Service) procChannels(ctx context.Context) error {
 			}
 
 			log.Printf("[INFO] new entry [%d] %s, %s, %s, %s", i+1, entry.VideoID, entry.Title, feedInfo.Name, entry.String())
+			if seenErr := s.Store.SetFirstSeen(entry, time.Now()); seenErr != nil {
+				log.Printf("[WARN] failed to set first seen time for %s: %v", entry.VideoID, seenErr)
+			}
 
 			file, downErr := s.Downloader.Get(ctx, entry.VideoID, s.makeFileName(entry))
 			if downErr != nil {
@@ -463,18 +468,27 @@ func (s *Service) isShort(file string) (bool, time.Duration) {
 	return false, 0
 }
 
+// firstSeen returns when the entry was first seen for download, or now if that is not recorded
+func (s *Service) firstSeen(entry ytfeed.Entry) time.Time {
+	found, ts, err := s.Store.CheckFirstSeen(entry)
+	if err != nil {
+		log.Printf("[WARN] failed to check first seen time for %s: %v", entry.VideoID, err)
+		return time.Now()
+	}
+	if !found {
+		return time.Now()
+	}
+	return ts
+}
+
 // update sets entry file name and reset published ts
 func (s *Service) update(entry ytfeed.Entry, file string, fi FeedInfo) ytfeed.Entry {
 	entry.File = file
 
-	// only reset time if the entry changed recently, to keep the initial set of entries
-	// of a new channel off the top of the feed. a live stream or premiere is published when
-	// scheduled, possibly days before the audio exists, and its updated time moves when it ends.
-	lastChange := entry.Published
-	if entry.Updated.After(lastChange) {
-		lastChange = entry.Updated
-	}
-	if time.Since(lastChange) < time.Hour*24 {
+	// reset time only for an entry first seen soon after it was published, to keep the initial set
+	// of entries of a new channel off the top of the feed. a live stream is published when scheduled
+	// and downloads only after it ends, possibly days after it was first seen.
+	if s.firstSeen(entry).Sub(entry.Published) < time.Hour*24 {
 		log.Printf("[DEBUG] reset published time for %s, from %s to %s (%v), %s",
 			entry.VideoID, entry.Published.Format(time.RFC3339), time.Now().Format(time.RFC3339),
 			time.Since(entry.Published), entry.String())
