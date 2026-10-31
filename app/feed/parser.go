@@ -91,6 +91,7 @@ type Entry struct {
 	Summary   string    `xml:"summary"`
 	Content   string    `xml:"content"`
 	ID        string    `xml:"id"`
+	Published string    `xml:"published"`
 	Updated   string    `xml:"updated"`
 	Link      Link      `xml:"link"`
 	Author    Author    `xml:"author"`
@@ -137,6 +138,11 @@ func atom1ToRss2(a Atom1) Rss2 {
 	for i, entry := range a.EntryList {
 		r.ItemList[i].Title = entry.Title
 		r.ItemList[i].Link = entry.Link.Href
+		r.ItemList[i].GUID = entry.ID
+		r.ItemList[i].PubDate = entry.Published
+		if r.ItemList[i].PubDate == "" {
+			r.ItemList[i].PubDate = entry.Updated
+		}
 		if entry.Content == "" {
 			r.ItemList[i].Description = template.HTML(entry.Summary) //nolint:gosec // HTML content from trusted RSS feed
 		} else {
@@ -218,6 +224,9 @@ func (rss *Rss2) parseDateTime(dt string) (time.Time, error) {
 		return ts, nil
 	}
 	if ts, err := time.Parse(time.RFC1123, dt); err == nil {
+		return ts, nil
+	}
+	if ts, err := time.Parse(time.RFC3339, dt); err == nil {
 		return ts, nil
 	}
 	if ts, err := time.Parse("2006-01-02 15:04:05 -0700", dt); err == nil {

@@ -23,6 +23,13 @@ gofmt -s -w $(find . -type f -name "*.go" -not -path "./vendor/*")
 goimports -w $(find . -type f -name "*.go" -not -path "./vendor/*")
 ```
 
+## PR and Merge
+
+`master` requires one approving review, which the repo owner cannot satisfy on his own PRs, and
+Copilot only ever posts a COMMENTED review. Own PRs therefore merge with `gh pr merge --admin`
+once CI is green and any review findings are addressed. The bypass covers the review requirement
+only: never merge past red or pending checks.
+
 ## High-Level Architecture
 
 Feed Master is a Go service that aggregates RSS feeds and YouTube content into unified feeds:

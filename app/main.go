@@ -129,18 +129,15 @@ func main() {
 		}
 		ytSvc.YtDlpUpdCommand = conf.YouTube.YtDlpUpdate.Command
 		ytSvc.YtDlpUpdOnStart = conf.YouTube.YtDlpUpdate.ForceOnStartup
-		if conf.YouTube.YtDlpUpdate.Interval > 0 {
-			log.Printf("[INFO] yt-dlp updater enabled, interval %s", conf.YouTube.YtDlpUpdate.Interval)
-			ytSvc.YtDlpUpdDuration = conf.YouTube.YtDlpUpdate.Interval
-		} else {
-			log.Printf("[INFO] yt-dlp periodic updater is disabled")
-		}
+		ytSvc.YtDlpUpdDuration = conf.YouTube.YtDlpUpdate.Interval
 
 		go func() {
 			if conf.YouTube.DisableUpdates {
 				log.Printf("[INFO] youtube updates are disabled")
 				return
 			}
+			log.Printf("[INFO] yt-dlp updater: %s", ytdlpUpdateStatus(conf.YouTube.YtDlpUpdate.Command,
+				conf.YouTube.YtDlpUpdate.Interval, conf.YouTube.YtDlpUpdate.ForceOnStartup))
 			if err := ytSvc.Do(context.TODO()); err != nil {
 				log.Printf("[ERROR] youtube processor failed: %v", err)
 			}
@@ -161,6 +158,22 @@ func main() {
 		AdminPasswd:  opts.AdminPasswd,
 	}
 	server.Run(context.Background(), opts.Port)
+}
+
+// ytdlpUpdateStatus describes the configured update triggers.
+func ytdlpUpdateStatus(cmd string, interval time.Duration, onStartup bool) string {
+	if cmd == "" {
+		return "disabled, no command set"
+	}
+	switch {
+	case onStartup && interval > 0:
+		return fmt.Sprintf("on startup and every %s", interval)
+	case onStartup:
+		return "on startup only, no interval set"
+	case interval > 0:
+		return fmt.Sprintf("every %s", interval)
+	}
+	return "never, command set but force_on_startup is false and no interval given"
 }
 
 func makeBoltDB(dbFile string) (*bolt.DB, error) {

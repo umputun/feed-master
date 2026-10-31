@@ -118,6 +118,9 @@ func TestParseDateTime(t *testing.T) {
 		{"Mon, 02 Jan 2006 15:04:05 MST", nil, "02 Jan 06 15:04 +0000"},   // RFC1123
 		{"2006-01-02 15:04:05 -0700", nil, "02 Jan 06 15:04 -0700"},
 		{"2017-09-30T14:11:48-0500", nil, "30 Sep 17 14:11 -0500"},
+		{"2026-10-07T14:11:48Z", nil, "07 Oct 26 14:11 +0000"},
+		{"2026-10-07T14:11:48+03:00", nil, "07 Oct 26 14:11 +0300"},
+		{"2026-10-07T14:11:48.123456789-05:00", nil, "07 Oct 26 14:11 -0500"},
 		{"100500", errors.New("can't parse timestamp 100500"), time.Now().Format(time.RFC822Z)},
 	}
 
@@ -268,4 +271,63 @@ func TestParseFeedContentIfRSSVersionEmptyContent(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, got.ItemList[0].Content, template.HTML("Content"))
 	assert.Equal(t, got.ItemList[0].Description, template.HTML("Content"))
+}
+
+func TestFeedParseAtomMetadata(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		published string
+		updated   string
+		want      time.Time
+	}{
+		{
+			name:    "updated UTC",
+			updated: "2026-10-07T14:11:48Z",
+			want:    time.Date(2026, time.October, 7, 14, 11, 48, 0, time.UTC),
+		},
+		{
+			name:      "published before updated",
+			published: "2026-10-06T14:11:48+03:00",
+			updated:   "2026-10-07T14:11:48Z",
+			want:      time.Date(2026, time.October, 6, 14, 11, 48, 0, time.FixedZone("", 3*60*60)),
+		},
+		{
+			name:    "updated with fractional seconds",
+			updated: "2026-10-07T14:11:48.123456789-05:00",
+			want:    time.Date(2026, time.October, 7, 14, 11, 48, 123456789, time.FixedZone("", -5*60*60)),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			published := ""
+			if tc.published != "" {
+				published = "<published>" + tc.published + "</published>"
+			}
+			content := `<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Example feed</title>
+  <id>urn:example:feed</id>
+  <updated>2026-10-07T14:11:48Z</updated>
+  <entry>
+    <title>Example entry</title>
+    <id>urn:example:entry</id>
+    <link href="https://example.org/entry"/>
+    <updated>` + tc.updated + `</updated>` + published + `
+    <summary>Entry content</summary>
+  </entry>
+</feed>`
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/atom+xml")
+				_, err := w.Write([]byte(content))
+				assert.NoError(t, err)
+			}))
+			defer ts.Close()
+
+			got, err := Parse(ts.URL)
+			require.NoError(t, err)
+			require.Len(t, got.ItemList, 1)
+			assert.Equal(t, "Wed, 07 Oct 2026 14:11:48 +0000", got.PubDate)
+			assert.Equal(t, "urn:example:entry", got.ItemList[0].GUID)
+			assert.Equal(t, tc.want.Format(time.RFC1123Z), got.ItemList[0].PubDate)
+			assert.True(t, tc.want.Equal(got.ItemList[0].DT), "got entry time %s", got.ItemList[0].DT)
+		})
+	}
 }

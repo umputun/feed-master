@@ -2,6 +2,7 @@ package proc
 
 import (
 	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
@@ -66,6 +67,46 @@ func TestSaveIfItemIsExists(t *testing.T) {
 
 	assert.False(t, created)
 	assert.NoError(t, err)
+}
+
+func TestSaveSameGUIDNewPubDate(t *testing.T) {
+	db, err := bolt.Open(filepath.Join(t.TempDir(), "store.db"), 0o600, &bolt.Options{Timeout: time.Second})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
+	bdb := &BoltDB{DB: db}
+
+	created, err := bdb.Save("radio-t", feed.Item{GUID: "guid-1", Title: "first", PubDate: pubDate})
+	require.NoError(t, err)
+	require.True(t, created)
+
+	created, err = bdb.Save("radio-t", feed.Item{GUID: "guid-1", Title: "edited", PubDate: "Mon, 02 Jan 2006 16:04:05 -0700"})
+	require.NoError(t, err)
+	assert.False(t, created)
+
+	items, err := bdb.Load("radio-t", 10, false)
+	require.NoError(t, err)
+	require.Len(t, items, 1)
+	assert.Equal(t, "first", items[0].Title)
+	assert.Equal(t, pubDate, items[0].PubDate)
+}
+
+func TestSaveEmptyGUIDNewPubDate(t *testing.T) {
+	db, err := bolt.Open(filepath.Join(t.TempDir(), "store.db"), 0o600, &bolt.Options{Timeout: time.Second})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
+	bdb := &BoltDB{DB: db}
+
+	created, err := bdb.Save("radio-t", feed.Item{Title: "first", PubDate: pubDate})
+	require.NoError(t, err)
+	require.True(t, created)
+
+	created, err = bdb.Save("radio-t", feed.Item{Title: "second", PubDate: "Mon, 02 Jan 2006 16:04:05 -0700"})
+	require.NoError(t, err)
+	assert.True(t, created)
+
+	items, err := bdb.Load("radio-t", 10, false)
+	require.NoError(t, err)
+	assert.Len(t, items, 2)
 }
 
 func TestLoadIfNotBucket(t *testing.T) {

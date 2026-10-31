@@ -92,12 +92,6 @@ func (filter *Filter) Skip(item feed.Item) (bool, error) {
 	return false, nil
 }
 
-// YTChannel defines youtube channel config
-type YTChannel struct {
-	ID   string
-	Name string
-}
-
 // Load config from file
 func Load(fname string) (res *Conf, err error) {
 	res = &Conf{}

@@ -149,6 +149,19 @@ func TestTruncatedMessage(t *testing.T) {
 	assert.LessOrEqual(t, len(htmlMessage), 1024)
 }
 
+func TestTruncatedMessageLongTitle(t *testing.T) {
+	// a title long enough to fill the caption drove CleanText's limit negative and panicked
+	client := TelegramClient{}
+	htmlMessage := client.getMessageHTML(
+		feed.Item{
+			Title:       strings.Repeat("t", 1000),
+			Link:        "https://example.com/" + strings.Repeat("l", 30),
+			Description: "abcde",
+		},
+		htmlMessageParams{TrimCaption: true})
+	assert.Contains(t, htmlMessage, strings.Repeat("t", 1000))
+}
+
 func TestGetMessageHTML(t *testing.T) {
 	item := feed.Item{
 		Title:       "\tPodcast\n\t",

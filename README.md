@@ -55,7 +55,7 @@ youtube: # youtube configuration, optional
   base_playlist_url: "https://www.youtube.com/feeds/videos.xml?playlist_id=" # base url for youtube playlist
   update: 60s # update interval for youtube feeds
   skip_shorts: 120s # skip videos (and audios) shorter than this value, optional
-  max_per_channel: 2 # max number of the latest videos per yt channel to download and process
+  max_per_channel: 2 # item limit for the channel source page and fallback RSS generation, not a download limit
   files_location: ./var/yt # location for downloaded youtube files
   rss_location: ./var/rss # location for generated youtube channel's RSS
   channels: # list of youtube channels to download and process
@@ -66,20 +66,29 @@ youtube: # youtube configuration, optional
       - {id: UCuIE7-5QzeAR6EdZXwDRwuQ, name: "Дилетант", type: "channel", lang: "ru-ru", "keep": 10}
       - {id: PLZVQqcKxEn_6YaOniJmxATjODSVUbbMkd, name: "Точка", type: "playlist", lang: "ru-ru", filter: {include: "ТОЧКА", exclude: "STAR'цы Live"}} 
   ytdlp_update: 
-    interval: 24h # update interval for yt-dlp. If not set, yt-dlp will not be updated 
+    interval: 24h # update interval for yt-dlp. If not set, only force_on_startup can trigger an update 
     command: "pip3 install --break-system-packages -U yt-dlp" # update yt-dlp command
     force_on_startup: true # force yt-dlp update on startup, before the first channel processing. Default: false
 
 system: # system configuration
   update: 1m # update interval for checking source feeds
   http_response_timeout: 30s # http response timeout
-  max_per_feed: 10 # max items per feed to be processed and inclueded in the final RSS
+  max_per_feed: 10 # max items per feed to be processed and included in the final RSS, also the default keep for yt channels
   max_total: 50 # max total items to be included in the final RSS
   max_keep: 1000 # max items to be kept in the internal database 
   base_url: http://localhost:8080 # base url for the generated RSS and media files
 ```
 
 _see [examples](https://github.com/umputun/feed-master/tree/master/_example/etc) for more details._
+
+**YouTube item limits.** Each channel's `keep` is the limit that matters. It caps how many entries are
+processed per poll and how many items `/yt/rss/{channel}` returns, and retention cleanup keeps up to
+`keep + 1` stored entries. A channel with no explicit `keep` falls back to `system.max_per_feed`, not to
+`youtube.max_per_channel`.
+
+The upstream YouTube feed returns only a window of recent entries per channel, so a limit above that
+window does not fetch more videos in a single poll. It raises how many collected entries are retained
+and served over time.
 
 ### Single-feed configuration
 
@@ -115,15 +124,28 @@ In both configuration modes, user can specify a list of telegram and twitter acc
 
 _See [requests.http](https://github.com/umputun/feed-master/blob/master/requests.http)_
 
+All `GET` endpoints are public and require no authentication. The two endpoints which modify state are protected by Basic authentication with the user `admin` and the password set by `--admin-passwd`; if that option is not set, a random password is generated on startup and the protected endpoints become unreachable.
+
 ### public endpoints
 
-- `GET /rss/{name}` - returns feed-set for given feed name
-- `GET /list` - returns list of feed-sets (json)
-- `GET /image/{name}` - returns image for given feed name
-- `GET /feed/{name}/sources` - returns list of sources for given feed name
-- `GET /yt/rss/{channel}` - return RSS feed for given youtube channel
+- `GET /rss/{name}` - returns the generated RSS feed for the given feed name
+- `GET /list` - returns the list of feed-sets (json)
+- `GET /config` - returns the currently loaded configuration (json)
+- `GET /image/{name}` and `GET /images/{name}` - returns the image for the given feed name
+- `GET /feeds` - renders the page listing all feeds
+- `GET /feed/{name}` - renders the page with items of the given feed
+- `GET /feed/{name}/sources` - renders the page listing sources of the given feed
+- `GET /feed/{name}/source/{source}` - renders the page with items of the given feed coming from a single source
+- `GET /yt/rss/{channel}` - returns the RSS feed for the given youtube channel or playlist
+- `GET /yt/channels` - renders the page listing all youtube channels and playlists
+- `GET /static/{file...}` - serves the static assets of the web UI
+- `GET /ping` - health check, responds with `pong`
+
+The downloaded youtube audio files are served from the path of `youtube.base_url`, which defaults to `<system.base_url>/yt/media`.
 
 ### admin endpoints
+
+Both require Basic authentication, see above.
 
 - `POST /yt/rss/generate` - regenerate RSS feed for all youtube channels
 - `DELETE /yt/entry/{channel}/{video}` - delete youtube entry, remove associated audio file, and remove from combined feeds
