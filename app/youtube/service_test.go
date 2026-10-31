@@ -501,6 +501,16 @@ func TestService_update(t *testing.T) {
 	}
 
 	{
+		published := time.Now().Add(time.Hour * -24 * 3)
+		svc.Store = &mocks.StoreServiceMock{CheckFirstSeenFunc: func(ytfeed.Entry) (bool, time.Time, error) {
+			return true, published.Add(time.Minute * 5), nil
+		}}
+		inpEntry := ytfeed.Entry{ChannelID: "chan1", VideoID: "vid1", Published: published, Title: "held back by outage"}
+		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "feed1"})
+		assert.Less(t, time.Since(res.Published), time.Second, "published time was reset")
+	}
+
+	{
 		published := time.Now().Add(time.Hour * -24 * 5)
 		svc.Store = &mocks.StoreServiceMock{CheckFirstSeenFunc: func(ytfeed.Entry) (bool, time.Time, error) {
 			return true, time.Now(), nil

@@ -487,7 +487,7 @@ func (s *Service) update(entry ytfeed.Entry, file string, fi FeedInfo) ytfeed.En
 
 	// reset time only for an entry first seen soon after it was published, to keep the initial set
 	// of entries of a new channel off the top of the feed. a live stream is published when scheduled
-	// and downloads only after it ends, possibly days after it was first seen.
+	// and downloads only after it ends; a video held back by a download outage is reset the same way.
 	if s.firstSeen(entry).Sub(entry.Published) < time.Hour*24 {
 		log.Printf("[DEBUG] reset published time for %s, from %s to %s (%v), %s",
 			entry.VideoID, entry.Published.Format(time.RFC3339), time.Now().Format(time.RFC3339),
