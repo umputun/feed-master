@@ -2,6 +2,7 @@ package youtube
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -239,6 +240,59 @@ func TestService_procChannels(t *testing.T) {
 	assert.FileExists(t, filepath.Join(tempDir, "e4650bb3d770eed60faad7ffbed5f33ffb1b89fa.mp3"), "non short video should exist")
 }
 
+func TestService_procChannelsDelayedDownload(t *testing.T) {
+	tempDir := t.TempDir()
+	published := time.Now().Add(-26 * time.Hour)
+	upcoming := ytfeed.Entry{ChannelID: "channel1", VideoID: "vid1", Title: "upcoming stream", Published: time.Now()}
+	finished := ytfeed.Entry{ChannelID: "channel1", VideoID: "vid2", Title: "finished stream", Published: published}
+	chans := &mocks.ChannelServiceMock{
+		GetFunc: func(context.Context, string, ytfeed.Type) ([]ytfeed.Entry, error) {
+			return []ytfeed.Entry{upcoming, finished}, nil
+		},
+	}
+	downloader := &mocks.DownloaderServiceMock{
+		GetFunc: func(_ context.Context, id string, fname string) (string, error) {
+			if id == upcoming.VideoID {
+				return "", errors.New("live event will begin in 23 hours")
+			}
+			fpath := filepath.Join(tempDir, fname+".mp3")
+			_, err := os.Create(fpath) //nolint:gosec // test file path is safe
+			require.NoError(t, err)
+			return fpath, nil
+		},
+	}
+	db, err := bolt.Open(filepath.Join(tempDir, "test.db"), 0o600, &bolt.Options{Timeout: 1 * time.Second})
+	require.NoError(t, err)
+	boltStore := &store.BoltDB{DB: db}
+	svc := Service{
+		Feeds:           []FeedInfo{{ID: "channel1", Name: "name1", Type: ytfeed.FTChannel}},
+		Downloader:      downloader,
+		ChannelService:  chans,
+		Store:           boltStore,
+		KeepPerChannel:  10,
+		RSSFileStore:    RSSFileStore{Enabled: true, Location: tempDir},
+		DurationService: &mocks.DurationServiceMock{FileFunc: func(string) int { return 1234 }},
+	}
+
+	require.NoError(t, boltStore.SetFirstSeen(finished, published.Add(6*time.Minute)))
+
+	require.NoError(t, svc.procChannels(context.Background()))
+
+	found, seen, err := boltStore.CheckFirstSeen(upcoming)
+	require.NoError(t, err)
+	require.True(t, found, "failed download records first sighting")
+	assert.WithinDuration(t, time.Now(), seen, time.Second)
+
+	res, err := boltStore.Load("channel1", 10)
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	assert.Equal(t, "vid2", res[0].VideoID)
+	assert.WithinDuration(t, time.Now(), res[0].Published, time.Second, "first seen soon after published, date reset")
+	found, _, err = boltStore.CheckFirstSeen(finished)
+	require.NoError(t, err)
+	assert.False(t, found, "first sighting dropped once processed")
+}
+
 func TestService_procChannelsIsAllowedFilter(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -451,7 +505,10 @@ func TestService_update(t *testing.T) {
 		},
 	}
 
-	svc := Service{DurationService: duration}
+	notSeen := &mocks.StoreServiceMock{CheckFirstSeenFunc: func(ytfeed.Entry) (bool, time.Time, error) {
+		return false, time.Time{}, nil
+	}}
+	svc := Service{DurationService: duration, Store: notSeen}
 
 	{ // update with reset pub time
 		inpEntry := ytfeed.Entry{
@@ -482,6 +539,47 @@ func TestService_update(t *testing.T) {
 		assert.Equal(t, 1234, res.Duration)
 		assert.Less(t, time.Since(res.Published), time.Second, "published time was reset")
 		assert.Equal(t, "Сергей Пархоменко на канале “Живой Гвоздь” в программме “Персонально ваш”. 06.04.2022", res.Title)
+	}
+
+	{ // regression: a live stream scheduled over 24h before it ended kept the scheduling time
+		published := time.Now().Add(time.Hour * -26)
+		svc.Store = &mocks.StoreServiceMock{CheckFirstSeenFunc: func(ytfeed.Entry) (bool, time.Time, error) {
+			return true, published.Add(time.Minute * 6), nil
+		}}
+		inpEntry := ytfeed.Entry{ChannelID: "chan1", VideoID: "vid1", Published: published, Title: "live stream"}
+		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "feed1"})
+		assert.Less(t, time.Since(res.Published), time.Second, "published time was reset")
+	}
+
+	{
+		published := time.Now().Add(time.Hour * -24 * 3)
+		svc.Store = &mocks.StoreServiceMock{CheckFirstSeenFunc: func(ytfeed.Entry) (bool, time.Time, error) {
+			return true, published.Add(time.Minute * 5), nil
+		}}
+		inpEntry := ytfeed.Entry{ChannelID: "chan1", VideoID: "vid1", Published: published, Title: "held back by outage"}
+		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "feed1"})
+		assert.Less(t, time.Since(res.Published), time.Second, "published time was reset")
+	}
+
+	{
+		published := time.Now().Add(time.Hour * -24 * 5)
+		svc.Store = &mocks.StoreServiceMock{CheckFirstSeenFunc: func(ytfeed.Entry) (bool, time.Time, error) {
+			return true, time.Now(), nil
+		}}
+		inpEntry := ytfeed.Entry{ChannelID: "chan1", VideoID: "vid1", Updated: time.Now().Add(-time.Hour), Published: published,
+			Title: "old video, recently edited"}
+		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "feed1"})
+		assert.True(t, res.Published.Equal(published), "published time kept")
+	}
+
+	{
+		published := time.Now().Add(time.Hour * -24 * 5)
+		svc.Store = &mocks.StoreServiceMock{CheckFirstSeenFunc: func(ytfeed.Entry) (bool, time.Time, error) {
+			return false, time.Time{}, errors.New("db failure")
+		}}
+		inpEntry := ytfeed.Entry{ChannelID: "chan1", VideoID: "vid1", Published: published, Title: "old video"}
+		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "feed1"})
+		assert.True(t, res.Published.Equal(published), "published time kept")
 	}
 }
 
@@ -524,8 +622,8 @@ func TestService_countAllEntries(t *testing.T) {
 
 	assert.Equal(t, 5, svc.countAllEntries())
 	assert.Len(t, storeSvc.LoadCalls(), 2)
-	assert.Equal(t, 5, storeSvc.LoadCalls()[0].Max)
-	assert.Equal(t, 10, storeSvc.LoadCalls()[1].Max)
+	assert.Equal(t, 5, storeSvc.LoadCalls()[0].MaX)
+	assert.Equal(t, 10, storeSvc.LoadCalls()[1].MaX)
 }
 
 func TestService_oldestEntry(t *testing.T) {
@@ -568,8 +666,8 @@ func TestService_oldestEntry(t *testing.T) {
 	}
 
 	assert.Len(t, storeSvc.LoadCalls(), 2)
-	assert.Equal(t, 5, storeSvc.LoadCalls()[0].Max)
-	assert.Equal(t, 10, storeSvc.LoadCalls()[1].Max)
+	assert.Equal(t, 5, storeSvc.LoadCalls()[0].MaX)
+	assert.Equal(t, 10, storeSvc.LoadCalls()[1].MaX)
 }
 
 func TestService_newestEntry(t *testing.T) {
@@ -612,8 +710,8 @@ func TestService_newestEntry(t *testing.T) {
 	}
 
 	assert.Len(t, storeSvc.LoadCalls(), 2)
-	assert.Equal(t, 1, storeSvc.LoadCalls()[0].Max)
-	assert.Equal(t, 1, storeSvc.LoadCalls()[1].Max)
+	assert.Equal(t, 1, storeSvc.LoadCalls()[0].MaX)
+	assert.Equal(t, 1, storeSvc.LoadCalls()[1].MaX)
 }
 
 func TestService_RemoveEntry(t *testing.T) {
@@ -649,7 +747,7 @@ func TestService_RemoveEntry(t *testing.T) {
 		// verify store methods were called
 		require.Len(t, storeSvc.LoadCalls(), 1)
 		assert.Equal(t, "chan1", storeSvc.LoadCalls()[0].ChannelID)
-		assert.Equal(t, 10, storeSvc.LoadCalls()[0].Max, "should use global KeepPerChannel for unknown channel")
+		assert.Equal(t, 10, storeSvc.LoadCalls()[0].MaX, "should use global KeepPerChannel for unknown channel")
 		require.Len(t, storeSvc.ResetProcessedCalls(), 1)
 		assert.Equal(t, "vid1", storeSvc.ResetProcessedCalls()[0].Entry.VideoID)
 		require.Len(t, storeSvc.RemoveCalls(), 1)
@@ -693,7 +791,7 @@ func TestService_RemoveEntry(t *testing.T) {
 
 		// verify Load was called with channel's keep limit, not global
 		require.Len(t, storeSvc.LoadCalls(), 1)
-		assert.Equal(t, 20, storeSvc.LoadCalls()[0].Max, "should use channel-specific Keep=20, not global KeepPerChannel=10")
+		assert.Equal(t, 20, storeSvc.LoadCalls()[0].MaX, "should use channel-specific Keep=20, not global KeepPerChannel=10")
 	})
 
 	t.Run("handles non-existent file gracefully", func(t *testing.T) {

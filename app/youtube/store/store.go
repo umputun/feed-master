@@ -16,7 +16,10 @@ import (
 	"github.com/umputun/feed-master/app/youtube/feed"
 )
 
-var processedBkt = []byte("processed")
+var (
+	processedBkt = []byte("processed")
+	firstSeenBkt = []byte("first_seen")
+)
 
 // BoltDB store for metadata related to downloaded YouTube audio.
 type BoltDB struct {
@@ -221,6 +224,12 @@ func (s *BoltDB) SetProcessed(entry feed.Entry) error {
 	}
 
 	err := s.Update(func(tx *bolt.Tx) error {
+		if seenBucket := tx.Bucket(firstSeenBkt); seenBucket != nil {
+			if e := seenBucket.Delete(key); e != nil {
+				return fmt.Errorf("delete first seen %s: %w", entry.VideoID, e)
+			}
+		}
+
 		bucket, e := tx.CreateBucketIfNotExists(processedBkt)
 		if e != nil {
 			return fmt.Errorf("create bucket %s: %w", processedBkt, e)
@@ -298,6 +307,64 @@ func (s *BoltDB) CheckProcessed(entry feed.Entry) (found bool, ts time.Time, err
 		var tsErr error
 		ts, tsErr = time.Parse(time.RFC3339, string(res))
 		if tsErr != nil {
+			return fmt.Errorf("parse timestamp: %w", tsErr)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return found, ts, fmt.Errorf("view store: %w", err)
+	}
+	return found, ts, nil
+}
+
+// SetFirstSeen records ts as the first time the entry was seen for download, unless one is already recorded.
+// SetProcessed drops the record.
+func (s *BoltDB) SetFirstSeen(entry feed.Entry, ts time.Time) error {
+	key, keyErr := s.procKey(entry)
+	if keyErr != nil {
+		return fmt.Errorf("failed to generate key for %s: %w", entry.VideoID, keyErr)
+	}
+
+	err := s.Update(func(tx *bolt.Tx) error {
+		bucket, e := tx.CreateBucketIfNotExists(firstSeenBkt)
+		if e != nil {
+			return fmt.Errorf("create bucket %s: %w", firstSeenBkt, e)
+		}
+		if bucket.Get(key) != nil {
+			return nil
+		}
+		if e = bucket.Put(key, []byte(ts.Format(time.RFC3339Nano))); e != nil {
+			return fmt.Errorf("save first seen %s: %w", entry.VideoID, e)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("update store: %w", err)
+	}
+	return nil
+}
+
+// CheckFirstSeen returns found=true and the recorded time if SetFirstSeen was called for the entry
+func (s *BoltDB) CheckFirstSeen(entry feed.Entry) (found bool, ts time.Time, err error) {
+	key, keyErr := s.procKey(entry)
+	if keyErr != nil {
+		return false, time.Time{}, fmt.Errorf("failed to generate key for %s: %w", entry.VideoID, keyErr)
+	}
+
+	err = s.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket(firstSeenBkt)
+		if bucket == nil {
+			return nil
+		}
+		res := bucket.Get(key)
+		if res == nil {
+			return nil
+		}
+		found = true
+		var tsErr error
+		if ts, tsErr = time.Parse(time.RFC3339Nano, string(res)); tsErr != nil {
 			return fmt.Errorf("parse timestamp: %w", tsErr)
 		}
 		return nil

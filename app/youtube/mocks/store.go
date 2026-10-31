@@ -12,44 +12,53 @@ import (
 
 // StoreServiceMock is a mock implementation of youtube.StoreService.
 //
-// 	func TestSomethingThatUsesStoreService(t *testing.T) {
+//	func TestSomethingThatUsesStoreService(t *testing.T) {
 //
-// 		// make and configure a mocked youtube.StoreService
-// 		mockedStoreService := &StoreServiceMock{
-// 			CheckProcessedFunc: func(entry ytfeed.Entry) (bool, time.Time, error) {
-// 				panic("mock out the CheckProcessed method")
-// 			},
-// 			CountProcessedFunc: func() int {
-// 				panic("mock out the CountProcessed method")
-// 			},
-// 			ExistFunc: func(entry ytfeed.Entry) (bool, error) {
-// 				panic("mock out the Exist method")
-// 			},
-// 			LoadFunc: func(channelID string, max int) ([]ytfeed.Entry, error) {
-// 				panic("mock out the Load method")
-// 			},
-// 			RemoveFunc: func(entry ytfeed.Entry) error {
-// 				panic("mock out the Remove method")
-// 			},
-// 			RemoveOldFunc: func(channelID string, keep int) ([]string, error) {
-// 				panic("mock out the RemoveOld method")
-// 			},
-// 			ResetProcessedFunc: func(entry ytfeed.Entry) error {
-// 				panic("mock out the ResetProcessed method")
-// 			},
-// 			SaveFunc: func(entry ytfeed.Entry) (bool, error) {
-// 				panic("mock out the Save method")
-// 			},
-// 			SetProcessedFunc: func(entry ytfeed.Entry) error {
-// 				panic("mock out the SetProcessed method")
-// 			},
-// 		}
+//		// make and configure a mocked youtube.StoreService
+//		mockedStoreService := &StoreServiceMock{
+//			CheckFirstSeenFunc: func(entry ytfeed.Entry) (bool, time.Time, error) {
+//				panic("mock out the CheckFirstSeen method")
+//			},
+//			CheckProcessedFunc: func(entry ytfeed.Entry) (bool, time.Time, error) {
+//				panic("mock out the CheckProcessed method")
+//			},
+//			CountProcessedFunc: func() int {
+//				panic("mock out the CountProcessed method")
+//			},
+//			ExistFunc: func(entry ytfeed.Entry) (bool, error) {
+//				panic("mock out the Exist method")
+//			},
+//			LoadFunc: func(channelID string, maX int) ([]ytfeed.Entry, error) {
+//				panic("mock out the Load method")
+//			},
+//			RemoveFunc: func(entry ytfeed.Entry) error {
+//				panic("mock out the Remove method")
+//			},
+//			RemoveOldFunc: func(channelID string, keep int) ([]string, error) {
+//				panic("mock out the RemoveOld method")
+//			},
+//			ResetProcessedFunc: func(entry ytfeed.Entry) error {
+//				panic("mock out the ResetProcessed method")
+//			},
+//			SaveFunc: func(entry ytfeed.Entry) (bool, error) {
+//				panic("mock out the Save method")
+//			},
+//			SetFirstSeenFunc: func(entry ytfeed.Entry, ts time.Time) error {
+//				panic("mock out the SetFirstSeen method")
+//			},
+//			SetProcessedFunc: func(entry ytfeed.Entry) error {
+//				panic("mock out the SetProcessed method")
+//			},
+//		}
 //
-// 		// use mockedStoreService in code that requires youtube.StoreService
-// 		// and then make assertions.
+//		// use mockedStoreService in code that requires youtube.StoreService
+//		// and then make assertions.
 //
-// 	}
+//	}
 type StoreServiceMock struct {
+	// CheckFirstSeenFunc mocks the CheckFirstSeen method.
+	CheckFirstSeenFunc func(entry ytfeed.Entry) (bool, time.Time, error)
+
 	// CheckProcessedFunc mocks the CheckProcessed method.
 	CheckProcessedFunc func(entry ytfeed.Entry) (bool, time.Time, error)
 
@@ -60,7 +69,7 @@ type StoreServiceMock struct {
 	ExistFunc func(entry ytfeed.Entry) (bool, error)
 
 	// LoadFunc mocks the Load method.
-	LoadFunc func(channelID string, max int) ([]ytfeed.Entry, error)
+	LoadFunc func(channelID string, maX int) ([]ytfeed.Entry, error)
 
 	// RemoveFunc mocks the Remove method.
 	RemoveFunc func(entry ytfeed.Entry) error
@@ -74,11 +83,19 @@ type StoreServiceMock struct {
 	// SaveFunc mocks the Save method.
 	SaveFunc func(entry ytfeed.Entry) (bool, error)
 
+	// SetFirstSeenFunc mocks the SetFirstSeen method.
+	SetFirstSeenFunc func(entry ytfeed.Entry, ts time.Time) error
+
 	// SetProcessedFunc mocks the SetProcessed method.
 	SetProcessedFunc func(entry ytfeed.Entry) error
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// CheckFirstSeen holds details about calls to the CheckFirstSeen method.
+		CheckFirstSeen []struct {
+			// Entry is the entry argument value.
+			Entry ytfeed.Entry
+		}
 		// CheckProcessed holds details about calls to the CheckProcessed method.
 		CheckProcessed []struct {
 			// Entry is the entry argument value.
@@ -96,8 +113,8 @@ type StoreServiceMock struct {
 		Load []struct {
 			// ChannelID is the channelID argument value.
 			ChannelID string
-			// Max is the max argument value.
-			Max int
+			// MaX is the maX argument value.
+			MaX int
 		}
 		// Remove holds details about calls to the Remove method.
 		Remove []struct {
@@ -121,12 +138,20 @@ type StoreServiceMock struct {
 			// Entry is the entry argument value.
 			Entry ytfeed.Entry
 		}
+		// SetFirstSeen holds details about calls to the SetFirstSeen method.
+		SetFirstSeen []struct {
+			// Entry is the entry argument value.
+			Entry ytfeed.Entry
+			// Ts is the ts argument value.
+			Ts time.Time
+		}
 		// SetProcessed holds details about calls to the SetProcessed method.
 		SetProcessed []struct {
 			// Entry is the entry argument value.
 			Entry ytfeed.Entry
 		}
 	}
+	lockCheckFirstSeen sync.RWMutex
 	lockCheckProcessed sync.RWMutex
 	lockCountProcessed sync.RWMutex
 	lockExist          sync.RWMutex
@@ -135,7 +160,40 @@ type StoreServiceMock struct {
 	lockRemoveOld      sync.RWMutex
 	lockResetProcessed sync.RWMutex
 	lockSave           sync.RWMutex
+	lockSetFirstSeen   sync.RWMutex
 	lockSetProcessed   sync.RWMutex
+}
+
+// CheckFirstSeen calls CheckFirstSeenFunc.
+func (mock *StoreServiceMock) CheckFirstSeen(entry ytfeed.Entry) (bool, time.Time, error) {
+	if mock.CheckFirstSeenFunc == nil {
+		panic("StoreServiceMock.CheckFirstSeenFunc: method is nil but StoreService.CheckFirstSeen was just called")
+	}
+	callInfo := struct {
+		Entry ytfeed.Entry
+	}{
+		Entry: entry,
+	}
+	mock.lockCheckFirstSeen.Lock()
+	mock.calls.CheckFirstSeen = append(mock.calls.CheckFirstSeen, callInfo)
+	mock.lockCheckFirstSeen.Unlock()
+	return mock.CheckFirstSeenFunc(entry)
+}
+
+// CheckFirstSeenCalls gets all the calls that were made to CheckFirstSeen.
+// Check the length with:
+//
+//	len(mockedStoreService.CheckFirstSeenCalls())
+func (mock *StoreServiceMock) CheckFirstSeenCalls() []struct {
+	Entry ytfeed.Entry
+} {
+	var calls []struct {
+		Entry ytfeed.Entry
+	}
+	mock.lockCheckFirstSeen.RLock()
+	calls = mock.calls.CheckFirstSeen
+	mock.lockCheckFirstSeen.RUnlock()
+	return calls
 }
 
 // CheckProcessed calls CheckProcessedFunc.
@@ -156,7 +214,8 @@ func (mock *StoreServiceMock) CheckProcessed(entry ytfeed.Entry) (bool, time.Tim
 
 // CheckProcessedCalls gets all the calls that were made to CheckProcessed.
 // Check the length with:
-//     len(mockedStoreService.CheckProcessedCalls())
+//
+//	len(mockedStoreService.CheckProcessedCalls())
 func (mock *StoreServiceMock) CheckProcessedCalls() []struct {
 	Entry ytfeed.Entry
 } {
@@ -184,7 +243,8 @@ func (mock *StoreServiceMock) CountProcessed() int {
 
 // CountProcessedCalls gets all the calls that were made to CountProcessed.
 // Check the length with:
-//     len(mockedStoreService.CountProcessedCalls())
+//
+//	len(mockedStoreService.CountProcessedCalls())
 func (mock *StoreServiceMock) CountProcessedCalls() []struct {
 } {
 	var calls []struct {
@@ -213,7 +273,8 @@ func (mock *StoreServiceMock) Exist(entry ytfeed.Entry) (bool, error) {
 
 // ExistCalls gets all the calls that were made to Exist.
 // Check the length with:
-//     len(mockedStoreService.ExistCalls())
+//
+//	len(mockedStoreService.ExistCalls())
 func (mock *StoreServiceMock) ExistCalls() []struct {
 	Entry ytfeed.Entry
 } {
@@ -227,33 +288,34 @@ func (mock *StoreServiceMock) ExistCalls() []struct {
 }
 
 // Load calls LoadFunc.
-func (mock *StoreServiceMock) Load(channelID string, max int) ([]ytfeed.Entry, error) {
+func (mock *StoreServiceMock) Load(channelID string, maX int) ([]ytfeed.Entry, error) {
 	if mock.LoadFunc == nil {
 		panic("StoreServiceMock.LoadFunc: method is nil but StoreService.Load was just called")
 	}
 	callInfo := struct {
 		ChannelID string
-		Max       int
+		MaX       int
 	}{
 		ChannelID: channelID,
-		Max:       max,
+		MaX:       maX,
 	}
 	mock.lockLoad.Lock()
 	mock.calls.Load = append(mock.calls.Load, callInfo)
 	mock.lockLoad.Unlock()
-	return mock.LoadFunc(channelID, max)
+	return mock.LoadFunc(channelID, maX)
 }
 
 // LoadCalls gets all the calls that were made to Load.
 // Check the length with:
-//     len(mockedStoreService.LoadCalls())
+//
+//	len(mockedStoreService.LoadCalls())
 func (mock *StoreServiceMock) LoadCalls() []struct {
 	ChannelID string
-	Max       int
+	MaX       int
 } {
 	var calls []struct {
 		ChannelID string
-		Max       int
+		MaX       int
 	}
 	mock.lockLoad.RLock()
 	calls = mock.calls.Load
@@ -279,7 +341,8 @@ func (mock *StoreServiceMock) Remove(entry ytfeed.Entry) error {
 
 // RemoveCalls gets all the calls that were made to Remove.
 // Check the length with:
-//     len(mockedStoreService.RemoveCalls())
+//
+//	len(mockedStoreService.RemoveCalls())
 func (mock *StoreServiceMock) RemoveCalls() []struct {
 	Entry ytfeed.Entry
 } {
@@ -312,7 +375,8 @@ func (mock *StoreServiceMock) RemoveOld(channelID string, keep int) ([]string, e
 
 // RemoveOldCalls gets all the calls that were made to RemoveOld.
 // Check the length with:
-//     len(mockedStoreService.RemoveOldCalls())
+//
+//	len(mockedStoreService.RemoveOldCalls())
 func (mock *StoreServiceMock) RemoveOldCalls() []struct {
 	ChannelID string
 	Keep      int
@@ -345,7 +409,8 @@ func (mock *StoreServiceMock) ResetProcessed(entry ytfeed.Entry) error {
 
 // ResetProcessedCalls gets all the calls that were made to ResetProcessed.
 // Check the length with:
-//     len(mockedStoreService.ResetProcessedCalls())
+//
+//	len(mockedStoreService.ResetProcessedCalls())
 func (mock *StoreServiceMock) ResetProcessedCalls() []struct {
 	Entry ytfeed.Entry
 } {
@@ -376,7 +441,8 @@ func (mock *StoreServiceMock) Save(entry ytfeed.Entry) (bool, error) {
 
 // SaveCalls gets all the calls that were made to Save.
 // Check the length with:
-//     len(mockedStoreService.SaveCalls())
+//
+//	len(mockedStoreService.SaveCalls())
 func (mock *StoreServiceMock) SaveCalls() []struct {
 	Entry ytfeed.Entry
 } {
@@ -386,6 +452,42 @@ func (mock *StoreServiceMock) SaveCalls() []struct {
 	mock.lockSave.RLock()
 	calls = mock.calls.Save
 	mock.lockSave.RUnlock()
+	return calls
+}
+
+// SetFirstSeen calls SetFirstSeenFunc.
+func (mock *StoreServiceMock) SetFirstSeen(entry ytfeed.Entry, ts time.Time) error {
+	if mock.SetFirstSeenFunc == nil {
+		panic("StoreServiceMock.SetFirstSeenFunc: method is nil but StoreService.SetFirstSeen was just called")
+	}
+	callInfo := struct {
+		Entry ytfeed.Entry
+		Ts    time.Time
+	}{
+		Entry: entry,
+		Ts:    ts,
+	}
+	mock.lockSetFirstSeen.Lock()
+	mock.calls.SetFirstSeen = append(mock.calls.SetFirstSeen, callInfo)
+	mock.lockSetFirstSeen.Unlock()
+	return mock.SetFirstSeenFunc(entry, ts)
+}
+
+// SetFirstSeenCalls gets all the calls that were made to SetFirstSeen.
+// Check the length with:
+//
+//	len(mockedStoreService.SetFirstSeenCalls())
+func (mock *StoreServiceMock) SetFirstSeenCalls() []struct {
+	Entry ytfeed.Entry
+	Ts    time.Time
+} {
+	var calls []struct {
+		Entry ytfeed.Entry
+		Ts    time.Time
+	}
+	mock.lockSetFirstSeen.RLock()
+	calls = mock.calls.SetFirstSeen
+	mock.lockSetFirstSeen.RUnlock()
 	return calls
 }
 
@@ -407,7 +509,8 @@ func (mock *StoreServiceMock) SetProcessed(entry ytfeed.Entry) error {
 
 // SetProcessedCalls gets all the calls that were made to SetProcessed.
 // Check the length with:
-//     len(mockedStoreService.SetProcessedCalls())
+//
+//	len(mockedStoreService.SetProcessedCalls())
 func (mock *StoreServiceMock) SetProcessedCalls() []struct {
 	Entry ytfeed.Entry
 } {
