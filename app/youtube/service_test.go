@@ -432,6 +432,31 @@ func TestService_update(t *testing.T) {
 		assert.Less(t, time.Since(res.Published), time.Second, "published time was reset")
 		assert.Equal(t, "Сергей Пархоменко на канале “Живой Гвоздь” в программме “Персонально ваш”. 06.04.2022", res.Title)
 	}
+
+	{ // regression: a live stream scheduled over 24h before it ended kept the scheduling time
+		inpEntry := ytfeed.Entry{
+			ChannelID: "chan1",
+			VideoID:   "vid1",
+			Updated:   time.Now().Add(time.Minute * -18),
+			Published: time.Now().Add(time.Hour * -26),
+			Title:     "live stream",
+		}
+		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "feed1"})
+		assert.Less(t, time.Since(res.Published), time.Second, "published time was reset")
+	}
+
+	{
+		published := time.Now().Add(time.Hour * -24 * 5)
+		inpEntry := ytfeed.Entry{
+			ChannelID: "chan1",
+			VideoID:   "vid1",
+			Updated:   published.Add(time.Minute),
+			Published: published,
+			Title:     "old video",
+		}
+		res := svc.update(inpEntry, "/tmp/audio.mp3", FeedInfo{ID: "f1", Name: "feed1"})
+		assert.True(t, res.Published.Equal(published), "published time kept")
+	}
 }
 
 func TestService_totalEntriesToKeep(t *testing.T) {

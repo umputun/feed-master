@@ -467,9 +467,14 @@ func (s *Service) isShort(file string) (bool, time.Duration) {
 func (s *Service) update(entry ytfeed.Entry, file string, fi FeedInfo) ytfeed.Entry {
 	entry.File = file
 
-	// only reset time if published not too long ago
-	// this is done to avoid initial set of entries added with a new channel to the top of the feed
-	if time.Since(entry.Published) < time.Hour*24 {
+	// only reset time if the entry changed recently, to keep the initial set of entries
+	// of a new channel off the top of the feed. a live stream or premiere is published when
+	// scheduled, possibly days before the audio exists, and its updated time moves when it ends.
+	lastChange := entry.Published
+	if entry.Updated.After(lastChange) {
+		lastChange = entry.Updated
+	}
+	if time.Since(lastChange) < time.Hour*24 {
 		log.Printf("[DEBUG] reset published time for %s, from %s to %s (%v), %s",
 			entry.VideoID, entry.Published.Format(time.RFC3339), time.Now().Format(time.RFC3339),
 			time.Since(entry.Published), entry.String())
