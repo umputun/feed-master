@@ -34,7 +34,7 @@ func TestService_DoYtDlpUpdateOnStartup(t *testing.T) {
 	boltStore := &store.BoltDB{DB: db}
 
 	t.Run("runs update on startup when enabled", func(t *testing.T) {
-		os.Remove(markerFile)
+		_ = os.Remove(markerFile)
 		svc := Service{
 			Feeds:           []FeedInfo{{ID: "ch1", Name: "n1", Type: ytfeed.FTChannel}},
 			Downloader:      &mocks.DownloaderServiceMock{},
@@ -56,7 +56,7 @@ func TestService_DoYtDlpUpdateOnStartup(t *testing.T) {
 	})
 
 	t.Run("skips update on startup when disabled", func(t *testing.T) {
-		os.Remove(markerFile)
+		_ = os.Remove(markerFile)
 		svc := Service{
 			Feeds:           []FeedInfo{{ID: "ch1", Name: "n1", Type: ytfeed.FTChannel}},
 			Downloader:      &mocks.DownloaderServiceMock{},

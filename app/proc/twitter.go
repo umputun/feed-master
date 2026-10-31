@@ -3,6 +3,7 @@ package proc
 import (
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/ChimeraCoder/anaconda"
@@ -62,8 +63,8 @@ func CleanText(inp string, maximum int) string {
 		// 4 symbols reserved for space and three dots on the end
 		snippet := []rune(res)[:maximum-4]
 		// go back in snippet and found first space
-		for i := len(snippet) - 1; i >= 0; i-- {
-			if snippet[i] == ' ' {
+		for i, r := range slices.Backward(snippet) {
+			if r == ' ' {
 				snippet = snippet[:i]
 				break
 			}
