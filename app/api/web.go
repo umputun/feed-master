@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -83,14 +84,7 @@ func (s *Server) getFeedPageCtrl(w http.ResponseWriter, r *http.Request) {
 // GET /feed/{name}/source/{source} - renders feed's source page with list of items
 func (s *Server) getFeedSourceCtrl(w http.ResponseWriter, r *http.Request) {
 	feedName := r.PathValue("name")
-	sourceNameRaw := r.PathValue("source")
-	var err error
-
-	sourceName, err := url.QueryUnescape(sourceNameRaw)
-	if err != nil {
-		s.renderErrorPage(w, r, err, 400)
-		return
-	}
+	sourceName := r.PathValue("source")
 
 	data, err := s.cache.Get(feedName+sourceName, func() ([]byte, error) {
 		if _, ok := s.Conf.Feeds[feedName]; !ok {
@@ -147,7 +141,7 @@ func (s *Server) getFeedSourceCtrl(w http.ResponseWriter, r *http.Request) {
 		}
 
 		res := bytes.NewBuffer(nil)
-		err = s.templates.ExecuteTemplate(res, "source.tmpl", &tmplData)
+		err := s.templates.ExecuteTemplate(res, "source.tmpl", &tmplData)
 		return res.Bytes(), err
 	})
 
@@ -285,10 +279,7 @@ func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 		}{}
 
 		for _, source := range feedConf.Sources {
-			src := Source{
-				Name: source.Name,
-				URL:  s.Conf.System.BaseURL + "/feed/" + feedName + "/source/" + source.Name,
-			}
+			src := Source{Name: source.Name, URL: s.youtubeSourcePageURL(feedName, source)}
 			tmplData.Sources = append(tmplData.Sources, src)
 		}
 		tmplData.SrcCount = len(tmplData.Sources)
@@ -306,6 +297,26 @@ func (s *Server) getSourcesPageCtrl(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(data) //nolint:gosec // html/template escapes source names and URLs
+}
+
+// youtubeSourcePageURL only links sources that can be browsed using the local YouTube store.
+// Ordinary RSS source URLs are configuration inputs and must not be exposed on this page.
+func (s *Server) youtubeSourcePageURL(feedName string, source config.Source) string {
+	base, err := url.Parse(s.Conf.System.BaseURL)
+	if err != nil || base.Host == "" {
+		return ""
+	}
+	upstream, err := url.Parse(source.URL)
+	if err != nil || !strings.EqualFold(upstream.Host, base.Host) || !strings.EqualFold(upstream.Scheme, base.Scheme) {
+		return ""
+	}
+	basePath := strings.TrimRight(base.Path, "/")
+	for _, channel := range s.Conf.YouTube.Channels {
+		if channel.ID != "" && channel.Name == source.Name && upstream.Path == basePath+"/yt/rss/"+channel.ID {
+			return strings.TrimRight(s.Conf.System.BaseURL, "/") + "/feed/" + url.PathEscape(feedName) + "/source/" + url.PathEscape(channel.Name)
+		}
+	}
+	return ""
 }
 
 func (s *Server) renderErrorPage(w http.ResponseWriter, _ *http.Request, err error, errCode int) {

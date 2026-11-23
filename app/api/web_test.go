@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"html"
 	"html/template"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -175,39 +177,50 @@ func TestServer_getFeedsPageCtrl(t *testing.T) {
 }
 
 func TestServer_getSourcesPageCtrl(t *testing.T) {
+	const privateRSS = "https://private.example.com/rss?token=private-token"
+	const youtubeName = "Пираты Радио-Т + архив"
 	conf := config.Conf{
 		Feeds: map[string]config.Feed{
 			"feed1": {
 				Sources: []config.Source{
-					{Name: "YouTube Channel 1"},
-					{Name: "YouTube Channel 2"},
+					{Name: "Радио-Т", URL: privateRSS},
+					{Name: youtubeName, URL: "https://feed.example.com/yt/rss/channel1"},
+					{Name: youtubeName, URL: "https://other.example.com/yt/rss/channel1"},
 				},
 			},
 		},
 	}
+	conf.System.BaseURL = "https://feed.example.com"
+	conf.YouTube.Channels = []youtube.FeedInfo{{ID: "channel1", Name: youtubeName}}
+	ytStore := &mocks.YoutubeStoreMock{LoadFunc: func(id string, _ int) ([]ytfeed.Entry, error) {
+		assert.Equal(t, "channel1", id)
+		return []ytfeed.Entry{{Title: "YouTube episode", Published: time.Now()}}, nil
+	}}
+	srv := setupTestServer(t, conf, nil, ytStore)
+	router := srv.router()
 
-	srv := setupTestServer(t, conf, nil, nil)
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, httptest.NewRequest(http.MethodGet, "/feed/feed1/sources", http.NoBody))
+	require.Equal(t, http.StatusOK, resp.Code)
+	body := resp.Body.String()
+	assert.Contains(t, body, "3 sources")
+	assert.Contains(t, body, "Радио-Т")
+	assert.Contains(t, html.UnescapeString(body), youtubeName)
+	assert.NotContains(t, body, "private.example.com")
+	assert.NotContains(t, body, "private-token")
+	assert.NotContains(t, body, "other.example.com")
+	assert.Equal(t, 1, strings.Count(body, `href="https://feed.example.com/feed/feed1/source/`))
 
-	ts := httptest.NewServer(srv.router())
-	defer ts.Close()
+	// Follow the actual rendered href through the router, including the Cyrillic name and plus sign.
+	_, tail, ok := strings.Cut(body, `href="https://feed.example.com/feed/feed1/source/`)
+	require.True(t, ok)
+	name, _, ok := strings.Cut(tail, `"`)
+	require.True(t, ok)
+	result := httptest.NewRecorder()
+	router.ServeHTTP(result, httptest.NewRequest(http.MethodGet, "/feed/feed1/source/"+html.UnescapeString(name), http.NoBody))
+	require.Equal(t, http.StatusOK, result.Code)
+	assert.Contains(t, result.Body.String(), "YouTube episode")
 
-	client := http.Client{Timeout: time.Second}
-	resp, err := client.Get(ts.URL + "/feed/feed1/sources")
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	require.NoError(t, err)
-	body := string(bodyBytes)
-
-	// check sources
-	assert.Contains(t, body, "YouTube Channel 1")
-	assert.Contains(t, body, "YouTube Channel 2")
-	assert.Contains(t, body, "2 sources")
-
-	// check footer
 	currentYear := time.Now().Year()
 	assert.Contains(t, body, fmt.Sprintf("&copy; %d Umputun", currentYear))
 }
