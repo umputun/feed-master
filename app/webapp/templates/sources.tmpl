@@ -36,9 +36,7 @@
     <div class="ump-feed-master__data-row">
         <div class="ump-feed-master__data-row-info-cell">
             <div>
-                <a href="{{.URL}}"
-                   target="_blank"><span class="ump-feed-master-program-name">{{.Name}}</span>
-                </a>
+                {{if .URL}}<a href="{{.URL}}" target="_blank">{{end}}<span class="ump-feed-master-program-name">{{.Name}}</span>{{if .URL}}</a>{{end}}
             </div>
         </div>
     </div>
